@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#0A5AA3</color>
+
+    <!-- 회원 가입 컬러-->
+    <color name="colorRegisterTextDefault">#000000</color>
+
+    <!-- 아이디 비밀번호 찾기 컬러-->
+    <color name="colorFindTextColor">#000000</color>
+    <color name="colorFindTextLogo">#0A5AA3</color>
+    <color name="colorTabSelectTextColor">#0A5AA3</color>
+
+    <!-- 심박수 컬러-->
+    <color name="colorHeartRateText">#0c65b4</color>
+
+    <!-- 오늘 활동 컬러-->
+    <color name="colorActivityTextBold">#000000</color>
+
+    <!-- 메시지 컬러-->
+    <color name="colorMessageTextBold">#005EB1</color>
+
+    <!-- 디바이스 컬러 -->
+    <color name="colorDeviceDefault">#005EB1</color>
+    <color name="colorDeviceConnect">#FFFFFF</color>
+
+    <!-- chart color -->
+    <color name="color_chart_xy">#8FA4AD</color>
+    <!-- Toolbar color -->
+    <color name="colorToolBar">#005eb1 </color>
+
+    <!-- 커플 컬러 -->
+    <color name="colorCoupleLogoText">#ffffff</color>
+    <color name="colorCoupleDivider">#e6e6e6</color>
+    <color name="colorCoupleImageText">#707070</color>
+
+    <!-- 프로필 컬러 -->
+    <color name="colorProfileName">#000000</color>
+    <color name="colorProfileBox">#f9fafa</color>
+
+
+</resources>

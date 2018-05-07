@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <variable
+            name="FindPw"
+            type="btcore.co.kr.d2band.view.find.fragment.FragmentPw"/>
+    </data>
+
+<android.support.constraint.ConstraintLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:id="@+id/box_email"
+        android:layout_width="0dp"
+        android:background="@drawable/box_large_register"
+        android:layout_height="54dp"
+        android:layout_marginEnd="47dp"
+        android:layout_marginStart="47dp"
+        android:layout_marginTop="6dp"
+        android:orientation="vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/text_email">
+
+        <EditText
+            android:id="@+id/edit_email"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="@dimen/register_largebox_margin"
+            android:background="@null"
+            android:ems="10"
+            android:inputType="textEmailAddress" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/text_email"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="47dp"
+        android:layout_marginTop="6dp"
+        android:text="@string/text_find_email"
+        android:textColor="@color/colorFindTextColor"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/box_phone" />
+
+    <LinearLayout
+        android:id="@+id/box_phone"
+        android:layout_width="match_parent"
+        android:background="@drawable/box_large_register"
+        android:layout_height="54dp"
+        android:layout_marginEnd="47dp"
+        android:layout_marginStart="47dp"
+        android:layout_marginTop="6dp"
+        android:orientation="vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/text_phone">
+
+        <EditText
+            android:id="@+id/edit_phone"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="@dimen/register_largebox_margin"
+            android:background="@null"
+            android:ems="10"
+            android:hint="@string/edit_find_hint_phone"
+            android:inputType="number" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/text_phone"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="47dp"
+        android:layout_marginTop="15dp"
+        android:text="@string/text_find_phone"
+        android:textColor="@color/colorFindTextColor"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/box_name" />
+
+    <LinearLayout
+        android:id="@+id/box_name"
+        android:layout_width="0dp"
+        android:background="@drawable/box_large_register"
+        android:layout_height="54dp"
+        android:layout_marginEnd="47dp"
+        android:layout_marginStart="47dp"
+        android:layout_marginTop="6dp"
+        android:orientation="vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/text_name">
+
+        <EditText
+            android:id="@+id/edit_pw"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="@dimen/register_largebox_margin"
+            android:background="@null"
+            android:ems="10"
+            android:hint="@string/edit_find_hint_pwconfirm"
+            android:inputType="textPassword" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/text_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="47dp"
+        android:layout_marginTop="52dp"
+        android:text="@string/text_find_pwconfirm"
+        android:textColor="@color/colorFindTextColor"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+</android.support.constraint.ConstraintLayout>
+
+</layout>

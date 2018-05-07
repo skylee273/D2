@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="btcore.co.kr.d2band.view.step.StepActivity">
+
+    <data>
+
+        <variable
+            name="StepActivity"
+            type="btcore.co.kr.d2band.view.step.StepActivity" />
+    </data>
+
+    <android.support.constraint.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+
+        <ScrollView
+            android:id="@+id/scrollView2"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toTopOf="@+id/fragment_bottom"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/btn_profile">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <android.support.constraint.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <android.support.v4.view.ViewPager
+                        android:id="@+id/viewPager_Step"
+                        android:layout_width="match_parent"
+                        android:layout_height="250dp"
+                        android:background="#ffffff"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/tabLayout_activity" />
+
+                    <android.support.design.widget.TabLayout
+                        android:id="@+id/tabLayout_activity"
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
+                        app:layout_constraintHorizontal_bias="0.0"
+                        app:layout_constraintLeft_toLeftOf="parent"
+                        app:layout_constraintRight_toRightOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/text_goal"
+                        app:tabIndicatorHeight="4dp"
+                        app:tabSelectedTextColor="@color/colorTabSelectTextColor">
+
+                        <android.support.design.widget.TabItem
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/text_activity_tabitem0" />
+
+                        <android.support.design.widget.TabItem
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/text_activity_tabitem1" />
+
+                        <android.support.design.widget.TabItem
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/text_activity_tabitem2" />
+                    </android.support.design.widget.TabLayout>
+
+                    <TextView
+                        android:id="@+id/text_goal"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="41dp"
+                        android:text="8000"
+                        android:textSize="18sp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/text_daliygoal" />
+
+                    <TextView
+                        android:id="@+id/text_dailykm"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="5dp"
+                        android:layout_marginTop="6dp"
+                        android:text="@string/text_dailykm"
+                        app:layout_constraintStart_toEndOf="@+id/text_km"
+                        app:layout_constraintTop_toBottomOf="@+id/text_daliygoal" />
+
+                    <TextView
+                        android:id="@+id/text_km"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="18dp"
+                        android:text="0"
+                        android:textColor="@color/colorActivityTextBold"
+                        android:textSize="18sp"
+                        app:layout_constraintStart_toEndOf="@+id/text_dailykcal"
+                        app:layout_constraintTop_toBottomOf="@+id/text_daliygoal" />
+
+                    <TextView
+                        android:id="@+id/text_dailykcal"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="5dp"
+                        android:layout_marginTop="6dp"
+                        android:text="@string/text_dailykcal"
+                        app:layout_constraintStart_toEndOf="@+id/text_kcal"
+                        app:layout_constraintTop_toBottomOf="@+id/text_daliygoal" />
+
+                    <TextView
+                        android:id="@+id/text_kcal"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="41dp"
+                        android:text="0"
+                        android:textColor="@color/colorActivityTextBold"
+                        android:textSize="18sp"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/text_daliygoal" />
+
+                    <TextView
+                        android:id="@+id/text_daliygoal"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="41dp"
+                        android:layout_marginTop="10dp"
+                        android:text="@string/text_daliygoal"
+                        android:textSize="10sp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/progressBar_step" />
+
+                    <ProgressBar
+                        android:id="@+id/progressBar_step"
+                        android:layout_width="0dp"
+                        android:layout_height="5dp"
+                        android:layout_marginEnd="41dp"
+                        android:layout_marginStart="41dp"
+                        android:layout_marginTop="20dp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/image_shoes" />
+
+                    <TextView
+                        android:id="@+id/text_dailystep"
+                        android:layout_width="wrap_content"
+                        android:layout_height="0dp"
+                        android:layout_marginStart="10dp"
+                        android:layout_marginTop="40dp"
+                        android:text="@string/text_dailystep"
+                        app:layout_constraintStart_toEndOf="@+id/text_step"
+                        app:layout_constraintTop_toBottomOf="@+id/text_todayStep" />
+
+                    <TextView
+                        android:id="@+id/text_step"
+                        android:layout_width="wrap_content"
+                        android:layout_height="35dp"
+                        android:layout_marginStart="21dp"
+                        android:layout_marginTop="6dp"
+                        android:text="0"
+                        android:textColor="#000000"
+                        android:textSize="28sp"
+                        app:layout_constraintStart_toEndOf="@+id/image_shoes"
+                        app:layout_constraintTop_toBottomOf="@+id/image_line" />
+
+                    <ImageView
+                        android:id="@+id/image_line"
+                        android:layout_width="21dp"
+                        android:layout_height="0dp"
+                        android:layout_marginStart="21dp"
+                        android:layout_marginTop="19dp"
+                        app:layout_constraintStart_toEndOf="@+id/image_shoes"
+                        app:layout_constraintTop_toBottomOf="@+id/text_todayStep"
+                        app:srcCompat="@drawable/icon_activity_line" />
+
+                    <TextView
+                        android:id="@+id/text_todayStep"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="75dp"
+                        android:layout_marginStart="21dp"
+                        android:layout_marginTop="58dp"
+                        android:text="@string/text_todayStep"
+                        android:textColor="@color/colorActivityTextBold"
+                        android:textStyle="bold"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@+id/image_shoes"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <ImageView
+                        android:id="@+id/image_shoes"
+                        android:layout_width="140dp"
+                        android:layout_height="102dp"
+                        android:layout_marginStart="41dp"
+                        android:layout_marginTop="48dp"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:srcCompat="@drawable/icon_activity_shoes" />
+                </android.support.constraint.ConstraintLayout>
+            </LinearLayout>
+        </ScrollView>
+
+        <fragment
+            android:id="@+id/fragment_bottom"
+            android:name="btcore.co.kr.d2band.view.main.fragment.FragmentBottomBar"
+            android:layout_width="0dp"
+            android:layout_height="65dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <Button
+            android:id="@+id/btn_profile"
+            android:layout_width="28dp"
+            android:layout_height="31dp"
+            android:layout_marginEnd="19dp"
+            android:layout_marginStart="111dp"
+            android:layout_marginTop="30dp"
+            android:background="@drawable/icon_profile"
+            android:onClick="@{StepActivity::OnProfile}"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/image_logo"
+            android:layout_width="43dp"
+            android:layout_height="31dp"
+            android:layout_marginTop="30dp"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/icon_activity_logo" />
+    </android.support.constraint.ConstraintLayout>
+
+</layout>

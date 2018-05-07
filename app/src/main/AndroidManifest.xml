@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="btcore.co.kr.d2band">
+
+    <!-- 전화가 오는 상황을 감지하기 위한 권한 추가 -->
+    <!-- 전화걸려올경우 상대방 정보 확인 -->
+    <uses-permission android:name="android.permission.READ_CALL_LOG" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+    <uses-permission android:name="android.permission.CALL_PHONE"/>
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+    <permission android:name="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"></permission>
+    <uses-permission android:name="android.permission.WRITE_CONTACTS"></uses-permission>
+    <uses-permission android:name="android.permission.SEND_SMS"></uses-permission>
+    <uses-permission android:name="android.permission.READ_CONTACTS"></uses-permission>
+    <uses-permission android:name="android.permission.READ_SMS"/>
+    <uses-permission android:name="android.permission.RECEIVE_MMS"></uses-permission>
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.RECEIVE_SMS"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <permission android:protectionLevel="signature"
+        android:name="android.permission.WRITE_SETTINGS"/>
+    <uses-permission android:name="android.permission.WRITE_SETTINGS"></uses-permission>
+    <permission android:protectionLevel="signature"
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
+    <uses-feature
+        android:name="android.hardware.bluetooth_le"
+        android:required="true" />
+
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:largeHeap="true"
+        android:hardwareAccelerated="false"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+        <activity android:name=".view.splash.SplashActivity"
+            android:theme="@style/SplashTheme">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".view.register.RegisterActivity"></activity>
+        <activity android:name=".view.login.LoginActivity"></activity>
+        <activity android:name=".view.main.MainActivity"></activity>
+        <activity android:name=".view.find.FindIdActivity"></activity>
+        <activity android:name=".view.device.DeviceListActivity"></activity>
+        <activity android:name=".view.step.StepActivity"></activity>
+        <activity android:name=".view.heartrate.HeartRateActivity"></activity>
+        <activity android:name=".view.sos.SosActivity"></activity>
+        <activity android:name=".view.couple.CoupleActivity"></activity>
+        <activity android:name=".view.message.MessageAtivity"></activity>
+        <activity android:name=".view.profile.ProfileAcitivty"></activity>
+
+        <!-- 서비스 영역 -->
+        <service android:enabled="true" android:name=".service.BluetoothLeService" />
+
+        <service
+            android:name=".service.KakaoNotificationService"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" >
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" >
+                </action>
+            </intent-filter>
+        </service>
+
+
+
+    </application>
+
+</manifest>

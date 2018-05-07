@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+
+    <dimen name="register_largebox_margin">23dp</dimen>
+    <dimen name="register_edit_height_margin">45dp</dimen>
+
+</resources>

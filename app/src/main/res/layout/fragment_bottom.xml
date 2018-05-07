@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <variable
+            name="BottomBar"
+            type="btcore.co.kr.d2band.view.main.fragment.FragmentBottomBar"/>
+    </data>
+
+<android.support.constraint.ConstraintLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="65dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btn_activity"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:onClick="@{BottomBar::OnAcivitiy}"
+            android:layout_weight="1"
+            android:background="@drawable/icon_activity" />
+
+        <Button
+            android:id="@+id/btn_heartrate"
+            android:onClick="@{BottomBar::OnHeartRate}"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/icon_unheart" />
+
+        <Button
+            android:id="@+id/btn_alarm"
+            android:onClick="@{BottomBar::OnAlarm}"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/icon_unalarm" />
+
+        <Button
+            android:id="@+id/btn_message"
+            android:onClick="@{BottomBar::OnMessage}"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/icon_unmessage" />
+
+        <Button
+            android:id="@+id/btn_couple"
+            android:onClick="@{BottomBar::OnCouple}"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/icon_uncouple" />
+    </LinearLayout>
+</android.support.constraint.ConstraintLayout>
+
+</layout>

@@ -1,0 +1,359 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="btcore.co.kr.d2band.view.heartrate.HeartRateActivity">
+
+    <data>
+
+        <variable
+            name="HeartActivity"
+            type="btcore.co.kr.d2band.view.heartrate.HeartRateActivity" />
+    </data>
+
+
+<LinearLayout
+    android:layout_width="match_parent"
+    android:orientation="vertical"
+    android:layout_height="match_parent">
+
+
+    <LinearLayout
+        android:id="@+id/linearLayout3"
+        android:layout_width="match_parent"
+        android:layout_height="67dp"
+        android:background="@color/colorToolBar"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="70"
+            android:orientation="vertical"></LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="100"
+            android:orientation="vertical"></LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="100"
+            android:orientation="vertical"></LinearLayout>
+
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="900"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/text_title"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical|center_horizontal"
+                android:text="@string/text_heart_title"
+                android:textColor="@color/colorCoupleLogoText"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="100"
+            android:orientation="vertical"></LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="100"
+            android:orientation="vertical">
+
+            <Button
+                android:id="@+id/btn_setting"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/toolbar_setting" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="70"
+            android:orientation="vertical"></LinearLayout>
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="214"
+        android:orientation="vertical"></LinearLayout>
+
+    <ImageView
+        android:id="@+id/image_heart6"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="300"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/box_toolbar"
+        app:srcCompat="@drawable/ic_heartrate" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="80"
+        android:orientation="vertical"></LinearLayout>
+
+    <TextView
+        android:id="@+id/text_bpm6"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="180"
+        android:gravity="center_vertical|center_horizontal"
+        android:text="0"
+        android:textSize="36sp"
+        android:textStyle="bold"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/image_heart2" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="30"
+        android:orientation="vertical"></LinearLayout>
+
+    <ImageView
+        android:id="@+id/image_bpm6"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="52.5"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/text_bpm2"
+        app:srcCompat="@drawable/ic_bpm" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="95"
+        android:orientation="vertical"></LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1050"
+        android:scrollbarSize="2dp"
+        android:scrollbarThumbVertical="@color/colorAccent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <android.support.constraint.ConstraintLayout
+                android:id="@+id/constraintLayout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/image_bpm2">
+
+                <ImageView
+                    android:id="@+id/image_divider4"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="54dp"
+                    android:layout_marginStart="51dp"
+                    android:layout_marginTop="4dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/text_error"
+                    app:srcCompat="@drawable/divider_horizontal_heart" />
+
+                <TextView
+                    android:id="@+id/text_errorbpm"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="54dp"
+                    android:layout_marginTop="24dp"
+                    android:text="0%"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/image_divider3" />
+
+                <TextView
+                    android:id="@+id/text_error"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="51dp"
+                    android:layout_marginTop="24dp"
+                    android:text="@string/text_heart_error"
+                    android:textColor="@color/colorHeartRateText"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/image_divider3" />
+
+                <ImageView
+                    android:id="@+id/image_divider3"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="54dp"
+                    android:layout_marginStart="51dp"
+                    android:layout_marginTop="4dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/text_state"
+                    app:srcCompat="@drawable/divider_horizontal_heart" />
+
+                <TextView
+                    android:id="@+id/text_statecurrent"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="54dp"
+                    android:layout_marginTop="24dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/image_divider2" />
+
+                <TextView
+                    android:id="@+id/text_state"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="51dp"
+                    android:layout_marginTop="24dp"
+                    android:text="@string/text_heart_state"
+                    android:textColor="@color/colorHeartRateText"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/image_divider2" />
+
+                <ImageView
+                    android:id="@+id/image_divider2"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="54dp"
+                    android:layout_marginStart="51dp"
+                    android:layout_marginTop="4dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/text_min"
+                    app:srcCompat="@drawable/divider_horizontal_heart" />
+
+                <TextView
+                    android:id="@+id/text_minbpm"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="54dp"
+                    android:layout_marginTop="24dp"
+                    android:text="0 BPM"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/image_divider1" />
+
+                <TextView
+                    android:id="@+id/text_min"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="51dp"
+                    android:layout_marginTop="24dp"
+                    android:text="@string/text_heart_min"
+                    android:textColor="@color/colorHeartRateText"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/image_divider1" />
+
+                <ImageView
+                    android:id="@+id/image_divider1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="54dp"
+                    android:layout_marginStart="51dp"
+                    android:layout_marginTop="4dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/text_max"
+                    app:srcCompat="@drawable/divider_horizontal_heart" />
+
+                <TextView
+                    android:id="@+id/text_maxbpm"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="54dp"
+                    android:layout_marginTop="24dp"
+                    android:text="0 BPM"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/image_divider0" />
+
+                <TextView
+                    android:id="@+id/text_max"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="51dp"
+                    android:layout_marginTop="24dp"
+                    android:text="@string/text_heart_max"
+                    android:textColor="@color/colorHeartRateText"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/image_divider0" />
+
+                <ImageView
+                    android:id="@+id/image_divider0"
+                    android:layout_width="0dp"
+                    android:layout_height="15dp"
+                    android:layout_marginEnd="54dp"
+                    android:layout_marginStart="51dp"
+                    android:layout_marginTop="4dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/text_avg"
+                    app:srcCompat="@drawable/divider_horizontal_heart" />
+
+                <TextView
+                    android:id="@+id/text_avgbpm"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="54dp"
+                    android:layout_marginTop="40dp"
+                    android:text="0 BPM"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/text_avg"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="51dp"
+                    android:layout_marginTop="40dp"
+                    android:text="@string/text_heart_avg"
+                    android:textColor="@color/colorHeartRateText"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+            </android.support.constraint.ConstraintLayout>
+        </LinearLayout>
+    </ScrollView>
+
+    <fragment
+        android:id="@+id/fragment_bottom"
+        android:name="btcore.co.kr.d2band.view.main.fragment.FragmentBottomBar"
+        android:layout_width="match_parent"
+        android:layout_height="65dp"
+        android:layout_weight="0"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+</LinearLayout>
+</layout>

@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="btcore.co.kr.d2band.view.step.StepActivity">
+
+    <data>
+
+        <variable
+            name="SosActivity"
+            type="btcore.co.kr.d2band.view.sos.SosActivity" />
+    </data>
+
+
+<android.support.constraint.ConstraintLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:id="@+id/linearLayout3"
+        android:layout_width="0dp"
+        android:layout_height="67dp"
+        android:background="@color/colorToolBar"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="70"
+            android:orientation="vertical"></LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="100"
+            android:orientation="vertical"></LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="100"
+            android:orientation="vertical"></LinearLayout>
+
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="900"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/text_title"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical|center_horizontal"
+                android:text="@string/text_sos_title"
+                android:textColor="@color/colorCoupleLogoText"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="100"
+            android:orientation="vertical"></LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="100"
+            android:orientation="vertical">
+
+            <Button
+                android:id="@+id/btn_setting"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/toolbar_setting" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="70"
+            android:orientation="vertical"></LinearLayout>
+    </LinearLayout>
+
+
+    <ScrollView
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/fragment_bottom"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout3">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <android.support.constraint.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <LinearLayout
+                    android:id="@+id/linearLayout5"
+                    android:layout_width="match_parent"
+                    android:layout_height="300dp"
+                    android:layout_marginTop="17dp"
+                    android:background="#ffffff"
+                    android:orientation="vertical"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintRight_toRightOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/btn_alert">
+
+                    <TableLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginBottom="13dp"
+                        android:layout_marginEnd="13dp"
+                        android:layout_marginStart="13dp"
+                        android:layout_marginTop="13dp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/btn_alert">
+
+                        <TableRow
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1">
+
+                            <Button
+                                android:id="@+id/btn_112"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:background="@drawable/icon_112"
+                                android:onClick="@{SosActivity::OnPolice}"
+                                android:text=" " />
+
+                            <Button
+                                android:id="@+id/btn_119"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:background="@drawable/icon_119"
+                                android:onClick="@{SosActivity::OnAmbulance}"
+                                android:text=" " />
+
+                            <Button
+                                android:id="@+id/btn_call"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:background="@drawable/icon_call"
+                                android:onClick="@{SosActivity::OnCall}"
+                                android:text=" " />
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1">
+
+                            <Button
+                                android:id="@+id/btn_message"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:background="@drawable/icon_msg"
+
+                                android:onClick="@{SosActivity::OnMessage}" />
+
+                            <Button
+                                android:id="@+id/btn_map"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:background="@drawable/icon_map"
+                                android:onClick="@{SosActivity::OnMap}" />
+
+                            <Button
+                                android:id="@+id/btn_hospital"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+
+                                android:layout_weight="1"
+                                android:background="@drawable/icon_hostpital" />
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1">
+
+                            <Button
+                                android:id="@+id/btn_sound"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:background="@drawable/icon_sound"
+
+                                android:onClick="@{SosActivity::OnRing}" />
+
+                            <Button
+                                android:id="@+id/btn_question"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:background="@drawable/icon_question"
+                                android:onClick="@{SosActivity::OnQuestion}" />
+
+                            <Button
+                                android:id="@+id/btn_settings"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:background="@drawable/icon_setting" />
+                        </TableRow>
+
+                    </TableLayout>
+                </LinearLayout>
+
+
+                <Button
+                    android:id="@+id/btn_alert"
+                    android:layout_width="128dp"
+                    android:layout_height="28dp"
+                    android:layout_marginTop="16dp"
+                    android:background="@drawable/icon_nonalarm"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/content" />
+
+                <com.skyfishjy.library.RippleBackground
+                    android:id="@+id/content"
+                    android:layout_width="147dp"
+                    android:layout_height="147dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:rb_color="#1E90FF"
+                    app:rb_duration="3000"
+                    app:rb_radius="32dp"
+                    app:rb_rippleAmount="4"
+                    app:rb_scale="6">
+
+                    <Button
+                        android:id="@+id/centerImage"
+                        android:layout_width="64dp"
+                        android:layout_height="64dp"
+                        android:layout_centerInParent="true"
+                        android:background="@drawable/icon_nonemergency" />
+                </com.skyfishjy.library.RippleBackground>
+            </android.support.constraint.ConstraintLayout>
+        </LinearLayout>
+    </ScrollView>
+
+    <fragment
+        android:id="@+id/fragment_bottom"
+        android:name="btcore.co.kr.d2band.view.main.fragment.FragmentBottomBar"
+        android:layout_width="0dp"
+        android:layout_height="65dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent" />
+
+</android.support.constraint.ConstraintLayout>
+
+</layout>

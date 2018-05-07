@@ -1,0 +1,485 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <variable
+            name="activity"
+            type="btcore.co.kr.d2band.view.register.RegisterActivity"/>
+    </data>
+<android.support.constraint.ConstraintLayout
+    android:layout_width="match_parent"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    android:layout_height="match_parent">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
+
+            <android.support.constraint.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="965dp">
+
+                <Button
+                    android:id="@+id/btn_register"
+                    android:layout_width="0dp"
+                    android:layout_height="68dp"
+                    android:layout_marginTop="59dp"
+                    android:background="@drawable/btn_register"
+                    android:onClick="@{activity::onRegisterCall}"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/box_address" />
+
+                <LinearLayout
+                    android:id="@+id/box_address"
+                    android:layout_width="match_parent"
+                    android:layout_height="54dp"
+                    android:layout_marginEnd="45dp"
+                    android:layout_marginStart="47dp"
+                    android:layout_marginTop="6dp"
+                    android:background="@drawable/box_large_register"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/text_address">
+
+                    <TextView
+                        android:id="@+id/text_location"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="@dimen/register_largebox_margin"
+                        android:layout_weight="900"
+                        android:singleLine="true"
+                        android:ellipsize="end"
+                        android:gravity="center_vertical"
+                        android:textSize="18sp" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="80"
+                        android:orientation="vertical">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="0dp"
+                            android:layout_weight="55"
+                            android:orientation="vertical"></LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="0dp"
+                            android:layout_weight="80"
+                            android:orientation="vertical">
+
+                            <Button
+                                android:id="@+id/btn_location"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:onClick="@{activity::onLocation}"
+                                android:layout_margin="2dp"
+                                android:background="@drawable/btn_location" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="0dp"
+                            android:layout_weight="55"
+                            android:orientation="vertical"></LinearLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="60"
+                        android:orientation="vertical"></LinearLayout>
+
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/text_address"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="47dp"
+                    android:layout_marginTop="6dp"
+                    android:text="@string/text_address"
+                    android:textColor="@color/colorRegisterTextDefault"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/box_phone" />
+
+                <LinearLayout
+                    android:id="@+id/box_phone"
+                    android:layout_width="match_parent"
+                    android:layout_height="54dp"
+                    android:layout_marginEnd="45dp"
+                    android:layout_marginStart="47dp"
+                    android:layout_marginTop="6dp"
+                    android:background="@drawable/box_large_register"
+                    android:orientation="vertical"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/text_phone">
+
+                    <EditText
+                        android:id="@+id/edit_phone"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="@dimen/register_largebox_margin"
+                        android:background="@null"
+                        android:ems="10"
+                        android:hint="@string/edit_hint_phone"
+                        android:inputType="number" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/text_phone"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="47dp"
+                    android:layout_marginTop="37dp"
+                    android:text="@string/text_phone"
+                    android:textColor="@color/colorRegisterTextDefault"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/box_height" />
+
+                <LinearLayout
+                    android:id="@+id/box_height"
+                    android:layout_width="0dp"
+                    android:layout_height="54dp"
+                    android:layout_marginEnd="45dp"
+                    android:layout_marginStart="47dp"
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/text_height">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/box_height"
+                        android:layout_weight="522.5"
+                        android:orientation="vertical">
+
+                        <EditText
+                            android:id="@+id/edit_height"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_marginLeft="@dimen/register_largebox_margin"
+                            android:layout_marginRight="@dimen/register_edit_height_margin"
+                            android:background="@null"
+                            android:ems="10"
+                            android:hint="@string/edit_hint_height"
+                            android:inputType="number" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="70"
+                        android:orientation="vertical"></LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/box_weight"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="522.5"
+                        android:background="@drawable/box_weight_register"
+                        android:orientation="vertical"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@+id/box_height"
+                        app:layout_constraintTop_toBottomOf="@+id/text_height">
+
+                        <EditText
+                            android:id="@+id/edit_weight"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_marginLeft="@dimen/register_largebox_margin"
+                            android:layout_marginRight="@dimen/register_edit_height_margin"
+                            android:background="@null"
+                            android:ems="10"
+                            android:hint="@string/edit_hint_weight"
+                            android:inputType="number" />
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/text_height"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="47dp"
+                    android:layout_marginTop="6dp"
+                    android:text="@string/text_height"
+                    android:textColor="@color/colorRegisterTextDefault"
+                    android:textSize="14sp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/box_birthday" />
+
+                <LinearLayout
+                    android:id="@+id/box_birthday"
+                    android:layout_width="0dp"
+                    android:layout_height="54dp"
+                    android:layout_marginEnd="45dp"
+                    android:layout_marginStart="47dp"
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/text_birthday">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/box_large_register"
+                        android:layout_weight="571"
+                        android:orientation="vertical">
+
+                        <EditText
+                            android:id="@+id/edit_birthday"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_marginLeft="@dimen/register_largebox_margin"
+                            android:background="@null"
+                            android:ems="10"
+                            android:hint="@string/edit_hint_birthday"
+                            android:inputType="number" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="88"
+                        android:orientation="vertical"></LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="216"
+                        android:orientation="vertical">
+
+                        <Button
+                            android:id="@+id/btn_man"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:onClick="@{activity::onMan}"
+                            android:background="@drawable/btn_man_uncheck" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="24"
+                        android:orientation="vertical"></LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="216"
+                        android:orientation="vertical">
+
+                        <Button
+                            android:id="@+id/btn_women"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:onClick="@{activity::onWomen}"
+                            android:background="@drawable/btn_uncheck_women" />
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/text_birthday"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="47dp"
+                    android:layout_marginTop="6dp"
+                    android:text="@string/text_birthday"
+                    android:textColor="@color/colorRegisterTextDefault"
+                    android:textSize="14sp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/box_name" />
+
+                <LinearLayout
+                    android:id="@+id/box_name"
+                    android:layout_width="match_parent"
+                    android:background="@drawable/box_large_register"
+                    android:layout_height="54dp"
+                    android:layout_marginEnd="45dp"
+                    android:layout_marginStart="47dp"
+                    android:layout_marginTop="6dp"
+                    android:orientation="vertical"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/text_name">
+
+                    <EditText
+                        android:id="@+id/edit_name"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="@dimen/register_largebox_margin"
+                        android:background="@null"
+                        android:ems="10"
+                        android:hint="@string/edit_hint_name"
+                        android:inputType="textPersonName" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/text_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="47dp"
+                    android:layout_marginTop="35dp"
+                    android:text="@string/text_name"
+                    android:textColor="@color/colorRegisterTextDefault"
+                    android:textSize="14sp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/box_confirm" />
+
+                <LinearLayout
+                    android:id="@+id/box_confirm"
+                    android:layout_width="match_parent"
+                    android:layout_height="54dp"
+                    android:layout_marginEnd="45dp"
+                    android:layout_marginStart="47dp"
+                    android:layout_marginTop="6dp"
+                    android:background="@drawable/box_large_register"
+                    android:orientation="vertical"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/text_pwconfirm">
+
+                    <EditText
+                        android:id="@+id/edit_pwconfirm"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="@dimen/register_largebox_margin"
+                        android:background="@null"
+                        android:ems="10"
+                        android:hint="@string/edit_hint_pwconfirm"
+                        android:inputType="textPassword" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/text_pwconfirm"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="47dp"
+                    android:layout_marginTop="6dp"
+                    android:text="@string/text_pwconfirm"
+                    android:textColor="@color/colorRegisterTextDefault"
+                    android:textSize="14sp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/box_pw" />
+
+                <LinearLayout
+                    android:id="@+id/box_pw"
+                    android:layout_width="0dp"
+                    android:background="@drawable/box_large_register"
+                    android:layout_height="54dp"
+                    android:layout_marginEnd="45dp"
+                    android:layout_marginStart="47dp"
+                    android:layout_marginTop="6dp"
+                    android:orientation="vertical"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/text_pw">
+
+                    <EditText
+                        android:id="@+id/edit_pw"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="@dimen/register_largebox_margin"
+                        android:background="@null"
+                        android:ems="10"
+                        android:hint="@string/edit_hint_pw"
+                        android:inputType="textPassword" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/text_pw"
+                    android:layout_width="wrap_content"
+                    android:layout_height="0dp"
+                    android:layout_marginStart="47dp"
+                    android:layout_marginTop="6dp"
+                    android:text="@string/text_pw"
+                    android:textColor="@color/colorRegisterTextDefault"
+                    android:textSize="14sp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/box_id" />
+
+                <LinearLayout
+                    android:id="@+id/box_id"
+                    android:layout_width="0dp"
+                    android:layout_height="54dp"
+                    android:layout_marginEnd="45dp"
+                    android:layout_marginStart="47dp"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/box_large_register"
+                    android:orientation="vertical"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/text_id">
+
+                    <EditText
+                        android:id="@+id/edit_id"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="@dimen/register_largebox_margin"
+                        android:background="@null"
+                        android:ems="10"
+                        android:hint="example@gmail.com"
+                        android:inputType="textPersonName" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/text_id"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="47dp"
+                    android:layout_marginTop="54dp"
+                    android:text="@string/text_id"
+                    android:textColor="@color/colorRegisterTextDefault"
+                    android:textSize="14sp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/btn_back_register" />
+
+                <Button
+                    android:id="@+id/btn_back_register"
+                    android:layout_width="28dp"
+                    android:layout_height="31dp"
+                    android:layout_marginEnd="115dp"
+                    android:layout_marginStart="19dp"
+                    android:layout_marginTop="30dp"
+                    android:onClick="@{activity::onRegister}"
+                    android:background="@drawable/ic_menu_back"
+                    app:layout_constraintEnd_toStartOf="@+id/image_logo_register"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <ImageView
+                    android:id="@+id/image_logo_register"
+                    android:layout_width="87dp"
+                    android:layout_height="31dp"
+                    android:layout_marginTop="30dp"
+                    android:background="@drawable/ic_menu_register_logo"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintRight_toRightOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+            </android.support.constraint.ConstraintLayout>
+        </LinearLayout>
+    </ScrollView>
+</android.support.constraint.ConstraintLayout>
+
+</layout>

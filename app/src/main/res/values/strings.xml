@@ -1,0 +1,120 @@
+<resources>
+    <string name="app_name">D2band</string>
+
+
+    <!-- 로그인 -->
+        <!-- 로그인 텍스트 -->
+        <string name="text_autostate">로그인 상태 유지</string>
+        <string name="text_login_find_id">아이디 찾기</string>
+        <string name="text_login_find_pw">비밀번호 찾기</string>
+        <string name="text_login_register">회원가입</string>
+
+        <!-- 로그인 Edit 텍스트 -->
+        <string name="edit_login_hint_id">아이디</string>
+        <string name="edit_login_hint_pw">비밀번호</string>
+    <!-- 회원가입 -->
+        <!-- 회원가입 텍스트 -->
+        <string name="text_id">아이디</string>
+        <string name="text_pw">비밀번호</string>
+        <string name="text_pwconfirm">비밀번호 확인</string>
+        <string name="text_name">이름</string>
+        <string name="text_birthday">생년월일</string>
+        <string name="text_height">신장</string>
+        <string name="text_phone">전화번호</string>
+        <string name="text_address">지역</string>
+
+    <!-- 회원가입 Edit 텍스트 -->
+
+        <string name="edit_hint_id">example@gmail.com</string>
+        <string name="edit_hint_pw">******</string>
+        <string name="edit_hint_pwconfirm">******</string>
+        <string name="edit_hint_name">김예시</string>
+        <string name="edit_hint_birthday">1993/00/00</string>
+        <string name="edit_hint_height">165</string>
+        <string name="edit_hint_weight">45</string>
+        <string name="edit_hint_phone">000-0000-0000</string>
+
+    <!-- 아이디 비밀번호 찾기 -->
+        <!-- 아이디 비밀번호 찾기 텍스트 -->
+        <string name="text_find_logo">아이디/비밀번호 찾기</string>
+        <string name="text_find_id">아이디 찾기</string>
+        <string name="text_find_pw">비밀번호 찾기</string>
+        <string name="text_find_name">이름</string>
+        <string name="text_find_pwconfirm">비밀번호</string>
+        <string name="text_find_phone">전화번호</string>
+        <string name="text_find_email">이메일(가입 아이디)</string>
+
+        <!-- 아이디 비밀번호 찾기 Edit 텍스트 -->
+    <string name="edit_find_hint_name">이름을 적어주세요</string>
+    <string name="edit_find_hint_pwconfirm">비밀번호를 적어주세요</string>
+        <string name="edit_find_hint_phone">휴대폰 번호를 적어주세요</string>
+        <string name="edit_find_hint_email">이메일 주소를 적어주세요</string>
+
+    <!-- 오늘 활동 -->
+        <!-- 오늘 활동 텍스트 -->
+        <string name="text_todayStep">TODAY STEP</string>
+        <string name="text_dailystep">STEP</string>
+        <string name="text_dailykcal">Kcal</string>
+        <string name="text_dailykm">Km</string>
+        <string name="text_daliygoal">Daily goal</string>
+        <string name="text_activity_tabitem0">TODAY</string>
+        <string name="text_activity_tabitem1">WEEK</string>
+        <string name="text_activity_tabitem2">MONTH</string>
+    <!-- 심박수 -->
+        <!-- 심박수 텍스트 -->
+        <string name="text_heart_title">심박수</string>
+        <string name="text_heart_avg">평균 심박수</string>
+        <string name="text_heart_max">최대 심박수</string>
+        <string name="text_heart_min">최소 심박수</string>
+        <string name="text_heart_state">현재 상태</string>
+        <string name="text_heart_error">오차</string>
+
+    <!-- 메시지 -->
+        <!-- 메시지 텍스트 -->
+        <string name="text_message_title">메시지</string>
+        <string name="text_message_receiver">수신자 설정</string>
+        <string name="text_message_special">특수문자</string>
+        <string name="text_message_119">119</string>
+        <string name="text_message_112">112</string>
+        <string name="text_message_context">내용</string>
+
+        <!-- 메시지 Edittext -->
+        <string name="edit_message_context">저는 현재 위급상황입니다.</string>
+
+    <!-- 프로필 -->
+        <!-- 프로필 텍스트 -->
+    <string name="text_profile_title">마이페이지</string>
+    <string name="text_profile_info">프로필 정보</string>
+    <string name="text_profile_passwrod">비밀번호 변경</string>
+    <string name="text_profile_message">커플 초대장</string>
+
+    <!-- 프로필 Edittext -->
+
+
+    <!-- 디바이스 선택 -->
+        <!-- 디바이스 텍스트 -->
+        <string name="text_device">디바이스</string>
+
+    <!-- 커플  -->
+        <!-- 커플 텍스트 -->
+    <string name="text_couple_title">커플디데이</string>
+
+    <!-- SOS  -->
+        <!-- SOS 텍스트 -->
+    <string name="text_sos_title">SOS</string>
+
+
+    <!-- dialog device -->
+    <string name="select_device">Select a device</string>
+    <string name="scanning">Scanning for devices...</string>
+    <string name="paired">paired</string>
+    <string name="ble_not_supported">Bluetooth Low Energy not supported</string>
+    <string name="scan">Scan</string>
+
+    <string name="ok">OK</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="cancel">Cancel</string>
+
+
+</resources>
