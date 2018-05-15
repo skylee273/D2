@@ -11,6 +11,7 @@ public class User {
     private static String height;
     private static String weight;
     private static String phone;
+    private static String address;
 
     public String getId() {
         return id;
@@ -76,6 +77,5 @@ public class User {
         this.address = address;
     }
 
-    private String address;
 
 }

@@ -3,6 +3,9 @@
 
 
     <dimen name="register_largebox_margin">23dp</dimen>
-    <dimen name="register_edit_height_margin">45dp</dimen>
+    <dimen name="register_edit_height_margin">45dp</dimen>\
+
+    <!-- 프로필 정보 텍스트 사이즈 -->
+    <dimen name="profile_info_text_size">18sp</dimen>
 
 </resources>

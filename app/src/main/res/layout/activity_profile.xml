@@ -115,6 +115,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="31dp"
                     android:background="@color/colorProfileBox"
+                    android:onClick="@{ProfileActivity::OnInfo}"
                     android:gravity="center_vertical"
                     android:paddingLeft="34dp"
                     android:text="@string/text_profile_info"

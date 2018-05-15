@@ -21,6 +21,8 @@ import android.util.Log;
 import java.util.List;
 import java.util.UUID;
 
+import btcore.co.kr.d2band.bus.BusEventHeart;
+import btcore.co.kr.d2band.bus.BusProviderHeart;
 import btcore.co.kr.d2band.util.ParserUtils;
 
 /**
@@ -36,6 +38,13 @@ public class BluetoothLeService extends Service {
     private String mBluetoothDeviceAddress = null;
     private int mConnectionState = STATE_DISCONNECTED;
 
+    private final static String HEART_RATE = "AF-04-01";
+    private final static String STPES = "AF-04-02";
+    private final static String BATTERY = "AF-04-03";
+    private final static String CALORIE = "AF-04-04";
+    private final static String EMERGENCY = "AF-04-05";
+
+    private String DATA[];
     private static final int STATE_DISCONNECTED = 0;
     private static final int STATE_CONNECTING = 1;
     private static final int STATE_CONNECTED = 2;
@@ -127,14 +136,31 @@ public class BluetoothLeService extends Service {
 
             if (notifications) {
                 Log.d("Noti received from ", characteristic.getUuid() + ", value: " + data);
+                DATA = data.split("-");
+                if(data.contains(HEART_RATE)){
+                    String heart = DATA[4] + DATA[5];
+                    BusProviderHeart.getInstance().post(new BusEventHeart(Integer.parseInt(heart)));
+                }
+                if(data.contains(STPES)){
+                    String steps = DATA[4] + DATA[5];
+                    BusProviderHeart.getInstance().post(new BusEventHeart(Integer.parseInt(steps)));
+                }
+                if(data.contains(BATTERY)){
+                    String battery = DATA[4] + DATA[5];
+                    BusProviderHeart.getInstance().post(new BusEventHeart(Integer.parseInt(battery)));
+                }
+                if(data.contains(CALORIE)){
+                    String calorie = DATA[4] + DATA[5];
+                    BusProviderHeart.getInstance().post(new BusEventHeart(Integer.parseInt(calorie)));
+                }
+                if(data.contains(EMERGENCY)){
+
+                }
 
             }
+
             onCharacteristicNotified(gatt, characteristic);
-
-
             broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
-
-
         }
 
         protected void onCharacteristicNotified(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic) {

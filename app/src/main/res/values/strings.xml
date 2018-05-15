@@ -88,6 +88,16 @@
     <string name="text_profile_passwrod">비밀번호 변경</string>
     <string name="text_profile_message">커플 초대장</string>
 
+    <!-- 프로필 정보 -->
+        <!-- 프로필 텍스트 -->
+    <string name="text_info_profile_title">프로필 정보</string>
+    <string name="text_info_profile_name">이름</string>
+    <string name="text_info_profile_birthday">생년월일</string>
+    <string name="text_info_profile_gender">성별</string>
+    <string name="text_info_profile_height">키</string>
+    <string name="text_info_profile_weight">몸무게</string>
+    <string name="text_info_prifile_phone">휴대폰</string>
+    <string name="text_info_profile_addr">주소</string>
     <!-- 프로필 Edittext -->
 
 

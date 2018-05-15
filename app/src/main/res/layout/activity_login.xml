@@ -92,12 +92,12 @@
 
     <Button
         android:id="@+id/btn_autologin"
-        android:layout_width="17dp"
-        android:layout_height="17dp"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
         android:layout_marginStart="27dp"
-        android:layout_marginTop="13dp"
-        android:onClick="@{Login::onAutoLogin}"
+        android:layout_marginTop="11dp"
         android:background="@drawable/icon_check"
+        android:onClick="@{Login::onAutoLogin}"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/linearLayout2" />
 

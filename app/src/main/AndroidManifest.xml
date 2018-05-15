@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="btcore.co.kr.d2band">
 
     <!-- 전화가 오는 상황을 감지하기 위한 권한 추가 -->
@@ -23,7 +24,8 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <permission android:protectionLevel="signature"
         android:name="android.permission.WRITE_SETTINGS"/>
-    <uses-permission android:name="android.permission.WRITE_SETTINGS"></uses-permission>
+    <uses-permission android:name="android.permission.WRITE_SETTINGS"
+        tools:ignore="ProtectedPermissions"></uses-permission>
     <permission android:protectionLevel="signature"
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
@@ -62,6 +64,7 @@
         <activity android:name=".view.couple.CoupleActivity"></activity>
         <activity android:name=".view.message.MessageAtivity"></activity>
         <activity android:name=".view.profile.ProfileAcitivty"></activity>
+        <activity android:name=".view.profile.ProfileInfoActivity"/>
 
         <!-- 서비스 영역 -->
         <service android:enabled="true" android:name=".service.BluetoothLeService" />

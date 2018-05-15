@@ -143,10 +143,11 @@ public class LoginModel {
                 user.setId(User[0]);
                 user.setName(User[1]);
                 user.setBirthday(User[2]);
-                user.setHeight(User[3]);
-                user.setWeight(User[4]);
-                user.setPhone(User[5]);
-                user.setAddress(User[6]);
+                user.setGender(User[3]);
+                user.setHeight(User[4]);
+                user.setWeight(User[5]);
+                user.setPhone(User[6]);
+                user.setAddress(User[7]);
                 UserApi.onSuccess("유저 정보 저장 완료");
             }catch (ArrayIndexOutOfBoundsException e){
                 UserApi.onFail("유저 정보 저장 실패");

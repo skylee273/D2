@@ -35,14 +35,18 @@ public class ProfileAcitivty  extends AppCompatActivity implements Profile.View{
         mProfileBinding = DataBindingUtil.setContentView(this, R.layout.activity_profile);
         mProfileBinding.setProfileActivity(this);
 
-        pref = getSharedPreferences("pref", Activity.MODE_PRIVATE);
-        editor = pref.edit();
+
 
         presenter = new ProfilePresenter(this);
         presenter.getUser();
     }
 
-
+    @Override
+    public void onBackPressed(){
+        Intent intent = new Intent(getApplicationContext(), StepActivity.class);
+        startActivity(intent);
+        finish();
+    }
     @OnClick(R.id.btn_back)
     public void OnBack(View view){
         Intent intent = new Intent(getApplicationContext(), StepActivity.class);
@@ -51,16 +55,22 @@ public class ProfileAcitivty  extends AppCompatActivity implements Profile.View{
     }
     @OnClick(R.id.btn_logout)
     public void OnLogout(View view){
-
+        pref = getSharedPreferences("pref", Activity.MODE_PRIVATE);
+        editor = pref.edit();
         editor.remove("AUTO_LOGIN");
         editor.commit();
         presenter.nextActivity();
+    }
+    @OnClick(R.id.btn_info)
+    public void OnInfo(View view){
+        Intent intent = new Intent(getApplicationContext(), ProfileInfoActivity.class);
+        startActivity(intent);
+        finish();
     }
 
     @Override
     public void showErrorMessage(String msg) {
         Snackbar.make(getWindow().getDecorView().getRootView(), msg, Snackbar.LENGTH_LONG).show();
-
     }
 
     @Override
@@ -74,6 +84,5 @@ public class ProfileAcitivty  extends AppCompatActivity implements Profile.View{
     public void showUserInfo(String name, String id) {
         mProfileBinding.textName.setText(name);
         mProfileBinding.textEmail.setText(id);
-        //mProfileBinding.textView4
     }
 }
