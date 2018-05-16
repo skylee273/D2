@@ -61,8 +61,8 @@ public class ProfileInfoActivity extends AppCompatActivity implements Info.View{
         mInfoBinding.textInfoName.setText(name);
         mInfoBinding.textInfoBirthday.setText(birthday);
         mInfoBinding.textInfoGender.setText(gender);
-        mInfoBinding.textInfoHeight.setText(height);
-        mInfoBinding.textInfoWeight.setText(weight);
+        mInfoBinding.textInfoHeight.setText(height + " cm");
+        mInfoBinding.textInfoWeight.setText(weight + " kg");
         //mInfoBinding.textInfoPhone.setText(name);
         mInfoBinding.textInfoAddr.setText(addr);
 

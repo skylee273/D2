@@ -16,4 +16,6 @@ public class mySql {
     public static String URL_FIND_PW = URL + "DioBand/User/PwSelect.jsp";
 
     public static String URL_SET_USER = URL + "DioBand/User/UserSelect.jsp";
+
+    public static String URL_UPDATE_PASSWORD = URL + "DioBand/User/PasswordUpdate.jsp";
 }

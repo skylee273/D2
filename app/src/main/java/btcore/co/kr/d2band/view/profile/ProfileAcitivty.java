@@ -13,6 +13,7 @@ import btcore.co.kr.d2band.R;
 import btcore.co.kr.d2band.databinding.ActivityProfileBinding;
 import btcore.co.kr.d2band.user.User;
 import btcore.co.kr.d2band.view.login.LoginActivity;
+import btcore.co.kr.d2band.view.profile.dialog.PasswordChangeActivity;
 import btcore.co.kr.d2band.view.profile.presenter.ProfilePresenter;
 import btcore.co.kr.d2band.view.step.StepActivity;
 import butterknife.OnClick;
@@ -67,7 +68,11 @@ public class ProfileAcitivty  extends AppCompatActivity implements Profile.View{
         startActivity(intent);
         finish();
     }
-
+    @OnClick(R.id.btn_password)
+    public void OnPasswordChange(View view){
+        PasswordChangeActivity Dialog = new PasswordChangeActivity(this);
+        Dialog.show();
+    }
     @Override
     public void showErrorMessage(String msg) {
         Snackbar.make(getWindow().getDecorView().getRootView(), msg, Snackbar.LENGTH_LONG).show();

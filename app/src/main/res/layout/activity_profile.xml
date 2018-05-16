@@ -93,6 +93,7 @@
                     android:layout_height="wrap_content"
                     android:background="@color/colorProfileBox"
                     android:gravity="center_vertical"
+                    android:onClick="@{ProfileActivity::OnPasswordChange}"
                     android:paddingLeft="34dp"
                     android:text="@string/text_profile_passwrod"
                     app:layout_constraintEnd_toEndOf="parent"
