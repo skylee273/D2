@@ -11,6 +11,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 
+import com.bumptech.glide.Glide;
+
 import btcore.co.kr.d2band.view.main.MainActivity;
 import btcore.co.kr.d2band.R;
 import btcore.co.kr.d2band.databinding.ActivityLoginBinding;
@@ -40,6 +42,7 @@ public class LoginActivity extends AppCompatActivity implements Login.View {
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_login);
         mBinding.setLogin(this);
 
+        Glide.with(this).load(R.drawable.logo).into(mBinding.imageLogoRegister);
 
         pref = getSharedPreferences("pref", Activity.MODE_PRIVATE);
         editor = pref.edit();
@@ -49,6 +52,7 @@ public class LoginActivity extends AppCompatActivity implements Login.View {
 
         if(isAuto) AutoLogin();
         else { mBinding.btnAutologin.setBackgroundResource(R.drawable.icon_uncheck); }
+
 
     }
 

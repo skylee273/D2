@@ -226,6 +226,7 @@
 
             <Button
                 android:id="@+id/btn_setting"
+                android:onClick="@{ProfileActivity::OnSetting}"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:background="@drawable/toolbar_setting" />

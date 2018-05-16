@@ -12,6 +12,7 @@ import btcore.co.kr.d2band.R;
 import btcore.co.kr.d2band.databinding.ActivityProfileinfoBinding;
 import btcore.co.kr.d2band.user.User;
 import btcore.co.kr.d2band.view.profile.presenter.InfoPresenter;
+import btcore.co.kr.d2band.view.setting.SettingActivity;
 import btcore.co.kr.d2band.view.step.StepActivity;
 import butterknife.OnClick;
 
@@ -31,6 +32,8 @@ public class ProfileInfoActivity extends AppCompatActivity implements Info.View{
         presenter = new InfoPresenter(this);
         presenter.setUser(user.getName(), user.getBirthday(), user.getGender(), user.getHeight(), user.getWeight(), user.getPhone(), user.getAddress());
     }
+
+
 
     @OnClick(R.id.btn_back)
     public void OnBack(View view){

@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <variable
+            name="SettingActivity"
+            type="btcore.co.kr.d2band.view.setting.SettingActivity" />
+    </data>
+
+
+    <android.support.constraint.ConstraintLayout
+        android:layout_width="match_parent"
+        android:background="#ffffff"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:id="@+id/box_push"
+            android:layout_width="0dp"
+            android:layout_height="65dp"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/box_kakao">
+
+            <ImageView
+                android:id="@+id/image_push"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="4"
+                android:padding="16dp"
+                app:srcCompat="@drawable/ic_push" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/box_setting"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/text_push_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/text_setting_push_title"
+                    android:textColor="@android:color/black"
+                    android:textSize="@dimen/setting_title_size" />
+
+                <TextView
+                    android:id="@+id/text_push_sub"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/text_setting_push_sub" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/box_kakao"
+            android:layout_width="0dp"
+            android:layout_height="65dp"
+            android:orientation="horizontal"
+            android:onClick="@{SettingActivity::OnKakao}"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/box_gps">
+
+            <ImageView
+                android:id="@+id/image_kakao"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="4"
+                android:padding="20dp"
+                app:srcCompat="@drawable/ic_kakao" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/box_setting"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/text_kakao_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/text_setting_kakao_title"
+                    android:textColor="@android:color/black"
+                    android:textSize="@dimen/setting_title_size" />
+
+                <TextView
+                    android:id="@+id/text_kakao_sub"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/text_setting_kakao_sub" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/box_gps"
+            android:layout_width="0dp"
+            android:layout_height="65dp"
+            android:orientation="horizontal"
+            android:onClick="@{SettingActivity::OnGps}"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/box_lock">
+
+            <ImageView
+                android:id="@+id/image_gps"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="4"
+                android:padding="16dp"
+                app:srcCompat="@drawable/ic_location" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/box_setting"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/text_gps_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/text_setting_gps_title"
+                    android:textColor="@android:color/black"
+                    android:textSize="@dimen/setting_title_size" />
+
+                <TextView
+                    android:id="@+id/text_gps_sub"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/text_setting_gps_sub" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/box_lock"
+            android:layout_width="0dp"
+            android:layout_height="65dp"
+            android:onClick="@{SettingActivity::OnLock}"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/box_version">
+
+            <ImageView
+                android:id="@+id/image_smartlock"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="4"
+                android:padding="16dp"
+                app:srcCompat="@drawable/ic_lock" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/box_setting"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/text_smartlock_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/text_setting_smartlock_title"
+                    android:textColor="@android:color/black"
+                    android:textSize="@dimen/setting_title_size" />
+
+                <TextView
+                    android:id="@+id/text_smartlock_sub"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="자동으로 잠금이 해제됩니다." />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/box_version"
+            android:layout_width="0dp"
+            android:layout_height="65dp"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/linearLayout3">
+
+            <ImageView
+                android:id="@+id/imageView5"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="4"
+                android:padding="16dp"
+                app:srcCompat="@drawable/ic_version" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/box_setting"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/text_version_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/text_setting_version_title"
+                    android:textColor="@android:color/black"
+                    android:textSize="@dimen/setting_title_size" />
+
+                <TextView
+                    android:id="@+id/text_version_sub"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/text_setting_version_sub" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/linearLayout3"
+            android:layout_width="match_parent"
+            android:layout_height="67dp"
+            android:background="@color/colorToolBar"
+            android:orientation="horizontal"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="70"
+                android:orientation="vertical"></LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="100"
+                android:orientation="vertical">
+
+                <Button
+                    android:id="@+id/btn_back"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/toolbar_back"
+                    android:onClick="@{SettingActivity::OnBack}" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="100"
+                android:orientation="vertical"></LinearLayout>
+
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="900"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/text_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical|center_horizontal"
+                    android:text="@string/text_setting_title"
+                    android:textColor="@color/colorCoupleLogoText"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="100"
+                android:orientation="vertical"></LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="170"
+                android:orientation="vertical">
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+
+    </android.support.constraint.ConstraintLayout>
+</layout>

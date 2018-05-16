@@ -15,6 +15,7 @@ import btcore.co.kr.d2band.user.User;
 import btcore.co.kr.d2band.view.login.LoginActivity;
 import btcore.co.kr.d2band.view.profile.dialog.PasswordChangeActivity;
 import btcore.co.kr.d2band.view.profile.presenter.ProfilePresenter;
+import btcore.co.kr.d2band.view.setting.SettingActivity;
 import btcore.co.kr.d2band.view.step.StepActivity;
 import butterknife.OnClick;
 
@@ -48,6 +49,13 @@ public class ProfileAcitivty  extends AppCompatActivity implements Profile.View{
         startActivity(intent);
         finish();
     }
+    @OnClick(R.id.btn_setting)
+    public void OnSetting(View view){
+        Intent intent = new Intent(getApplicationContext(), SettingActivity.class);
+        startActivity(intent);
+        finish();
+    }
+
     @OnClick(R.id.btn_back)
     public void OnBack(View view){
         Intent intent = new Intent(getApplicationContext(), StepActivity.class);

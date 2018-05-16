@@ -3,6 +3,7 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#0A5AA3</color>
+    <color name="colorWhite">#ffffff</color>
 
     <!-- 회원 가입 컬러-->
     <color name="colorRegisterTextDefault">#000000</color>
@@ -38,6 +39,9 @@
     <!-- 프로필 컬러 -->
     <color name="colorProfileName">#000000</color>
     <color name="colorProfileBox">#f9fafa</color>
+
+    <!-- 스마트락 컬러 -->
+    <color name="colorSmartLockText">#0c65b4</color>
 
 
 </resources>

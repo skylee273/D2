@@ -8,4 +8,7 @@
     <!-- 프로필 정보 텍스트 사이즈 -->
     <dimen name="profile_info_text_size">18sp</dimen>
 
+   <!-- 설정 텍스트 사이즈 -->
+    <dimen name="setting_title_size">18sp</dimen>
+
 </resources>
