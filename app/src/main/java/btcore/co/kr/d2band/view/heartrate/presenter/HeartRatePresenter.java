@@ -23,17 +23,19 @@ public class HeartRatePresenter implements HeartRate.Presenter {
         this.heartRateModel = new HeartRateModel();
     }
 
-
     @Override
-    public void initBleData(String[] data) {
-        heartRateModel.setHeartRateData(data);
-        if(heartRateModel.checkHeartData(data)){
-            heartRateView.showHeartData(heartRateModel.makeHeartData());
+    public void UpdateHeart(String heart) {
+        if(heartRateModel.checkHeartData(heart)){
+            heartRateModel.setHeart(new HeartRateModel.HeartApiListener() {
+                @Override
+                public void onSuccess() {
+                    heartRateView.showHeartData(heartRateModel.getHeart(),heartRateModel.getAvgHeart(), heartRateModel.getMaxHeart(), heartRateModel.getMinHeart(), heartRateModel.getState(), heartRateModel.getError());
+                }
+                @Override
+                public void onFail() {
 
-        }else{
-            heartRateView.showErrorMessage("데이터 오류");
+                }
+            });
         }
     }
-
-
 }

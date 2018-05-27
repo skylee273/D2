@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
@@ -38,9 +39,12 @@ import btcore.co.kr.d2band.view.find.fragment.FragmentPw;
 import btcore.co.kr.d2band.view.main.MainActivity;
 import btcore.co.kr.d2band.R;
 import btcore.co.kr.d2band.view.profile.ProfileAcitivty;
+import btcore.co.kr.d2band.view.step.dialog.StepDialog;
 import btcore.co.kr.d2band.view.step.fragment.StepMonthFragment;
 import btcore.co.kr.d2band.view.step.fragment.StepTodayFragment;
 import btcore.co.kr.d2band.view.step.fragment.StepWeekFragment;
+import btcore.co.kr.d2band.view.step.presenter.Step;
+import btcore.co.kr.d2band.view.step.presenter.StepActivityPresenter;
 import butterknife.OnClick;
 
 import static btcore.co.kr.d2band.service.BluetoothLeService.STATE;
@@ -49,7 +53,7 @@ import static btcore.co.kr.d2band.service.BluetoothLeService.STATE;
  * Created by leehaneul on 2018-01-17.
  */
 
-public class StepActivity extends AppCompatActivity {
+public class StepActivity extends AppCompatActivity implements Step.view {
 
     private final String TAG = getClass().getSimpleName();
     private static final int UART_PROFILE_DISCONNECTED = 21;
@@ -66,8 +70,10 @@ public class StepActivity extends AppCompatActivity {
     FragmentPagerAdapter mPagerAdapter = null;
     public BluetoothLeService mService = null;
     BleProtocol bleProtocol;
+    Step.Presenter presenter;
+    StepDialog stepDialog;
     @Override
-    public void onCreate(Bundle savedInstanceState){
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         mStepBinding = DataBindingUtil.setContentView(this, R.layout.activity_step);
@@ -79,18 +85,31 @@ public class StepActivity extends AppCompatActivity {
         service_init();
 
         // 블루투스 데이터 생성
-         bleProtocol = new BleProtocol();
+        bleProtocol = new BleProtocol();
 
+        // 프레젠터 생성
+        presenter = new StepActivityPresenter(this);
     }
 
+    @OnClick(R.id.text_goal)
+    public void OnGoal(View view){
+        stepDialog =  new StepDialog(this);
+        stepDialog.show();
+        stepDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialog) {
+                presenter.UpdateGoal(stepDialog.getmGoal());
+            }
+        });
+    }
     @OnClick(R.id.btn_profile)
-    public void OnProfile(View view){
+    public void OnProfile(View view) {
         Intent intent = new Intent(getApplicationContext(), ProfileAcitivty.class);
         startActivity(intent);
         finish();
     }
 
-    private void initView(){
+    private void initView() {
         mPagerAdapter = new pagerAdapter(getSupportFragmentManager());
         mStepBinding.viewPagerStep.setAdapter(new pagerAdapter(getSupportFragmentManager()));
         mStepBinding.viewPagerStep.setCurrentItem(0);
@@ -104,15 +123,33 @@ public class StepActivity extends AppCompatActivity {
 
             @Override
             public void onTabUnselected(TabLayout.Tab tab) {
-
             }
 
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
-
             }
         });
+        mStepBinding.progressBarStep.setMax(8000);
+        mStepBinding.progressBarStep.setProgress(0);
+    }
 
+    @Override
+    public void showTodayData(ArrayList arrayList) {
+        mStepBinding.textStep.setText(arrayList.get(0).toString());
+        mStepBinding.textKcal.setText(arrayList.get(1).toString());
+        mStepBinding.textKm.setText(arrayList.get(2).toString());
+        mStepBinding.progressBarStep.setProgress(Integer.parseInt(arrayList.get(0).toString()));
+    }
+
+    @Override
+    public void showErrorMessage(String message) {
+        Log.d(TAG, message);
+    }
+
+    @Override
+    public void showGoal(String goal) {
+        mStepBinding.textGoal.setText(goal);
+        mStepBinding.progressBarStep.setMax(Integer.parseInt(goal));
     }
 
     public class pagerAdapter extends FragmentPagerAdapter {
@@ -184,20 +221,16 @@ public class StepActivity extends AppCompatActivity {
     protected void onRestart() {
         super.onRestart();
         android.util.Log.d(TAG, "onRestart");
-        SendCommand(bleProtocol.Requset());
-
     }
 
     @Override
     public void onResume() {
         super.onResume();
-
         if (!mBtAdapter.isEnabled()) {
             android.util.Log.i(TAG, "onResume - BT not enabled yet");
             Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
         }
-
     }
 
     @Override
@@ -293,7 +326,6 @@ public class StepActivity extends AppCompatActivity {
             }
             //*********************//
             if (action.equals(BluetoothLeService.ACTION_DATA_AVAILABLE)) {
-
                 final byte[] txValue = intent.getByteArrayExtra(BluetoothLeService.EXTRA_DATA);
                 runOnUiThread(new Runnable() {
                     public void run() {
@@ -307,7 +339,20 @@ public class StepActivity extends AppCompatActivity {
                     }
                 });
             }
-            //*********************//
+            if (action.equals(BluetoothLeService.D2_BLUETOOTH_DATA)) {
+                final String Step = intent.getStringExtra(BluetoothLeService.EXTRA_DATA);
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        try {
+                            String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
+                            presenter.UpdateStep(Step);
+                        } catch (Exception e) {
+                            android.util.Log.e(TAG, e.toString());
+                        }
+                    }
+                });
+            }
+
             if (action.equals(BluetoothLeService.DEVICE_DOES_NOT_SUPPORT_UART)) {
                 connection = false;
                 mService.disconnect();

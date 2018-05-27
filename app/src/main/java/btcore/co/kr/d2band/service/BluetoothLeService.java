@@ -18,11 +18,12 @@ import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-import btcore.co.kr.d2band.bus.BusEventHeart;
-import btcore.co.kr.d2band.bus.BusProviderHeart;
+import btcore.co.kr.d2band.database.SEVER;
 import btcore.co.kr.d2band.util.ParserUtils;
 
 /**
@@ -42,7 +43,7 @@ public class BluetoothLeService extends Service {
     private final static String STPES = "AF-04-02";
     private final static String BATTERY = "AF-04-03";
     private final static String CALORIE = "AF-04-04";
-    private final static String EMERGENCY = "AF-04-05";
+    private final static String EMERGENCY = "AF-04-05-99-99-FF";
 
     private String DATA[];
     private static final int STATE_DISCONNECTED = 0;
@@ -61,6 +62,8 @@ public class BluetoothLeService extends Service {
             "btcore.co.kr.d2band.service.EXTRA_DATA";
     public final static String DEVICE_DOES_NOT_SUPPORT_UART =
             "btcore.co.kr.d2band.service.DEVICE_DOES_NOT_SUPPORT_UART";
+    public final static String D2_BLUETOOTH_DATA =
+            "btcore.co.kr.d2band.service.D2_BLUETOOTH_DATA";
 
     public static final UUID TX_POWER_UUID = UUID.fromString("00001804-0000-1000-8000-00805f9b34fb");
     public static final UUID TX_POWER_LEVEL_UUID = UUID.fromString("00002a07-0000-1000-8000-00805f9b34fb");
@@ -72,6 +75,8 @@ public class BluetoothLeService extends Service {
     public static final UUID TX_CHAR_UUID = UUID.fromString("6e400003-b5a3-f393-e0a9-e50e24dcca9e");
 
     public static int STATE = 0;
+    SimpleDateFormat mFormat = new SimpleDateFormat("yyyy-MM-dd-hh-mm-ss");
+    SEVER sever;
 
     // GATT 이벤트에 대한 콜벡 메소드를 구현합니다.
     private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
@@ -135,45 +140,57 @@ public class BluetoothLeService extends Service {
             final BluetoothGattDescriptor cccd = characteristic.getDescriptor(CCCD);
             final boolean notifications = cccd == null || cccd.getValue() == null || cccd.getValue().length != 2 || cccd.getValue()[0] == 0x01;
 
-            if (notifications) {
-                Log.d("Noti received from ", characteristic.getUuid() + ", value: " + data);
-                DATA = data.split("-");
-                if(data.contains(HEART_RATE)){
-                    String heart = DATA[4] + DATA[5];
-                    BusProviderHeart.getInstance().post(new BusEventHeart(Integer.parseInt(heart)));
+            try {
+                if (notifications) {
+                    Log.d("Noti received from ", characteristic.getUuid() + ", value: " + data);
+                    DATA = data.split("-");
+                    if (data.contains(HEART_RATE)) {
+                        String heart = DATA[4] + DATA[5];
+                        heart = String.valueOf(Integer.parseInt(heart, 16));
+                        sever.INSERT_HEART(getTime(), heart);
+                        broadcastUpdate(D2_BLUETOOTH_DATA, heart);
+                    }
+                    if (data.contains(STPES)) {
+                        String steps = DATA[4] + DATA[5];
+                        steps = String.valueOf(Integer.parseInt(steps, 16));
+                        sever.INSERT_STEP(getTime(), steps);
+                        broadcastUpdate(D2_BLUETOOTH_DATA, steps);
+                    }
+                    if (data.contains(BATTERY)) {
+                        String battery = DATA[4] + DATA[5];
+                        broadcastUpdate(D2_BLUETOOTH_DATA, battery);
+                    }
+                    if (data.contains(CALORIE)) {
+                        // String calorie = DATA[4] + DATA[5];
+                        // broadcastUpdate(D2_BLUETOOTH_DATA, calorie);
+                    }
+                    if (data.contains(EMERGENCY)) {
+                        String emergency = DATA[4] + DATA[5];
+                        emergency = String.valueOf(Integer.parseInt(emergency, 16));
+                        broadcastUpdate(D2_BLUETOOTH_DATA, emergency);
+                    }
                 }
-                if(data.contains(STPES)){
-                    String steps = DATA[4] + DATA[5];
-                    BusProviderHeart.getInstance().post(new BusEventHeart(Integer.parseInt(steps)));
-                }
-                if(data.contains(BATTERY)){
-                    String battery = DATA[4] + DATA[5];
-                    BusProviderHeart.getInstance().post(new BusEventHeart(Integer.parseInt(battery)));
-                }
-                if(data.contains(CALORIE)){
-                    String calorie = DATA[4] + DATA[5];
-                    BusProviderHeart.getInstance().post(new BusEventHeart(Integer.parseInt(calorie)));
-                }
-                if(data.contains(EMERGENCY)){
-
-                }
-
+            } catch (ArrayIndexOutOfBoundsException e) {
+                Log.d(TAG, e.toString());
             }
-
             onCharacteristicNotified(gatt, characteristic);
             broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
         }
 
         protected void onCharacteristicNotified(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic) {
-            // do nothing
         }
-
-
     };
 
     private void broadcastUpdate(final String action) {
         final Intent intent = new Intent(action);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+    }
+
+    private void broadcastUpdate(final String action, String data) {
+        final Intent intent = new Intent(action);
+        intent.putExtra(EXTRA_DATA, data);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+
     }
 
     private void broadcastUpdate(final String action,
@@ -197,11 +214,13 @@ public class BluetoothLeService extends Service {
     public IBinder onBind(Intent intent) {
         return mBinder;
     }
+
     @Override
     public boolean onUnbind(Intent intent) {
         close();
         return super.onUnbind(intent);
     }
+
     private final IBinder mBinder = new LocalBinder();
 
     public boolean initialize() {
@@ -221,6 +240,7 @@ public class BluetoothLeService extends Service {
 
         return true;
     }
+
     public boolean connect(final String address) {
         if (mBluetoothAdapter == null || address == null) {
             Log.w(TAG, "BluetoothAdapter not initialized or unspecified address.");
@@ -347,6 +367,12 @@ public class BluetoothLeService extends Service {
         return mBluetoothGatt.getServices();
     }
 
-
+    private String getTime() {
+        long mNow;
+        Date mDate;
+        mNow = System.currentTimeMillis();
+        mDate = new Date(mNow);
+        return mFormat.format(mDate);
+    }
 
 }

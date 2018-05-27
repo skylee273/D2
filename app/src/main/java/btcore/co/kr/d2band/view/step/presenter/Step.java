@@ -11,10 +11,12 @@ public interface Step {
     interface view{
         void showTodayData(ArrayList arrayList);
         void showErrorMessage(String message);
+        void showGoal(String goal);
     }
 
     interface Presenter{
-        void initBleData(String step, String weight, String height);
+        void UpdateStep(String step);
+        void UpdateGoal(String goal);
     }
 
 }

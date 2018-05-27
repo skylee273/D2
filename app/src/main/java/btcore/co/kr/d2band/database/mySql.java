@@ -1,5 +1,7 @@
 package btcore.co.kr.d2band.database;
 
+import btcore.co.kr.d2band.util.ParserUtils;
+
 /**
  * Created by leehaneul on 2018-01-22.
  */
@@ -22,4 +24,10 @@ public class mySql {
     public static String URL_INSERT_RECV = URL + "DioBand/Message/ReceiveInsert.jsp";
 
     public static String URL_SET_RECEIVE = URL + "DioBand/Message/ReceiveSelect.jsp";
+
+    public static String URL_INSERT_STEP = URL + "DioBand/Step/StepInsert.jsp";
+
+    public static String URL_INSERT_HEART = URL + "DioBand/Heart/HeartInsert.jsp";
+
+    public static String URL_SELECT_HEART = URL + "DioBand/Heart/HeartSelect.jsp";
 }

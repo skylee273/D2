@@ -6,6 +6,7 @@ import android.os.AsyncTask;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 
 import btcore.co.kr.d2band.user.User;
 
@@ -20,6 +21,7 @@ public class MessageModel {
     ApiListener apiListener;
     RecvApiListener recvApliListener;
     User user;
+
 
     public boolean checkMessage(String msg) {
         this.msg = msg;

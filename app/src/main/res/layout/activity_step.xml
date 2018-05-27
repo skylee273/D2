@@ -76,6 +76,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="41dp"
+                        android:onClick="@{StepActivity::OnGoal}"
                         android:text="8000"
                         android:textSize="18sp"
                         app:layout_constraintEnd_toEndOf="parent"
@@ -136,6 +137,7 @@
 
                     <ProgressBar
                         android:id="@+id/progressBar_step"
+                        style="?android:attr/progressBarStyleHorizontal"
                         android:layout_width="0dp"
                         android:layout_height="5dp"
                         android:layout_marginEnd="41dp"

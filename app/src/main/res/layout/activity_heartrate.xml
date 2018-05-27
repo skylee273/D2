@@ -71,7 +71,7 @@
         android:orientation="vertical"></LinearLayout>
 
     <TextView
-        android:id="@+id/text_bpm6"
+        android:id="@+id/text_bpm"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="180"

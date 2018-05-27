@@ -31,6 +31,7 @@ import java.util.Date;
 import btcore.co.kr.d2band.R;
 import btcore.co.kr.d2band.databinding.ActivityMainBinding;
 import btcore.co.kr.d2band.service.BluetoothLeService;
+import btcore.co.kr.d2band.util.BleProtocol;
 import btcore.co.kr.d2band.view.device.DeviceListActivity;
 import btcore.co.kr.d2band.view.find.fragment.FragmentId;
 import btcore.co.kr.d2band.view.find.fragment.FragmentPw;
@@ -60,7 +61,7 @@ public class MainActivity extends AppCompatActivity implements Main.View {
 
     ActivityMainBinding mainBinding;
     Main.Presenter presenter;
-
+    BleProtocol bleProtocol;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -80,6 +81,9 @@ public class MainActivity extends AppCompatActivity implements Main.View {
 
         // 블루투스 서비스 시작
         service_init();
+
+        // Time DATA
+        bleProtocol = new BleProtocol();
 
     }
 
@@ -108,6 +112,7 @@ public class MainActivity extends AppCompatActivity implements Main.View {
 
     @Override
     public void startMainActivity() {
+        SendCommand(bleProtocol.getTimeInfo(bleProtocol.getDate(), bleProtocol.getWeek()));
         Intent intent = new Intent(getApplicationContext(), StepActivity.class);
         startActivity(intent);
         finish();
@@ -119,7 +124,9 @@ public class MainActivity extends AppCompatActivity implements Main.View {
         startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
     }
 
-
+    public void SendCommand(byte[] data) {
+        mService.writeRXCharacteristic(data);
+    }
     @Override
     public void onDestroy() {
         super.onDestroy();

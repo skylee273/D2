@@ -11,13 +11,13 @@ package btcore.co.kr.d2band.view.heartrate.presenter;
 public interface HeartRate {
 
     interface View{
-        void showHeartData(String[] heartRate);
+        void showHeartData(String heart, String avgHeart, String maxHeart, String minHeart, String currentState, String error);
         void showErrorMessage(String message);
 
     }
 
     interface Presenter{
-        void initBleData(String[] data);
+        void UpdateHeart(String heart);
     }
 
 }

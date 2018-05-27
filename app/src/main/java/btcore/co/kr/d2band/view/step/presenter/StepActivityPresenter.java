@@ -16,14 +16,22 @@ public class StepActivityPresenter implements Step.Presenter{
         this.todayActivityModel = new StepActivityModel();
     }
 
-    @Override
-    public void initBleData(String step, String weight, String height) {
 
-        todayActivityModel.setTodayData(step, weight, height);
+    @Override
+    public void UpdateStep(String step) {
         if(todayActivityModel.checkTodayData(step)){
             todayView.showTodayData(todayActivityModel.makeTodayData());
         }else{
-            todayView.showErrorMessage("StepActivityPresenter 데이터 없음" );
+
+        }
+    }
+
+    @Override
+    public void UpdateGoal(String goal) {
+        if(todayActivityModel.checkGoal(goal)){
+            todayView.showGoal(goal);
+        }else{
+            todayView.showErrorMessage("목표 설정이 잘못 되었습니다.");
         }
     }
 }

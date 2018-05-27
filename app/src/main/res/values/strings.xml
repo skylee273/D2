@@ -126,6 +126,9 @@
         <!-- SOS 텍스트 -->
     <string name="text_sos_title">SOS</string>
 
+    <!-- SOS  -->
+        <!-- SOS 텍스트 -->
+    <string name="text_lock_title">스마트락</string>
 
     <!-- dialog device -->
     <string name="select_device">Select a device</string>
