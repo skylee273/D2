@@ -15,24 +15,23 @@
         android:paddingBottom="16dp"
         android:paddingLeft="24dp"
         android:paddingTop="16dp"
-        android:text="비밀번호 변경"
+        android:text="메시지 변경"
         android:textColor="#000"
         android:textSize="20sp" />
 
     <android.support.design.widget.TextInputLayout
-        android:id="@+id/findPwDialogEmailTi"
+        android:id="@+id/textinput_msg"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginLeft="24dp"
-        android:layout_marginRight="24dp"
-        >
+        android:layout_marginRight="24dp">
 
         <android.support.design.widget.TextInputEditText
-            android:id="@+id/edit_newpassword"
+            android:id="@+id/edit_msg"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="비밀번호"
-            android:inputType="textPassword"
+            android:hint="메시지 입력"
+            android:inputType="text"
             android:textColorHint="#42000000" />
     </android.support.design.widget.TextInputLayout>
     <View
@@ -46,7 +45,7 @@
         android:paddingBottom="17dp"
         android:paddingEnd="16dp"
         android:paddingStart="16dp"
-        android:text="비밀번호를 변경해주세요."
+        android:text="메시지를 입력해주세요."
         android:textColor="#000"
         android:textSize="16sp" />
     <LinearLayout

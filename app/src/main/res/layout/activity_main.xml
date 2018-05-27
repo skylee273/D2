@@ -46,7 +46,7 @@
         android:layout_marginTop="190dp"
         android:background="@drawable/icon_unrigth"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btn_back" />
+        app:layout_constraintTop_toBottomOf="@+id/text_device" />
 
     <ImageView
         android:id="@+id/imageView"
@@ -57,7 +57,7 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btn_back"
+        app:layout_constraintTop_toBottomOf="@+id/text_device"
         app:srcCompat="@drawable/btn_man_check" />
 
     <Button
@@ -68,7 +68,7 @@
         android:layout_marginTop="190dp"
         android:background="@drawable/icon_unleft"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btn_back" />
+        app:layout_constraintTop_toBottomOf="@+id/text_device" />
 
     <TextView
         android:id="@+id/text_device"
@@ -83,16 +83,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <Button
-        android:id="@+id/btn_back"
-        android:layout_width="28dp"
-        android:onClick="@{MainActivity::OnBack}"
-        android:layout_height="31dp"
-        android:layout_marginStart="19dp"
-        android:layout_marginTop="30dp"
-        android:background="@drawable/icon_back"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
 </android.support.constraint.ConstraintLayout>
 
     </layout>

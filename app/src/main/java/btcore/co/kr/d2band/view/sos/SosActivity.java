@@ -19,6 +19,8 @@ import android.view.View;
 import btcore.co.kr.d2band.Manifest;
 import btcore.co.kr.d2band.R;
 import btcore.co.kr.d2band.databinding.ActivitySosBinding;
+import btcore.co.kr.d2band.view.find.FindIdActivity;
+import btcore.co.kr.d2band.view.setting.SettingActivity;
 import butterknife.OnClick;
 
 /**
@@ -66,7 +68,12 @@ public class SosActivity  extends AppCompatActivity{
         Uri uri = Uri.parse("geo:38.899533,-77.036476");
         Intent it = new Intent(Intent.ACTION_VIEW,uri);
         startActivity(it);
-
+    }
+    @OnClick(R.id.btn_settings)
+    public void OnSettings(View view){
+        Intent intent = new Intent(getApplicationContext(), SettingActivity.class);
+        startActivity(intent);
+        finish();
     }
     @OnClick(R.id.btn_sound)
     public void OnRing(View view){
@@ -76,17 +83,16 @@ public class SosActivity  extends AppCompatActivity{
 
     @OnClick(R.id.btn_question)
     public void OnQuestion(View view){
-        AlertDialog.Builder alert_confirm = new AlertDialog.Builder(SosActivity.this);
-        alert_confirm.setMessage("도움말").setCancelable(false).setPositiveButton("확인",
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        // 'YES'
-                    }
-                });
-        AlertDialog alert = alert_confirm.create();
-        alert.show();
-
+        AlertDialog.Builder questionAlert = new AlertDialog.Builder(SosActivity.this);
+        questionAlert.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();     //닫기
+            }
+        });
+        questionAlert.setTitle("도움말");
+        questionAlert.setMessage("문의하실 사항은 아래 번호로 연락 부탁드립니다.");
+        questionAlert.show();
     }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data){

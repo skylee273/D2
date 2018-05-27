@@ -46,14 +46,11 @@ public class FragmentPw extends Fragment {
         this.phone = mBinding.editPhone.getText().toString();
         return phone;
     }
-    public String getPw(){
-        this.pw = mBinding.editPw.getText().toString();
+    public String getName(){
+        this.pw = mBinding.editName.getText().toString();
         return pw;
     }
-    public String getEmail(){
-        this.email = mBinding.editEmail.getText().toString();
-        return email;
-    }
+
 
 
 

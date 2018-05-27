@@ -71,6 +71,7 @@ public class BluetoothLeService extends Service {
     public static final UUID RX_CHAR_UUID = UUID.fromString("6e400002-b5a3-f393-e0a9-e50e24dcca9e");
     public static final UUID TX_CHAR_UUID = UUID.fromString("6e400003-b5a3-f393-e0a9-e50e24dcca9e");
 
+    public static int STATE = 0;
 
     // GATT 이벤트에 대한 콜벡 메소드를 구현합니다.
     private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
@@ -89,13 +90,13 @@ public class BluetoothLeService extends Service {
                 // Attempts to discover services after successful connection.
                 Log.i(TAG, "Attempting to start service discovery:" +
                         mBluetoothGatt.discoverServices());
-
-
+                STATE = 1;
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 intentAction = ACTION_GATT_DISCONNECTED;
                 mConnectionState = STATE_DISCONNECTED;
                 Log.i(TAG, "Disconnected from GATT server.");
                 broadcastUpdate(intentAction);
+                STATE = 2;
             }
         }
 
@@ -314,7 +315,7 @@ public class BluetoothLeService extends Service {
 
     }
 
-    public void writeRXCharacteristic(String value) {
+    public void writeRXCharacteristic(byte[] value) {
         BluetoothGattService RxService = mBluetoothGatt.getService(RX_SERVICE_UUID);
 
         showMessage("mBluetoothGatt null" + mBluetoothGatt);

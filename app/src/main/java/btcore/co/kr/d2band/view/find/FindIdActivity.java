@@ -21,6 +21,7 @@ import btcore.co.kr.d2band.view.find.fragment.FragmentPw;
 import btcore.co.kr.d2band.view.find.presenter.Find;
 import btcore.co.kr.d2band.view.find.presenter.FindPresenter;
 import btcore.co.kr.d2band.view.login.LoginActivity;
+import btcore.co.kr.d2band.view.step.StepActivity;
 import butterknife.OnClick;
 
 /**
@@ -95,15 +96,22 @@ public class FindIdActivity extends AppCompatActivity implements Find.View {
             presenter.callIdDialog();
         } else {
             FragmentPw fragmentPw = (FragmentPw) findFragmentByPosition(currentPage);
-            String pw = fragmentPw.getPw();
+            String name = fragmentPw.getName();
             String phone = fragmentPw.getPhone();
-            String email = fragmentPw.getEmail();
-            presenter.initFindPw(pw, phone,email);
+            presenter.initFindPw(name, phone);
             presenter.callPwDialog();
         }
 
 
     }
+
+    @Override
+    public void onBackPressed(){
+        Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
+        startActivity(intent);
+        finish();
+    }
+
     public Fragment findFragmentByPosition(int position) {
         FragmentPagerAdapter fragmentPagerAdapter = mPagerAdapter;
         return getSupportFragmentManager().findFragmentByTag("android:switcher:" + mBinding.viewFind.getId() + ":" + fragmentPagerAdapter.getItemId(position));
@@ -112,7 +120,6 @@ public class FindIdActivity extends AppCompatActivity implements Find.View {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
     }
 
 
@@ -138,17 +145,7 @@ public class FindIdActivity extends AppCompatActivity implements Find.View {
     }
 
     @Override
-    public void startEmailDialog(String title, String pw, String phone) {
-        /*
-        Intent sendEmail = new Intent(Intent.ACTION_SEND);
-        sendEmail.setType("plain/text");
-        // email setting 배열로 해놔서 복수 발송 가능
-        String[] address = {email};
-        sendEmail.putExtra(Intent.EXTRA_EMAIL, address);
-        sendEmail.putExtra(Intent.EXTRA_SUBJECT, "[D2 Band] 비밀번호 찾기");
-        sendEmail.putExtra(Intent.EXTRA_TEXT, "귀하의 비밀번호는 : " + pw + "입니다.");
-        startActivity(sendEmail);
-           */
+    public void startPwDialog(String msg, String pw) {
         AlertDialog.Builder alert = new AlertDialog.Builder(FindIdActivity.this);
         alert.setPositiveButton("확인", new DialogInterface.OnClickListener() {
             @Override
@@ -156,13 +153,12 @@ public class FindIdActivity extends AppCompatActivity implements Find.View {
                 dialog.dismiss();     //닫기
             }
         });
-        alert.setTitle(title);
-        alert.setMessage("고객님의 비밀번호가 " + phone + " 로 전송되었습니다.");
+        alert.setTitle("임시 비밀번호");
+        alert.setMessage(msg + pw + " 입니다.");
         alert.show();
 
-
-
     }
+
 
     public class pagerAdapter extends FragmentPagerAdapter {
 
@@ -178,10 +174,10 @@ public class FindIdActivity extends AppCompatActivity implements Find.View {
             switch (position) {
                 case 0:
                     fragment = new FragmentId();
-                    return  fragment;
+                    return fragment;
                 case 1:
                     fragment = new FragmentPw();
-                    return  fragment;
+                    return fragment;
                 default:
                     break;
             }

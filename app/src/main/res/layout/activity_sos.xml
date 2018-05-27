@@ -72,21 +72,11 @@
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="100"
+            android:layout_weight="170"
             android:orientation="vertical">
 
-            <Button
-                android:id="@+id/btn_setting"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@drawable/toolbar_setting" />
         </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="70"
-            android:orientation="vertical"></LinearLayout>
     </LinearLayout>
 
 
@@ -188,7 +178,6 @@
                                 android:id="@+id/btn_hospital"
                                 android:layout_width="match_parent"
                                 android:layout_height="match_parent"
-
                                 android:layout_weight="1"
                                 android:background="@drawable/icon_hostpital" />
                         </TableRow>
@@ -220,6 +209,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="match_parent"
                                 android:layout_weight="1"
+                                android:onClick="@{SosActivity::OnSettings}"
                                 android:background="@drawable/icon_setting" />
                         </TableRow>
 

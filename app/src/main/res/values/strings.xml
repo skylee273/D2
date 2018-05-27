@@ -42,7 +42,7 @@
         <string name="text_find_name">이름</string>
         <string name="text_find_pwconfirm">비밀번호</string>
         <string name="text_find_phone">전화번호</string>
-        <string name="text_find_email">이메일(가입 아이디)</string>
+        <string name="text_find_email">생년월일 </string>
 
         <!-- 아이디 비밀번호 찾기 Edit 텍스트 -->
     <string name="edit_find_hint_name">이름을 적어주세요</string>
@@ -77,9 +77,9 @@
         <string name="text_message_119">119</string>
         <string name="text_message_112">112</string>
         <string name="text_message_context">내용</string>
+        <string name="text_message_context_change">내용변경</string>
+        <string name="text_message_emergency_context">저는 현재 위급상황입니다.</string>
 
-        <!-- 메시지 Edittext -->
-        <string name="edit_message_context">저는 현재 위급상황입니다.</string>
 
     <!-- 프로필 -->
         <!-- 프로필 텍스트 -->

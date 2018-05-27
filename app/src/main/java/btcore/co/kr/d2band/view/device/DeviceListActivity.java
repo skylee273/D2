@@ -159,9 +159,10 @@ public class DeviceListActivity extends Activity {
                     String temp;
                     if(result.getDevice().getName() != null){
                         temp = result.getDevice().getName();
-                        if(temp.equals("H_Fit")){
+                        if(temp.equals("D2")){
                             addDevice(result.getDevice(), result.getRssi());
                         }
+
                     }
                 }
             });

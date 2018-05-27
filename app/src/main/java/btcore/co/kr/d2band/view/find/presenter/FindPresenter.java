@@ -24,8 +24,8 @@ public class FindPresenter implements Find.Presenter {
     }
 
     @Override
-    public void initFindPw(String name, String phone, String email) {
-        findModel.setPwInfo(name, phone, email);
+    public void initFindPw(String name, String phone) {
+        findModel.setPwInfo(name, phone);
     }
 
     @Override
@@ -53,9 +53,8 @@ public class FindPresenter implements Find.Presenter {
         if (findModel.checkPwInfo()) {
             findModel.getPwInfo(new FindModel.FindPwApiListner() {
                 @Override
-                public void onSuccess(String message, String phone) {
-
-                    findView.startEmailDialog("아래 번호로 전송 되었습니다.", message, phone);
+                public void onSuccess(String msg, String pw) {
+                    findView.startPwDialog(msg, pw);
                 }
 
                 @Override

@@ -106,7 +106,6 @@ public class RegisterModel {
     public interface ApiListener {
         void onSuccess(String message);
         void onFail (String message);
-
     }
 
     class RegisterUser extends AsyncTask<String, Void, String> {

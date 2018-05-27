@@ -5,7 +5,6 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
-
         <variable
             name="MessageActivity"
             type="btcore.co.kr.d2band.view.message.MessageAtivity" />
@@ -34,30 +33,48 @@
                 android:layout_height="match_parent">
 
                 <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="41dp"
-                    android:layout_marginEnd="19dp"
-                    android:layout_marginStart="34dp"
-                    android:layout_marginTop="14dp"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="16dp"
+                    android:layout_marginTop="32dp"
                     android:orientation="vertical"
+                    android:padding="5dp"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/textView">
+                    app:layout_constraintTop_toTopOf="parent">
 
-                    <EditText
-                        android:id="@+id/edit_context"
+                    <Button
+                        android:id="@+id/btn_plus"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:layout_marginLeft="15dp"
-                        android:background="@null"
-                        android:ems="10"
-                        android:inputType="textPersonName"
-                        android:text="@string/edit_message_context"
-                        android:textSize="14sp" />
+                        android:onClick="@{MessageActivity::OnPlus}"
+                        android:background="@drawable/btn_plus" />
                 </LinearLayout>
 
                 <TextView
-                    android:id="@+id/textView"
+                    android:id="@+id/text_change"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="32dp"
+                    android:layout_marginTop="34dp"
+                    android:text="@string/text_message_context_change"
+                    android:onClick="@{MessageActivity::OnChange}"
+                    android:textColor="@color/colorMessageTextBold"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/constraintLayout2" />
+
+                <TextView
+                    android:id="@+id/text_msg"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="34dp"
+                    android:layout_marginTop="14dp"
+                    android:text="@string/text_message_emergency_context"
+                    android:onClick="@{MessageActivity::OnMsg}"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/text_msg_context" />
+
+                <TextView
+                    android:id="@+id/text_msg_context"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="34dp"
@@ -154,17 +171,13 @@
                     android:layout_marginTop="14dp"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/text_receiver" />
+                    app:layout_constraintTop_toBottomOf="@+id/text_receiver" /><![CDATA[
 
-                <Button
-                    android:id="@+id/btn_plus"
-                    android:layout_width="12dp"
-                    android:layout_height="12dp"
-                    android:layout_marginEnd="41dp"
-                    android:layout_marginTop="46dp"
-                    android:background="@drawable/btn_plus"
+                @drawable/btn_plus"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
+
+                ]]>
 
                 <TextView
                     android:id="@+id/text_receiver"
@@ -201,66 +214,18 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <LinearLayout
-            android:layout_width="0dp"
+
+        <TextView
+            android:id="@+id/text_title"
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_weight="70"
-            android:orientation="vertical"></LinearLayout>
+            android:layout_weight="1"
+            android:gravity="center_vertical|center_horizontal"
+            android:text="@string/text_message_title"
+            android:textColor="@color/colorCoupleLogoText"
+            android:textSize="20sp"
+            android:textStyle="bold" />
 
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="100"
-            android:orientation="vertical"></LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="100"
-            android:orientation="vertical"></LinearLayout>
-
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="900"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/text_title"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center_vertical|center_horizontal"
-                android:text="@string/text_message_title"
-                android:textColor="@color/colorCoupleLogoText"
-                android:textSize="20sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="100"
-            android:orientation="vertical"></LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="100"
-            android:orientation="vertical">
-
-            <Button
-                android:id="@+id/btn_profile"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@drawable/toolbar_profile" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="70"
-            android:orientation="vertical"></LinearLayout>
     </LinearLayout>
 </android.support.constraint.ConstraintLayout>
 </layout>

@@ -42,7 +42,6 @@ import butterknife.OnClick;
 public class MainActivity extends AppCompatActivity implements Main.View {
 
     private final String TAG = getClass().getSimpleName();
-
     private static final int UART_PROFILE_DISCONNECTED = 21;
     private static final int UART_PROFILE_CONNECTED = 20;
     private static final int REQUEST_SELECT_DEVICE = 1;
@@ -86,18 +85,8 @@ public class MainActivity extends AppCompatActivity implements Main.View {
 
     @OnClick(R.id.btn_connect)
     public void OnConnect(View view) {
-        Intent intent = new Intent(getApplicationContext(), StepActivity.class);
-        startActivity(intent);
-        finish();
-       // presenter.isEnabled();
+       presenter.isEnabled();
     }
-    @OnClick(R.id.btn_back)
-    public void OnBack(View view){
-        Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
-        startActivity(intent);
-        finish();
-    }
-
 
     @Override
     public void showErrorMessage(String msg) {

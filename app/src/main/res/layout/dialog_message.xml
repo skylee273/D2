@@ -15,29 +15,44 @@
         android:paddingBottom="16dp"
         android:paddingLeft="24dp"
         android:paddingTop="16dp"
-        android:text="비밀번호 변경"
+        android:text="수신자 추가"
         android:textColor="#000"
         android:textSize="20sp" />
 
     <android.support.design.widget.TextInputLayout
-        android:id="@+id/findPwDialogEmailTi"
+        android:id="@+id/textinput_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginLeft="24dp"
-        android:layout_marginRight="24dp"
-        >
+        android:layout_marginRight="24dp">
 
         <android.support.design.widget.TextInputEditText
-            android:id="@+id/edit_newpassword"
+            android:id="@+id/edit_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="비밀번호"
-            android:inputType="textPassword"
+            android:hint="이름 입력"
+            android:inputType="text"
             android:textColorHint="#42000000" />
     </android.support.design.widget.TextInputLayout>
     <View
         android:layout_width="match_parent"
         android:layout_height="16dp" />
+
+    <android.support.design.widget.TextInputLayout
+        android:id="@+id/textinput_phone"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="24dp"
+        android:layout_marginRight="24dp">
+
+        <android.support.design.widget.TextInputEditText
+            android:id="@+id/edit_phone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="휴대폰 번호 입력"
+            android:inputType="phone"
+            android:textColorHint="#42000000" />
+    </android.support.design.widget.TextInputLayout>
 
     <TextView
         android:id="@+id/text_state"
@@ -46,7 +61,7 @@
         android:paddingBottom="17dp"
         android:paddingEnd="16dp"
         android:paddingStart="16dp"
-        android:text="비밀번호를 변경해주세요."
+        android:text="이름과 핸드폰 번호를 입력하세요"
         android:textColor="#000"
         android:textSize="16sp" />
     <LinearLayout
@@ -70,13 +85,13 @@
             android:textSize="16sp" />
 
         <TextView
-            android:id="@+id/btn_change"
+            android:id="@+id/btn_plus"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="3"
             android:clickable="true"
             android:gravity="center"
-            android:text="변경"
+            android:text="추가"
             android:textColor="@color/colorAccent"
             android:textSize="16sp" />
     </LinearLayout>
