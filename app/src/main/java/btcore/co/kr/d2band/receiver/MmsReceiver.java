@@ -18,6 +18,9 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
+import btcore.co.kr.d2band.bus.SmsBusEvent;
+import btcore.co.kr.d2band.bus.SmsProvider;
+
 import static android.content.Context.MODE_PRIVATE;
 
 
@@ -37,10 +40,6 @@ public class MmsReceiver extends BroadcastReceiver {
         mSavedContext = context;
         String action = intent.getAction();
         String type = intent.getType();
-
-
-        Log.d(TAG, "MmsReceiver Received");
-
         if (action.equals(ACTION_MMS_RECEIVED) && type.equals(MMS_DATA_TYPE)) {
             try {
                 List<TextMessage> messages = getMessagesFrom(context, intent);
@@ -64,19 +63,10 @@ public class MmsReceiver extends BroadcastReceiver {
         c.moveToFirst();
         String countStr = String.format("%03d", c.getCount());
 
-        String eventType = "MmsReceivedEvent";
         String numberOrName = getDisplayName(mSavedContext, message.from);
-        String data = message.body;
-        String retData = countStr;
-        if (data != null) {
-            retData += data;
-        }
-
-    }
-
-    private void showToast(String eventType, String numberOrName, String data) {
-        Toast.makeText(mSavedContext, eventType + "," + numberOrName + "," + data, Toast.LENGTH_LONG).show();
-        Log.w(TAG, eventType + "," + numberOrName + "," + data);
+        String mmsContext = message.body;
+        String mmsData = numberOrName + "&&&&&" + mmsContext + "&&&&&" + countStr;
+        SmsProvider.getInstance().post(new SmsBusEvent(mmsData));
     }
 
 
@@ -85,15 +75,11 @@ public class MmsReceiver extends BroadcastReceiver {
         if (context == null) {
             return displayName;
         }
-
-        // Retrieve the lookup URI to the contact in the database
         Uri contactUri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(number));
         if (contactUri == null) {
             return displayName;
         }
-
         try {
-            // Get a cursor to the contact's entry
             String[] projection = {ContactsContract.Contacts.DISPLAY_NAME};
             Cursor cursor = context.getContentResolver().query(contactUri, projection, null, null, null);
             if (cursor.moveToFirst()) {
@@ -127,17 +113,14 @@ public class MmsReceiver extends BroadcastReceiver {
                     Thread.sleep(1000);
                 } catch (Exception ex) {
                 }
-
                 Cursor cur = context.getContentResolver().query(Uri.parse("content://mms/inbox"), null, "m_type in (132,128)", null, "date DESC");
                 if (cur == null) {
                     continue;
                 }
-
                 try {
                     if (cur.getCount() == 0) {
                         continue;
                     }
-
                     cur.moveToFirst();
                     int cnt = 0;
 
@@ -148,7 +131,6 @@ public class MmsReceiver extends BroadcastReceiver {
                         if (!buffer.contains(mid)) {
                             continue;
                         }
-
                         String subj = cur.getString(cur.getColumnIndex("sub"));
                         String body = "";
                         String from = getMmsAddr(context, id);
@@ -178,7 +160,6 @@ public class MmsReceiver extends BroadcastReceiver {
                             }
                         }
 
-                        //messages.add(new TextMessage(from, date, subj + (body.length() != 0 ? "\n" + body : "")));
                         messages.add(new TextMessage(from, date, body.length() != 0 ? "\n" + body : ""));
                         return messages;
                     } while (cur.moveToNext() && ++cnt < 10);
@@ -245,8 +226,6 @@ public class MmsReceiver extends BroadcastReceiver {
         } finally {
             cur.close();
         }
-
-        // return address.replaceAll("[^0-9]", "");
         return address;
     }
 

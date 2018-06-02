@@ -12,26 +12,27 @@ import android.content.res.Configuration;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.design.widget.Snackbar;
 import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
-import android.widget.TextView;
 import android.widget.Toast;
+
+import com.squareup.otto.Subscribe;
 
 import java.text.DateFormat;
 import java.util.Date;
 
+import btcore.co.kr.d2band.bus.CallBusEvent;
+import btcore.co.kr.d2band.bus.CallProvider;
+import btcore.co.kr.d2band.bus.SmsBusEvent;
+import btcore.co.kr.d2band.bus.SmsProvider;
 import btcore.co.kr.d2band.databinding.ActivityHeartrateBinding;
 import btcore.co.kr.d2band.service.BluetoothLeService;
 import btcore.co.kr.d2band.util.BleProtocol;
 import btcore.co.kr.d2band.view.heartrate.presenter.HeartRate;
 import btcore.co.kr.d2band.view.heartrate.presenter.HeartRatePresenter;
 import btcore.co.kr.d2band.R;
-import butterknife.OnClick;
 
 /**
  * Created by leehaneul on 2018-01-17.
@@ -48,9 +49,7 @@ public class HeartRateActivity extends AppCompatActivity implements HeartRate.Vi
     private static final int REQUEST_SELECT_DEVICE = 1;
     private static final int REQUEST_ENABLE_BT = 2;
     private static final int UART_PROFILE_READY = 10;
-    private static boolean connection = false;
     private BluetoothAdapter mBtAdapter = null;
-    private Context mContext;
     private int mState = UART_PROFILE_DISCONNECTED;
     public BluetoothLeService mService = null;
 
@@ -74,8 +73,6 @@ public class HeartRateActivity extends AppCompatActivity implements HeartRate.Vi
         bleProtocol = new BleProtocol();
 
     }
-
-
     @Override
     public void showHeartData(String heart, String avgHeart, String maxHeart, String minHeart, String currentState, String error) {
         mBinding.textBpm.setText(heart);
@@ -95,6 +92,8 @@ public class HeartRateActivity extends AppCompatActivity implements HeartRate.Vi
     public void onDestroy() {
         super.onDestroy();
         android.util.Log.d(TAG, "onDestroy()");
+        SmsProvider.getInstance().unregister(this);
+        CallProvider.getInstance().unregister(this);
         try {
             LocalBroadcastManager.getInstance(this).unregisterReceiver(UARTStatusChangeReceiver);
         } catch (Exception ignore) {
@@ -136,9 +135,33 @@ public class HeartRateActivity extends AppCompatActivity implements HeartRate.Vi
     }
 
     @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+    }
+
+    @Subscribe
+    public void FinishLoad(CallBusEvent callBusEvent){
+        switch (callBusEvent.getCallType()){
+            case 0:
+                sendMsg(bleProtocol.getCallStart(callBusEvent.getEventData()));
+                break;
+            case 1:
+                sendMsg(bleProtocol.getCallEnd(callBusEvent.getEventData()));
+                break;
+            case 2:
+                sendMsg(bleProtocol.getMissedCall(callBusEvent.getEventData()));
+                break;
+        }
+    }
+    @Subscribe
+    public void FinishLoad(SmsBusEvent smsBusEvent){
+        sendMsg(bleProtocol.getSms(smsBusEvent.getEventData()));
+    }
+
+
+    @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
-
             case REQUEST_ENABLE_BT:
                 if (resultCode == Activity.RESULT_OK) {
                     Toast.makeText(this, "Bluetooth has turned on ", Toast.LENGTH_SHORT).show();
@@ -148,18 +171,11 @@ public class HeartRateActivity extends AppCompatActivity implements HeartRate.Vi
                     finish();
                 }
                 break;
-            default:
-                android.util.Log.e(TAG, "wrong request code");
-                break;
         }
     }
 
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-    }
 
-    public void SendCommand(byte[] data) {
+    public void sendMsg(byte[] data) {
         mService.writeRXCharacteristic(data);
     }
 
@@ -178,16 +194,13 @@ public class HeartRateActivity extends AppCompatActivity implements HeartRate.Vi
     private ServiceConnection mServiceConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder rawBinder) {
             mService = ((BluetoothLeService.LocalBinder) rawBinder).getService();
-            connection = false;
             Log.d(TAG, "onServiceConnected mService= " + mService);
             if (!mService.initialize()) {
                 Log.e(TAG, "Unable to initialize Bluetooth");
                 finish();
             }
         }
-
         public void onServiceDisconnected(ComponentName classname) {
-            connection = false;
             mService = null;
         }
     };
@@ -197,42 +210,49 @@ public class HeartRateActivity extends AppCompatActivity implements HeartRate.Vi
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
 
-            final Intent mIntent = intent;
-            //*********************//
             if (action.equals(BluetoothLeService.ACTION_GATT_CONNECTED)) {
-                connection = false;
                 runOnUiThread(new Runnable() {
                     public void run() {
+                        Snackbar.make(getWindow().getDecorView().getRootView(), "재연결 되었습니다.", Snackbar.LENGTH_LONG).show();
                         mState = UART_PROFILE_CONNECTED;
                     }
                 });
             }
-
-            //*********************//
             if (action.equals(BluetoothLeService.ACTION_GATT_DISCONNECTED)) {
-                connection = false;
                 runOnUiThread(new Runnable() {
                     public void run() {
-                        android.util.Log.d(TAG, "UART_DISCONNECT_MSG");
                         mState = UART_PROFILE_DISCONNECTED;
                         mService.close();
                     }
                 });
             }
-
-
-            //*********************//
             if (action.equals(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED)) {
-                connection = true;
                 mService.enableTXNotification();
             }
-            //*********************//
+
             if (action.equals(BluetoothLeService.ACTION_DATA_AVAILABLE)) {
-                final byte[] txValue = intent.getByteArrayExtra(BluetoothLeService.EXTRA_DATA);
                 runOnUiThread(new Runnable() {
                     public void run() {
                         try {
-                            String text = new String(txValue, "UTF-8");
+                            String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
+                            Log.d(TAG, "ACTION_DATA_AVAILABLE : " + currentDateTimeString);
+                        } catch (Exception e) {
+                            android.util.Log.e(TAG, e.toString());
+                        }
+                    }
+                });
+            }
+            if (action.equals(BluetoothLeService.DEVICE_DOES_NOT_SUPPORT_UART)) {
+                String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
+                Log.d(TAG, "DEVICE_DOES_NOT_SUPPORT_UART : " + currentDateTimeString);
+                mService.disconnect();
+            }
+            if (action.equals(BluetoothLeService.D2_HEART_DATA)) {
+                final String Heart = intent.getStringExtra(BluetoothLeService.EXTRA_DATA);
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        try {
+                            presenter.UpdateHeart(Heart);
                             String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
 
                         } catch (Exception e) {
@@ -241,23 +261,7 @@ public class HeartRateActivity extends AppCompatActivity implements HeartRate.Vi
                     }
                 });
             }
-            if (action.equals(BluetoothLeService.D2_BLUETOOTH_DATA)) {
-                final String Heart = intent.getStringExtra(BluetoothLeService.EXTRA_DATA);
-                runOnUiThread(new Runnable() {
-                    public void run() {
-                        try {
-                            presenter.UpdateHeart(Heart);
-                        } catch (Exception e) {
-                            android.util.Log.e(TAG, e.toString());
-                        }
-                    }
-                });
-            }
 
-            if (action.equals(BluetoothLeService.DEVICE_DOES_NOT_SUPPORT_UART)) {
-                connection = false;
-                mService.disconnect();
-            }
         }
     };
 
@@ -268,6 +272,7 @@ public class HeartRateActivity extends AppCompatActivity implements HeartRate.Vi
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
         intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
         intentFilter.addAction(BluetoothLeService.DEVICE_DOES_NOT_SUPPORT_UART);
+        intentFilter.addAction(BluetoothLeService.D2_HEART_DATA);
         return intentFilter;
     }
 

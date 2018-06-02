@@ -14,6 +14,7 @@ import android.content.res.Configuration;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
@@ -27,10 +28,18 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.squareup.otto.Subscribe;
+
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
 
+import btcore.co.kr.d2band.bus.CallBusEvent;
+import btcore.co.kr.d2band.bus.CallProvider;
+import btcore.co.kr.d2band.bus.SmsBusEvent;
+import btcore.co.kr.d2band.bus.SmsProvider;
 import btcore.co.kr.d2band.databinding.ActivityStepBinding;
 import btcore.co.kr.d2band.service.BluetoothLeService;
 import btcore.co.kr.d2band.util.BleProtocol;
@@ -61,9 +70,7 @@ public class StepActivity extends AppCompatActivity implements Step.view {
     private static final int REQUEST_SELECT_DEVICE = 1;
     private static final int REQUEST_ENABLE_BT = 2;
     private static final int UART_PROFILE_READY = 10;
-    private static boolean connection = false;
     private BluetoothAdapter mBtAdapter = null;
-    private Context mContext;
     private int mState = UART_PROFILE_DISCONNECTED;
 
     ActivityStepBinding mStepBinding;
@@ -72,6 +79,9 @@ public class StepActivity extends AppCompatActivity implements Step.view {
     BleProtocol bleProtocol;
     Step.Presenter presenter;
     StepDialog stepDialog;
+    private Timer task;
+    TimerTask mnTask;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -89,6 +99,11 @@ public class StepActivity extends AppCompatActivity implements Step.view {
 
         // 프레젠터 생성
         presenter = new StepActivityPresenter(this);
+
+        // 버스 등록
+        CallProvider.getInstance().register(this);
+        SmsProvider.getInstance().register(this);
+
     }
 
     @OnClick(R.id.text_goal)
@@ -136,7 +151,6 @@ public class StepActivity extends AppCompatActivity implements Step.view {
     @Override
     public void showTodayData(ArrayList arrayList) {
         mStepBinding.textStep.setText(arrayList.get(0).toString());
-        mStepBinding.textKcal.setText(arrayList.get(1).toString());
         mStepBinding.textKm.setText(arrayList.get(2).toString());
         mStepBinding.progressBarStep.setProgress(Integer.parseInt(arrayList.get(0).toString()));
     }
@@ -193,6 +207,8 @@ public class StepActivity extends AppCompatActivity implements Step.view {
     public void onDestroy() {
         super.onDestroy();
         android.util.Log.d(TAG, "onDestroy()");
+        SmsProvider.getInstance().unregister(this);
+        CallProvider.getInstance().unregister(this);
         try {
             LocalBroadcastManager.getInstance(this).unregisterReceiver(UARTStatusChangeReceiver);
         } catch (Exception ignore) {
@@ -226,6 +242,9 @@ public class StepActivity extends AppCompatActivity implements Step.view {
     @Override
     public void onResume() {
         super.onResume();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(onNotice);
+        LocalBroadcastManager.getInstance(this).registerReceiver(onNotice, new IntentFilter("LocalMsg"));
+
         if (!mBtAdapter.isEnabled()) {
             android.util.Log.i(TAG, "onResume - BT not enabled yet");
             Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
@@ -233,6 +252,29 @@ public class StepActivity extends AppCompatActivity implements Step.view {
         }
     }
 
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+    }
+
+    @Subscribe
+    public void FinishLoad(CallBusEvent callBusEvent){
+        switch (callBusEvent.getCallType()){
+            case 0:
+                SendCommand(bleProtocol.getCallStart(callBusEvent.getEventData()));
+                break;
+            case 1:
+                SendCommand(bleProtocol.getCallEnd(callBusEvent.getEventData()));
+                break;
+            case 2:
+                SendCommand(bleProtocol.getMissedCall(callBusEvent.getEventData()));
+                break;
+        }
+    }
+    @Subscribe
+    public void FinishLoad(SmsBusEvent smsBusEvent){
+        SendCommand(bleProtocol.getSms(smsBusEvent.getEventData()));
+    }
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
@@ -246,20 +288,127 @@ public class StepActivity extends AppCompatActivity implements Step.view {
                     finish();
                 }
                 break;
-            default:
-                android.util.Log.e(TAG, "wrong request code");
-                break;
         }
     }
 
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
+    public void RequestTask() {
+        task = new Timer();
+        mnTask = new TimerTask() {
+            @Override
+            public void run() {
+                if(STATE){
+                 SendCommand(bleProtocol.Requset());
+                }
+            }
+        };
+        task.schedule(mnTask,0, 10000);
     }
-
     public void SendCommand(byte[] data) {
         mService.writeRXCharacteristic(data);
     }
+
+    private BroadcastReceiver onNotice = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String Kakao = intent.getStringExtra("kakaoInfo");
+            Log.d(TAG, Kakao);
+        }
+
+    };
+    private final BroadcastReceiver UARTStatusChangeReceiver = new BroadcastReceiver() {
+
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+
+            if (action.equals(BluetoothLeService.ACTION_GATT_CONNECTED)) {
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        Snackbar.make(getWindow().getDecorView().getRootView(), "재연결 되었습니다.", Snackbar.LENGTH_LONG).show();
+                        mState = UART_PROFILE_CONNECTED;
+                    }
+                });
+            }
+            if (action.equals(BluetoothLeService.ACTION_GATT_DISCONNECTED)) {
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        mState = UART_PROFILE_DISCONNECTED;
+                        mService.close();
+                    }
+                });
+            }
+            if (action.equals(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED)) {
+                mService.enableTXNotification();
+            }
+
+            if (action.equals(BluetoothLeService.ACTION_DATA_AVAILABLE)) {
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        try {
+                            String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
+                            Log.d(TAG, "ACTION_DATA_AVAILABLE : " + currentDateTimeString);
+                        } catch (Exception e) {
+                            android.util.Log.e(TAG, e.toString());
+                        }
+                    }
+                });
+            }
+            if (action.equals(BluetoothLeService.DEVICE_DOES_NOT_SUPPORT_UART)) {
+                String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
+                Log.d(TAG, "DEVICE_DOES_NOT_SUPPORT_UART : " + currentDateTimeString);
+                mService.disconnect();
+            }
+            if (action.equals(BluetoothLeService.D2_STEP_DATA)) {
+                final String Step = intent.getStringExtra(BluetoothLeService.EXTRA_DATA);
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        try {
+                            presenter.UpdateStep(Step);
+                        } catch (Exception e) {
+                            android.util.Log.e(TAG, e.toString());
+                        }
+                    }
+                });
+            }
+            if (action.equals(BluetoothLeService.D2_CALORIE)) {
+                final String Calorie = intent.getStringExtra(BluetoothLeService.EXTRA_DATA);
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        try {
+                            mStepBinding.textKcal.setText(Calorie);
+                        } catch (Exception e) {
+                            android.util.Log.e(TAG, e.toString());
+                        }
+                    }
+                });
+            }
+        }
+    };
+
+
+    private static IntentFilter makeGattUpdateIntentFilter() {
+        final IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(BluetoothLeService.ACTION_GATT_CONNECTED);
+        intentFilter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED);
+        intentFilter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
+        intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
+        intentFilter.addAction(BluetoothLeService.DEVICE_DOES_NOT_SUPPORT_UART);
+        intentFilter.addAction(BluetoothLeService.D2_STEP_DATA);
+        intentFilter.addAction(BluetoothLeService.D2_CALORIE);
+        return intentFilter;
+    }
+    private ServiceConnection mServiceConnection = new ServiceConnection() {
+        public void onServiceConnected(ComponentName className, IBinder rawBinder) {
+            mService = ((BluetoothLeService.LocalBinder) rawBinder).getService();
+            Log.d(TAG, "onServiceConnected mService= " + mService);
+            if (!mService.initialize()) {
+                Log.e(TAG, "Unable to initialize Bluetooth");
+                finish();
+            }
+        }
+        public void onServiceDisconnected(ComponentName classname) {
+            mService = null;
+        }
+    };
 
     public void service_init() {
         mBtAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -271,102 +420,5 @@ public class StepActivity extends AppCompatActivity implements Step.view {
         Intent bindIntent = new Intent(this, BluetoothLeService.class);
         bindService(bindIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
         LocalBroadcastManager.getInstance(this).registerReceiver(UARTStatusChangeReceiver, makeGattUpdateIntentFilter());
-    }
-
-    private ServiceConnection mServiceConnection = new ServiceConnection() {
-        public void onServiceConnected(ComponentName className, IBinder rawBinder) {
-            mService = ((BluetoothLeService.LocalBinder) rawBinder).getService();
-            connection = false;
-            Log.d(TAG, "onServiceConnected mService= " + mService);
-            if (!mService.initialize()) {
-                Log.e(TAG, "Unable to initialize Bluetooth");
-                finish();
-            }
-        }
-
-        public void onServiceDisconnected(ComponentName classname) {
-            connection = false;
-            mService = null;
-        }
-    };
-
-    private final BroadcastReceiver UARTStatusChangeReceiver = new BroadcastReceiver() {
-
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-
-            final Intent mIntent = intent;
-            //*********************//
-            if (action.equals(BluetoothLeService.ACTION_GATT_CONNECTED)) {
-                connection = false;
-                runOnUiThread(new Runnable() {
-                    public void run() {
-                        mState = UART_PROFILE_CONNECTED;
-                    }
-                });
-            }
-
-            //*********************//
-            if (action.equals(BluetoothLeService.ACTION_GATT_DISCONNECTED)) {
-                connection = false;
-                runOnUiThread(new Runnable() {
-                    public void run() {
-                        android.util.Log.d(TAG, "UART_DISCONNECT_MSG");
-                        mState = UART_PROFILE_DISCONNECTED;
-                        mService.close();
-                    }
-                });
-            }
-
-
-            //*********************//
-            if (action.equals(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED)) {
-                connection = true;
-                mService.enableTXNotification();
-            }
-            //*********************//
-            if (action.equals(BluetoothLeService.ACTION_DATA_AVAILABLE)) {
-                final byte[] txValue = intent.getByteArrayExtra(BluetoothLeService.EXTRA_DATA);
-                runOnUiThread(new Runnable() {
-                    public void run() {
-                        try {
-                            String text = new String(txValue, "UTF-8");
-                            String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
-
-                        } catch (Exception e) {
-                            android.util.Log.e(TAG, e.toString());
-                        }
-                    }
-                });
-            }
-            if (action.equals(BluetoothLeService.D2_BLUETOOTH_DATA)) {
-                final String Step = intent.getStringExtra(BluetoothLeService.EXTRA_DATA);
-                runOnUiThread(new Runnable() {
-                    public void run() {
-                        try {
-                            String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
-                            presenter.UpdateStep(Step);
-                        } catch (Exception e) {
-                            android.util.Log.e(TAG, e.toString());
-                        }
-                    }
-                });
-            }
-
-            if (action.equals(BluetoothLeService.DEVICE_DOES_NOT_SUPPORT_UART)) {
-                connection = false;
-                mService.disconnect();
-            }
-        }
-    };
-
-    private static IntentFilter makeGattUpdateIntentFilter() {
-        final IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(BluetoothLeService.ACTION_GATT_CONNECTED);
-        intentFilter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED);
-        intentFilter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
-        intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
-        intentFilter.addAction(BluetoothLeService.DEVICE_DOES_NOT_SUPPORT_UART);
-        return intentFilter;
     }
 }

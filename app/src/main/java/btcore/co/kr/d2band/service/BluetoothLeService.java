@@ -25,6 +25,7 @@ import java.util.UUID;
 
 import btcore.co.kr.d2band.database.SEVER;
 import btcore.co.kr.d2band.util.ParserUtils;
+import btcore.co.kr.d2band.view.sos.SosActivity;
 
 /**
  * Created by leehaneul on 2018-02-20.
@@ -43,7 +44,8 @@ public class BluetoothLeService extends Service {
     private final static String STPES = "AF-04-02";
     private final static String BATTERY = "AF-04-03";
     private final static String CALORIE = "AF-04-04";
-    private final static String EMERGENCY = "AF-04-05-99-99-FF";
+    private final static String EMERGENCY = "AF-04-05-99-99";
+    private final static String CONNECTIONACK = "AF-04-07-99-99-FF";
 
     private String DATA[];
     private static final int STATE_DISCONNECTED = 0;
@@ -64,6 +66,14 @@ public class BluetoothLeService extends Service {
             "btcore.co.kr.d2band.service.DEVICE_DOES_NOT_SUPPORT_UART";
     public final static String D2_BLUETOOTH_DATA =
             "btcore.co.kr.d2band.service.D2_BLUETOOTH_DATA";
+    public final static String D2_CONNECTION_ACK =
+            "btcore.co.kr.d2band.service.D2_CONNECTION_ACK";
+    public final static String D2_STEP_DATA =
+            "btcore.co.kr.d2band.service.D2_STEP_DATA";
+    public final static String D2_HEART_DATA =
+            "btcore.co.kr.d2band.service.D2_HEART_DATA";
+    public final static String D2_CALORIE =
+            "btcore.co.kr.d2band.service.D2_CALORIE";
 
     public static final UUID TX_POWER_UUID = UUID.fromString("00001804-0000-1000-8000-00805f9b34fb");
     public static final UUID TX_POWER_LEVEL_UUID = UUID.fromString("00002a07-0000-1000-8000-00805f9b34fb");
@@ -74,7 +84,7 @@ public class BluetoothLeService extends Service {
     public static final UUID RX_CHAR_UUID = UUID.fromString("6e400002-b5a3-f393-e0a9-e50e24dcca9e");
     public static final UUID TX_CHAR_UUID = UUID.fromString("6e400003-b5a3-f393-e0a9-e50e24dcca9e");
 
-    public static int STATE = 0;
+    public static boolean STATE = false;
     SimpleDateFormat mFormat = new SimpleDateFormat("yyyy-MM-dd-hh-mm-ss");
     SEVER sever;
 
@@ -91,17 +101,12 @@ public class BluetoothLeService extends Service {
                 intentAction = ACTION_GATT_CONNECTED;
                 mConnectionState = STATE_CONNECTED;
                 broadcastUpdate(intentAction);
-                Log.i(TAG, "Connected to GATT server.");
-                // Attempts to discover services after successful connection.
-                Log.i(TAG, "Attempting to start service discovery:" +
-                        mBluetoothGatt.discoverServices());
-                STATE = 1;
+                STATE = true;
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 intentAction = ACTION_GATT_DISCONNECTED;
                 mConnectionState = STATE_DISCONNECTED;
-                Log.i(TAG, "Disconnected from GATT server.");
                 broadcastUpdate(intentAction);
-                STATE = 2;
+                STATE = false;
             }
         }
 
@@ -148,26 +153,28 @@ public class BluetoothLeService extends Service {
                         String heart = DATA[4] + DATA[5];
                         heart = String.valueOf(Integer.parseInt(heart, 16));
                         sever.INSERT_HEART(getTime(), heart);
-                        broadcastUpdate(D2_BLUETOOTH_DATA, heart);
+                        broadcastUpdate(D2_HEART_DATA, heart);
                     }
                     if (data.contains(STPES)) {
                         String steps = DATA[4] + DATA[5];
                         steps = String.valueOf(Integer.parseInt(steps, 16));
                         sever.INSERT_STEP(getTime(), steps);
-                        broadcastUpdate(D2_BLUETOOTH_DATA, steps);
+                        broadcastUpdate(D2_STEP_DATA, steps);
                     }
                     if (data.contains(BATTERY)) {
                         String battery = DATA[4] + DATA[5];
                         broadcastUpdate(D2_BLUETOOTH_DATA, battery);
                     }
                     if (data.contains(CALORIE)) {
-                        // String calorie = DATA[4] + DATA[5];
-                        // broadcastUpdate(D2_BLUETOOTH_DATA, calorie);
+                        String calorie = DATA[4] + DATA[5];
+                        broadcastUpdate(D2_CALORIE, calorie);
                     }
                     if (data.contains(EMERGENCY)) {
-                        String emergency = DATA[4] + DATA[5];
-                        emergency = String.valueOf(Integer.parseInt(emergency, 16));
-                        broadcastUpdate(D2_BLUETOOTH_DATA, emergency);
+                       Intent intent = new Intent(getApplicationContext(), SosActivity.class);
+                       startActivity(intent);
+                    }
+                    if(data.contains(CONNECTIONACK)){
+                        broadcastUpdate(D2_CONNECTION_ACK, "ACK");
                     }
                 }
             } catch (ArrayIndexOutOfBoundsException e) {

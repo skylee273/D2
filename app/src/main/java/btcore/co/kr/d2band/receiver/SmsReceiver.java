@@ -7,11 +7,16 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.provider.Telephony;
 import android.telephony.SmsMessage;
 import android.util.Log;
 
+
+import btcore.co.kr.d2band.bus.SmsBusEvent;
+import btcore.co.kr.d2band.bus.SmsProvider;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -20,86 +25,70 @@ import static android.content.Context.MODE_PRIVATE;
  */
 
 public class SmsReceiver extends BroadcastReceiver {
-    private  final String TAG = getClass().getSimpleName();
-
     protected Context mSavedContext;
+    private final String TAG = getClass().getSimpleName();
+
+    public SmsReceiver() {
+        super();
+    }
 
     @Override
     public void onReceive(Context context, Intent intent) {
         mSavedContext = context;
-
-        Log.d(TAG, "BroadcastReceiver Received");
-
-        if ("android.provider.Telephony.SMS_RECEIVED".equals(intent.getAction())) {
-            Bundle bundle = intent.getExtras();
-            Object[] messages = (Object[])bundle.get("pdus");
-            SmsMessage[] smsMessage = new SmsMessage[messages.length];
-
-            for(int i = 0; i < messages.length; i++) {
-                smsMessage[i] = SmsMessage.createFromPdu((byte[])messages[i]);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            for (SmsMessage message : Telephony.Sms.Intents.getMessagesFromIntent(intent)) {
+                receiveMessage(message);
             }
+        } else {
+            try {
+                final Bundle bundle = intent.getExtras();
+                if (bundle == null || !bundle.containsKey("pdus")) {
+                    return;
+                }
 
-            String message = smsMessage[0].getMessageBody().toString();
-            String numberOrName = getDisplayName(mSavedContext, smsMessage[0].getOriginatingAddress());
-
+                final Object[] pdus = (Object[]) bundle.get("pdus");
+                for (Object pdu : pdus) {
+                    receiveMessage(SmsMessage.createFromPdu((byte[]) pdu));
+                }
+            } catch (Exception e) {
+                Log.e(TAG, e.getMessage());
+            }
         }
     }
 
+    private void receiveMessage(SmsMessage message) {
 
-    private int missMessage() {
         Uri sms_content = Uri.parse("content://sms/inbox");
-        Cursor c = mSavedContext.getContentResolver().query(sms_content, null, "read = 0", null,null);
+        Cursor c = mSavedContext.getContentResolver().query(sms_content, null, "read = 0", null, null);
         c.moveToFirst();
-
-        return c.getCount();
+        int countStr = c.getCount();
+        String numberOrName = getDisplayName(mSavedContext, message.getOriginatingAddress());
+        if (numberOrName.length() > 0 ) {
+            String sms = numberOrName + "&&&&&" + String.valueOf(countStr);
+            SmsProvider.getInstance().post(new SmsBusEvent(sms));
+        }
     }
 
-
-    private String getContactName(Context context, String phoneNumber) {
-        ContentResolver cr = context.getContentResolver();
-        Uri uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(phoneNumber));
-        Cursor cursor = cr.query(uri, new String[]{ContactsContract.PhoneLookup.DISPLAY_NAME}, null, null, null);
-        if (cursor == null) {
-            return null;
-        }
-        String contactName = null;
-        if(cursor.moveToFirst()) {
-            contactName = cursor.getString(cursor.getColumnIndex(ContactsContract.PhoneLookup.DISPLAY_NAME));
-        }
-
-        if(cursor != null && !cursor.isClosed()) {
-            cursor.close();
-        }
-
-        return contactName;
-    }
     private String getDisplayName(Context context, String number) {
         String displayName = number;
         if (context == null) {
             return displayName;
         }
 
-        // Retrieve the lookup URI to the contact in the database
         Uri contactUri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(number));
         if (contactUri == null) {
             return displayName;
         }
 
-        // Get a cursor to the contact's entry
-        String[] projection = { ContactsContract.Contacts.DISPLAY_NAME };
+        String[] projection = {ContactsContract.Contacts.DISPLAY_NAME};
         Cursor cursor = context.getContentResolver().query(contactUri, projection, null, null, null);
 
         if (cursor.moveToFirst()) {
             int nameIdx = cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME);
             displayName = cursor.getString(nameIdx);
-            cursor.close(); // Release resources
+            cursor.close();
         }
         return displayName;
     }
-
-
-
-
-
 
 }

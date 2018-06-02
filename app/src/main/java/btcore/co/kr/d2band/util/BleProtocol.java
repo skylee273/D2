@@ -1,6 +1,7 @@
 package btcore.co.kr.d2band.util;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
@@ -8,25 +9,31 @@ import java.util.Locale;
 public class BleProtocol {
 
     private byte D_START = 0x7F;
-    private byte D_LENGHT;
+    private byte D_LENGHT = 0x01;
     private byte D_TYPE_NOTI = 0x0F;
     private byte D_TYPE_TIME = 0x0A;
     private byte D_CALL = 0x00;
+    private byte D_CALL_START = 0x01;
+    private byte D_CALL_STOP = 0x00;
     private byte D_MISS_CALL = 0x01;
+    private byte D_MISS_COUNT;
     private byte D_SMS = 0x02;
+    private byte D_SMS_COUNT;
     private byte D_KAKAO = 0x03;
     private byte D_SUB_CALL = 0x04;
     private byte D_SUB_SMS = 0x05;
     private byte D_SUB_KAKAO = 0x07;
     private byte D_REQUEST = 0x0B;
     private byte D_END = (byte) 0xff;
+    private byte D_NAME_LENGTH;
+    private byte [] D_NAME;
     private byte[] sendByte;
-    private String byteToStr;
+    private ArrayList<Byte> sendData = new ArrayList<>();
 
 
     private void clearData(){
         sendByte = null;
-        byteToStr = null;
+        sendData.clear();
     }
 
     public byte[] Requset() {
@@ -69,6 +76,106 @@ public class BleProtocol {
 
     }
 
+    public byte[] getCallStart(String name){
+        clearData();
+        sendByte = new byte[20];
+        D_NAME_LENGTH = (byte) name.length();
+        D_NAME = name.getBytes();
+        sendData.add(D_START);
+        sendData.add(D_LENGHT);
+        sendData.add(D_TYPE_NOTI);
+        sendData.add(D_CALL);
+        sendData.add(D_CALL_START);
+        sendData.add(D_NAME_LENGTH);
+        for(byte NameByte : D_NAME){
+            sendData.add(NameByte);
+        }
+        if(sendData.size() > 20) {
+            D_LENGHT = 18;
+            sendData.set(19, D_END);
+            sendData.set(1, D_LENGHT);
+        }else{
+            sendData.add(D_END);
+            sendData.set(1, (byte) (sendData.size() - 2));
+        }
+
+        for(int i = 0 ; i < sendData.size(); i++) {
+            sendByte[i] = sendData.get(i);
+        }
+        return sendByte;
+    }
+    public byte[] getCallEnd(String name){
+        clearData();
+        sendByte = new byte[20];
+        D_NAME_LENGTH = (byte) name.length();
+        D_NAME = name.getBytes();
+        sendData.add(D_START);
+        sendData.add(D_LENGHT);
+        sendData.add(D_TYPE_NOTI);
+        sendData.add(D_CALL);
+        sendData.add(D_CALL_STOP);
+        sendData.add(D_NAME_LENGTH);
+        for(byte NameByte : D_NAME){
+            sendData.add(NameByte);
+        }
+        if(sendData.size() > 20) {
+            D_LENGHT = 18;
+            sendData.set(19, D_END);
+            sendData.set(1, D_LENGHT);
+        }else{
+            sendData.add(D_END);
+            sendData.set(1, (byte) (sendData.size() - 2));
+        }
+
+        for(int i = 0 ; i < sendData.size(); i++) {
+            sendByte[i] = sendData.get(i);
+        }
+        return sendByte;
+    }
+
+    public byte[] getMissedCall(String miss){
+        clearData();
+        sendByte = new byte[20];
+        D_MISS_COUNT = (byte)Integer.parseInt(miss);
+        D_LENGHT = 0x04;
+        sendByte[0] = D_START;
+        sendByte[1] = D_LENGHT;
+        sendByte[2] = D_TYPE_NOTI;
+        sendByte[3] = D_MISS_CALL;
+        sendByte[4] = D_MISS_COUNT;
+        sendByte[5] = D_END;
+        return sendByte;
+    }
+    public byte[] getSms(String s){
+        clearData();
+        sendByte = new byte[20];
+        String [] sms = s.split("&&&&&");
+        D_SMS_COUNT = (byte)Integer.parseInt(sms[1]);
+        D_NAME_LENGTH = (byte) sms[0].length();
+        D_NAME = sms[0].getBytes();
+        sendData.add(D_START);
+        sendData.add(D_LENGHT);
+        sendData.add(D_TYPE_NOTI);
+        sendData.add(D_SMS);
+        sendData.add(D_SMS_COUNT);
+        sendData.add(D_NAME_LENGTH);
+        for(byte NameByte : D_NAME){
+            sendData.add(NameByte);
+        }
+        if(sendData.size() > 20) {
+            D_LENGHT = 18;
+            sendData.set(19, D_END);
+            sendData.set(1, D_LENGHT);
+        }else{
+            sendData.add(D_END);
+            sendData.set(1, (byte) (sendData.size() - 2));
+        }
+
+        for(int i = 0 ; i < sendData.size(); i++) {
+            sendByte[i] = sendData.get(i);
+        }
+        return sendByte;
+    }
 
     public int getWeek() {
         Calendar cal = Calendar.getInstance();
