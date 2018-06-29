@@ -14,14 +14,9 @@ public class MessageDialog extends Dialog implements View.OnClickListener {
 
     private static final int LAYOUT = R.layout.dialog_message;
     private Context context;
-
-    private TextInputEditText name;
-    private TextInputEditText phone;
-    private TextView state;
     private TextView cancel;
     private TextView plus;
-    private String mName;
-    private String mPhone;
+    private boolean deleteFlag = false;
 
     public MessageDialog(@NonNull Context context) {
         super(context);
@@ -33,10 +28,6 @@ public class MessageDialog extends Dialog implements View.OnClickListener {
         super.onCreate(savedInstanceState);
         setContentView(LAYOUT);
 
-        name = findViewById(R.id.edit_name);
-        phone = findViewById(R.id.edit_phone);
-
-        state = findViewById(R.id.text_state);
         cancel = findViewById(R.id.btn_cancel);
         plus = findViewById(R.id.btn_plus);
 
@@ -45,16 +36,11 @@ public class MessageDialog extends Dialog implements View.OnClickListener {
 
     }
 
-    private void setText() {
-        mName = name.getText().toString();
-        mPhone = phone.getText().toString();
+    private void setDeleteFlag() {
+        deleteFlag = true;
     }
-
-    public String getmName() {
-        return mName;
-    }
-    public String getmPhone(){
-        return mPhone;
+    public boolean getDeleteFlag(){
+        return deleteFlag;
     }
 
     @Override
@@ -64,12 +50,8 @@ public class MessageDialog extends Dialog implements View.OnClickListener {
                 cancel();
                 break;
             case R.id.btn_plus:
-                setText();
-                if(mName != null && mPhone != null ){
-                    MessageDialog.this.dismiss();
-                }else{
-                    state.setText("이름 또는 휴대폰 번호를 입력하세요");
-                }
+                setDeleteFlag();
+                MessageDialog.this.dismiss();
                 break;
         }
     }

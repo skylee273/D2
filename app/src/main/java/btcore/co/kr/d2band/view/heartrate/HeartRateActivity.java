@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
@@ -22,6 +23,8 @@ import com.squareup.otto.Subscribe;
 
 import java.text.DateFormat;
 import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import btcore.co.kr.d2band.bus.CallBusEvent;
 import btcore.co.kr.d2band.bus.CallProvider;
@@ -29,10 +32,13 @@ import btcore.co.kr.d2band.bus.SmsBusEvent;
 import btcore.co.kr.d2band.bus.SmsProvider;
 import btcore.co.kr.d2band.databinding.ActivityHeartrateBinding;
 import btcore.co.kr.d2band.service.BluetoothLeService;
+import btcore.co.kr.d2band.user.Contact;
 import btcore.co.kr.d2band.util.BleProtocol;
 import btcore.co.kr.d2band.view.heartrate.presenter.HeartRate;
 import btcore.co.kr.d2band.view.heartrate.presenter.HeartRatePresenter;
 import btcore.co.kr.d2band.R;
+
+import static btcore.co.kr.d2band.service.BluetoothLeService.STATE;
 
 /**
  * Created by leehaneul on 2018-01-17.
@@ -51,15 +57,21 @@ public class HeartRateActivity extends AppCompatActivity implements HeartRate.Vi
     private static final int UART_PROFILE_READY = 10;
     private BluetoothAdapter mBtAdapter = null;
     private int mState = UART_PROFILE_DISCONNECTED;
-    public BluetoothLeService mService = null;
+    private BluetoothLeService mService = null;
+    private SharedPreferences heartPref = null;
+    private SharedPreferences.Editor editor;
+    private long startTime;
+    private long endTime;
+    private ActivityHeartrateBinding mBinding;
+    private HeartRate.Presenter presenter;
+    private BleProtocol bleProtocol;
+    private Timer heartTimer;
+    private TimerTask heartTask;
+    private Contact contact;
 
-    // 멤버 변수
-    ActivityHeartrateBinding mBinding;
-    HeartRate.Presenter presenter;
-    BleProtocol bleProtocol;
 
     @Override
-    public void onCreate(Bundle savedInstanceState){
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_heartrate);
         mBinding.setHeartActivity(this);
@@ -72,7 +84,19 @@ public class HeartRateActivity extends AppCompatActivity implements HeartRate.Vi
         // 블루투스 데이터 생성
         bleProtocol = new BleProtocol();
 
+        // 연락처
+        contact = new Contact();
+
+        RequestTask();
+
+        heartPref = getSharedPreferences("D2", Activity.MODE_PRIVATE);
+        editor = heartPref.edit();
+
+        CallProvider.getInstance().register(this);
+        SmsProvider.getInstance().register(this);
+
     }
+
     @Override
     public void showHeartData(String heart, String avgHeart, String maxHeart, String minHeart, String currentState, String error) {
         mBinding.textBpm.setText(heart);
@@ -85,16 +109,20 @@ public class HeartRateActivity extends AppCompatActivity implements HeartRate.Vi
 
     @Override
     public void showErrorMessage(String message) {
-        Log.e(TAG,message);
+        Log.e(TAG, message);
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        android.util.Log.d(TAG, "onDestroy()");
-        SmsProvider.getInstance().unregister(this);
-        CallProvider.getInstance().unregister(this);
+        if (heartTimer != null) {
+            heartTimer.cancel();
+            heartTimer = null;
+        }
+
         try {
+            SmsProvider.getInstance().unregister(this);
+            CallProvider.getInstance().unregister(this);
             LocalBroadcastManager.getInstance(this).unregisterReceiver(UARTStatusChangeReceiver);
         } catch (Exception ignore) {
             android.util.Log.e(TAG, ignore.toString());
@@ -104,6 +132,17 @@ public class HeartRateActivity extends AppCompatActivity implements HeartRate.Vi
             mService.stopSelf();
             mService = null;
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        endTime = System.currentTimeMillis();
+        Snackbar.make(getWindow().getDecorView().getRootView(), "한번더 누르면 종료됩니다.", Snackbar.LENGTH_LONG).show();
+        if (endTime - startTime < 2000) {
+            super.onBackPressed();
+            finishAffinity();
+        }
+        startTime = System.currentTimeMillis();
     }
 
     @Override
@@ -140,24 +179,66 @@ public class HeartRateActivity extends AppCompatActivity implements HeartRate.Vi
     }
 
     @Subscribe
-    public void FinishLoad(CallBusEvent callBusEvent){
-        switch (callBusEvent.getCallType()){
-            case 0:
-                sendMsg(bleProtocol.getCallStart(callBusEvent.getEventData()));
-                break;
-            case 1:
-                sendMsg(bleProtocol.getCallEnd(callBusEvent.getEventData()));
-                break;
-            case 2:
-                sendMsg(bleProtocol.getMissedCall(callBusEvent.getEventData()));
-                break;
+    public void FinishLoad(CallBusEvent callBusEvent) {
+        boolean subFlag = false;
+        try {
+            String name = callBusEvent.getEventData();
+            for (String temp : contact.getName()) {
+                if (name.equals(temp)) {
+                    subFlag = true;
+                }
+            }
+            if (STATE && subFlag != true) {
+                switch (callBusEvent.getCallType()) {
+                    case 0:
+                        send(bleProtocol.getCallStart(callBusEvent.getEventData()));
+                        break;
+                    case 1:
+                        send(bleProtocol.getCallEnd(callBusEvent.getEventData()));
+                        break;
+                    case 2:
+                        send(bleProtocol.getMissedCall(callBusEvent.getEventData()));
+                        break;
+                }
+            }
+            if (STATE && subFlag == true) {
+                switch (callBusEvent.getCallType()) {
+                    case 0:
+                        send(bleProtocol.getSubCallStart(callBusEvent.getEventData()));
+                        break;
+                    case 1:
+                        send(bleProtocol.getSubCallEnd(callBusEvent.getEventData()));
+                        break;
+                    case 2:
+                        send(bleProtocol.getSubMissedCall(callBusEvent.getEventData()));
+                        break;
+                }
+            }
+        } catch (Exception e) {
+            Log.d(TAG, e.toString());
         }
     }
-    @Subscribe
-    public void FinishLoad(SmsBusEvent smsBusEvent){
-        sendMsg(bleProtocol.getSms(smsBusEvent.getEventData()));
-    }
 
+    @Subscribe
+    public void FinishLoad(SmsBusEvent smsBusEvent) {
+        boolean subFlag = false;
+        String[] sms = smsBusEvent.getEventData().split("&&&&&");
+        String NameOrPhone = sms[0];
+        try {
+            for (String name : contact.getName()) {
+                if (NameOrPhone.equals(name)) subFlag = true;
+            }
+            if (STATE && subFlag == true) {
+                send(bleProtocol.getSubSms(smsBusEvent.getEventData()));
+            }
+            if (STATE && subFlag != true) {
+                send(bleProtocol.getSms(smsBusEvent.getEventData()));
+            }
+        } catch (Exception e) {
+            Log.d(TAG, e.toString());
+        }
+
+    }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -174,8 +255,26 @@ public class HeartRateActivity extends AppCompatActivity implements HeartRate.Vi
         }
     }
 
+    public void RequestTask() {
+        heartTimer = new Timer();
+        heartTask = new TimerTask() {
+            @Override
+            public void run() {
+                if (STATE) {
+                    send(bleProtocol.Requset());
+                } else {
+                    String address = heartPref.getString("DEVICEADDR", "");
+                    if (address.length() > 0) {
+                        service_init();
+                        mService.connect(address);
+                    }
+                }
+            }
+        };
+        heartTimer.schedule(heartTask, 1500, 30000);
+    }
 
-    public void sendMsg(byte[] data) {
+    public void send(byte[] data) {
         mService.writeRXCharacteristic(data);
     }
 
@@ -200,6 +299,7 @@ public class HeartRateActivity extends AppCompatActivity implements HeartRate.Vi
                 finish();
             }
         }
+
         public void onServiceDisconnected(ComponentName classname) {
             mService = null;
         }
@@ -230,18 +330,6 @@ public class HeartRateActivity extends AppCompatActivity implements HeartRate.Vi
                 mService.enableTXNotification();
             }
 
-            if (action.equals(BluetoothLeService.ACTION_DATA_AVAILABLE)) {
-                runOnUiThread(new Runnable() {
-                    public void run() {
-                        try {
-                            String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
-                            Log.d(TAG, "ACTION_DATA_AVAILABLE : " + currentDateTimeString);
-                        } catch (Exception e) {
-                            android.util.Log.e(TAG, e.toString());
-                        }
-                    }
-                });
-            }
             if (action.equals(BluetoothLeService.DEVICE_DOES_NOT_SUPPORT_UART)) {
                 String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
                 Log.d(TAG, "DEVICE_DOES_NOT_SUPPORT_UART : " + currentDateTimeString);
@@ -253,8 +341,6 @@ public class HeartRateActivity extends AppCompatActivity implements HeartRate.Vi
                     public void run() {
                         try {
                             presenter.UpdateHeart(Heart);
-                            String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
-
                         } catch (Exception e) {
                             android.util.Log.e(TAG, e.toString());
                         }
@@ -270,7 +356,6 @@ public class HeartRateActivity extends AppCompatActivity implements HeartRate.Vi
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_CONNECTED);
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED);
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
-        intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
         intentFilter.addAction(BluetoothLeService.DEVICE_DOES_NOT_SUPPORT_UART);
         intentFilter.addAction(BluetoothLeService.D2_HEART_DATA);
         return intentFilter;

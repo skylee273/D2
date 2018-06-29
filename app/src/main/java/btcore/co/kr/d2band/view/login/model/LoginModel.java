@@ -6,10 +6,12 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
 
+import btcore.co.kr.d2band.user.Contact;
 import btcore.co.kr.d2band.user.User;
 import btcore.co.kr.d2band.util.SHA256Util;
 
 import static btcore.co.kr.d2band.database.mySql.URL_LOGIN;
+import static btcore.co.kr.d2band.database.mySql.URL_SET_RECEIVE;
 import static btcore.co.kr.d2band.database.mySql.URL_SET_USER;
 
 /**
@@ -21,7 +23,9 @@ public class LoginModel {
     String id, pw;
     String encrypt_password, encrypt_salt;
     ApiListener apiListener, UserApi;
+    RecvApiListener recvApiListener;
     User user;
+    Contact contact;
     public void setUserData(String id, String pw){
         this.id = id;
         this.pw = pw;
@@ -49,9 +53,14 @@ public class LoginModel {
 
     public void callSetUser(ApiListener listener){
         this.UserApi = listener;
-        GetUser getUser = new GetUser();
-        getUser.execute(id);
+        setUser setUser = new setUser();
+        setUser.execute(id);
+    }
 
+    public void callSetRecv(RecvApiListener listener){
+        this.recvApiListener = listener;
+        setMSG task = new setMSG();
+        task.execute(id);
     }
 
     public void callLogin(ApiListener listener){
@@ -64,7 +73,10 @@ public class LoginModel {
         void onSuccess(String message);
         void onFail (String message);
     }
-
+    public interface RecvApiListener {
+        void onSuccess(String message);
+        void onFail (String message);
+    }
 
     class Login extends AsyncTask<String, Void, String> {
         URL login_url;
@@ -126,7 +138,7 @@ public class LoginModel {
             }
         }
     }
-    class GetUser extends AsyncTask<String, Void, String> {
+    class setUser extends AsyncTask<String, Void, String> {
         URL userUrl;
 
         @Override
@@ -180,5 +192,65 @@ public class LoginModel {
             }
         }
     }
+
+    class setMSG extends AsyncTask<String, Void, String> {
+        URL userUrl;
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            try {
+                String Recv[] = s.split("&&&&&");
+                String name[] = new String[Recv.length];
+                String phone[] = new String[Recv.length];
+                int index = 0;
+                contact = new Contact();
+                for(String recv : Recv){
+                    String con[] = recv.split("#####");
+                    name[index] = con[0];
+                    phone[index] = con[1];
+                    index++;
+                }
+                contact.setName(name);
+                contact.setPhone(phone);
+                recvApiListener.onSuccess("수신자 저장");
+            }catch (ArrayIndexOutOfBoundsException e){
+                recvApiListener.onSuccess("수신자 저장 실패");
+            }
+
+        }
+
+        @Override
+        protected String doInBackground(String... params) {
+
+            try {
+                String _id = params[0];
+
+                String url_address = URL_SET_RECEIVE + "?id=" + _id;
+
+                userUrl = new URL(url_address);
+                BufferedReader in = new BufferedReader(new InputStreamReader(userUrl.openStream()));
+
+                String result = "";
+                String temp = "";
+                while ((temp = in.readLine()) != null) {
+                    result += temp;
+                }
+                in.close();
+
+                return result;
+            } catch (Exception e) {
+                e.printStackTrace();
+                return new String("User Exception: " + e.getMessage());
+            }
+        }
+    }
+
+
 
 }

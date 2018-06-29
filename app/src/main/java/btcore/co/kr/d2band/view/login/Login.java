@@ -17,5 +17,6 @@ public interface Login {
         void initUserData(String id, String pw);
         void callLogin();
         void UserSet();
+        void RecvSet();
     }
 }

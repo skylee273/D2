@@ -84,7 +84,23 @@ public class MessagePresenter implements Message.Presenter {
 
             }
         });
-
     }
+
+    @Override
+    public void deleteReceiver(String name, String phone) {
+        if(messageModel.checkReceiver(name, phone)){
+            messageModel.deleteReceiver(new MessageModel.DeleteApiListener() {
+                @Override
+                public void onSuccess() {
+                    messageView.updateView();
+                }
+                @Override
+                public void onFail() {
+                    messageView.showErrorMessage("삭제에 실패하였습니다.");
+                }
+            });
+        }
+    }
+
 
 }

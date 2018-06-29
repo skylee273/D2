@@ -156,10 +156,10 @@ public class DeviceListActivity extends Activity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    String temp;
+                    String deviceName;
                     if(result.getDevice().getName() != null){
-                        temp = result.getDevice().getName();
-                        if(temp.equals("D2")){
+                        deviceName = result.getDevice().getName();
+                        if(deviceName.equals("D2")){
                             addDevice(result.getDevice(), result.getRssi());
                         }
 

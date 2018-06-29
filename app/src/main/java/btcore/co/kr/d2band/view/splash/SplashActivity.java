@@ -1,21 +1,37 @@
 package btcore.co.kr.d2band.view.splash;
 
 import android.Manifest;
+import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.res.Configuration;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
+import android.support.v4.content.LocalBroadcastManager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.widget.Toast;
 
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
 
 import java.util.ArrayList;
 
+import btcore.co.kr.d2band.bus.CallProvider;
+import btcore.co.kr.d2band.bus.SmsProvider;
 import btcore.co.kr.d2band.view.login.LoginActivity;
+import btcore.co.kr.d2band.view.main.MainActivity;
 
 public class SplashActivity extends AppCompatActivity {
 
+    private final String TAG = getClass().getSimpleName();
     Context mContext;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,9 +43,11 @@ public class SplashActivity extends AppCompatActivity {
         TedPermission.with(mContext)
                 .setPermissionListener(permissionlistener)
                 .setDeniedMessage("만약 서비스를 허용하지 않으시면 앱 이용시에 제한이 있습니다.\n\n 권한을 설정 해주세요 [설정] > [권한]")
-                .setPermissions(Manifest.permission.SEND_SMS, Manifest.permission.RECEIVE_SMS, Manifest.permission.READ_PHONE_STATE, Manifest.permission.CALL_PHONE, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+                .setPermissions(Manifest.permission.SEND_SMS, Manifest.permission.RECEIVE_SMS, Manifest.permission.READ_PHONE_STATE, Manifest.permission.CALL_PHONE, Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS)
                 .check();
     }
+
 
     /**
      * 퍼미션 리스너
@@ -37,8 +55,6 @@ public class SplashActivity extends AppCompatActivity {
     PermissionListener permissionlistener = new PermissionListener() {
         @Override
         public void onPermissionGranted() {
-
-            // MainActivity.class 자리에 다음에 넘어갈 액티비티를 넣어주기
             Intent intent = new Intent(mContext, LoginActivity.class);
             startActivity(intent);
             finish();

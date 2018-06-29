@@ -1,5 +1,6 @@
 package btcore.co.kr.d2band.util;
 
+import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -20,15 +21,18 @@ public class BleProtocol {
     private byte D_SMS = 0x02;
     private byte D_SMS_COUNT;
     private byte D_KAKAO = 0x03;
+    private byte D_KAKAO_COUNT;
     private byte D_SUB_CALL = 0x04;
-    private byte D_SUB_SMS = 0x05;
+    private byte D_SUB_MISS_CALL = 0x05;
+    private byte D_SUB_SMS = 0x06;
     private byte D_SUB_KAKAO = 0x07;
     private byte D_REQUEST = 0x0B;
-    private byte D_END = (byte) 0xff;
+    private byte D_END = (byte) 0x00;
     private byte D_NAME_LENGTH;
     private byte [] D_NAME;
     private byte[] sendByte;
     private ArrayList<Byte> sendData = new ArrayList<>();
+
 
 
     private void clearData(){
@@ -70,7 +74,7 @@ public class BleProtocol {
         sendByte[15] = (byte) timeData.charAt(12);         //1           /second
         sendByte[16] = (byte) timeData.charAt(13);         //1
         sendByte[17] = (byte) WeekData;         //1
-        sendByte[18] = (byte) 0xff;
+        sendByte[18] = (byte) D_END;
 
         return sendByte;
 
@@ -79,8 +83,12 @@ public class BleProtocol {
     public byte[] getCallStart(String name){
         clearData();
         sendByte = new byte[20];
-        D_NAME_LENGTH = (byte) name.length();
-        D_NAME = name.getBytes();
+        try {
+            D_NAME = name.getBytes("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        D_NAME_LENGTH = (byte)D_NAME.length;
         sendData.add(D_START);
         sendData.add(D_LENGHT);
         sendData.add(D_TYPE_NOTI);
@@ -104,11 +112,47 @@ public class BleProtocol {
         }
         return sendByte;
     }
+    public byte[] getSubCallStart(String name){
+        clearData();
+        sendByte = new byte[20];
+        try {
+            D_NAME = name.getBytes("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        D_NAME_LENGTH = (byte)D_NAME.length;
+        sendData.add(D_START);
+        sendData.add(D_LENGHT);
+        sendData.add(D_TYPE_NOTI);
+        sendData.add(D_SUB_CALL);
+        sendData.add(D_CALL_START);
+        sendData.add(D_NAME_LENGTH);
+        for(byte NameByte : D_NAME){
+            sendData.add(NameByte);
+        }
+        if(sendData.size() > 20) {
+            D_LENGHT = 18;
+            sendData.set(19, D_END);
+            sendData.set(1, D_LENGHT);
+        }else{
+            sendData.add(D_END);
+            sendData.set(1, (byte) (sendData.size() - 2));
+        }
+
+        for(int i = 0 ; i < sendData.size(); i++) {
+            sendByte[i] = sendData.get(i);
+        }
+        return sendByte;
+    }
     public byte[] getCallEnd(String name){
         clearData();
         sendByte = new byte[20];
-        D_NAME_LENGTH = (byte) name.length();
-        D_NAME = name.getBytes();
+        try {
+            D_NAME = name.getBytes("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        D_NAME_LENGTH = (byte)D_NAME.length;
         sendData.add(D_START);
         sendData.add(D_LENGHT);
         sendData.add(D_TYPE_NOTI);
@@ -132,7 +176,38 @@ public class BleProtocol {
         }
         return sendByte;
     }
+    public byte[] getSubCallEnd(String name){
+        clearData();
+        sendByte = new byte[20];
+        try {
+            D_NAME = name.getBytes("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        D_NAME_LENGTH = (byte)D_NAME.length;
+        sendData.add(D_START);
+        sendData.add(D_LENGHT);
+        sendData.add(D_TYPE_NOTI);
+        sendData.add(D_SUB_CALL);
+        sendData.add(D_CALL_STOP);
+        sendData.add(D_NAME_LENGTH);
+        for(byte NameByte : D_NAME){
+            sendData.add(NameByte);
+        }
+        if(sendData.size() > 20) {
+            D_LENGHT = 18;
+            sendData.set(19, D_END);
+            sendData.set(1, D_LENGHT);
+        }else{
+            sendData.add(D_END);
+            sendData.set(1, (byte) (sendData.size() - 2));
+        }
 
+        for(int i = 0 ; i < sendData.size(); i++) {
+            sendByte[i] = sendData.get(i);
+        }
+        return sendByte;
+    }
     public byte[] getMissedCall(String miss){
         clearData();
         sendByte = new byte[20];
@@ -146,13 +221,30 @@ public class BleProtocol {
         sendByte[5] = D_END;
         return sendByte;
     }
+    public byte[] getSubMissedCall(String miss){
+        clearData();
+        sendByte = new byte[20];
+        D_MISS_COUNT = (byte)Integer.parseInt(miss);
+        D_LENGHT = 0x04;
+        sendByte[0] = D_START;
+        sendByte[1] = D_LENGHT;
+        sendByte[2] = D_TYPE_NOTI;
+        sendByte[3] = D_SUB_MISS_CALL;
+        sendByte[4] = D_MISS_COUNT;
+        sendByte[5] = D_END;
+        return sendByte;
+    }
     public byte[] getSms(String s){
         clearData();
         sendByte = new byte[20];
         String [] sms = s.split("&&&&&");
         D_SMS_COUNT = (byte)Integer.parseInt(sms[1]);
-        D_NAME_LENGTH = (byte) sms[0].length();
-        D_NAME = sms[0].getBytes();
+        try {
+            D_NAME = sms[0].getBytes("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        D_NAME_LENGTH = (byte)D_NAME.length;
         sendData.add(D_START);
         sendData.add(D_LENGHT);
         sendData.add(D_TYPE_NOTI);
@@ -176,7 +268,108 @@ public class BleProtocol {
         }
         return sendByte;
     }
+    public byte[] getSubSms(String s){
+        clearData();
+        sendByte = new byte[20];
+        String [] sms = s.split("&&&&&");
+        D_SMS_COUNT = (byte)Integer.parseInt(sms[1]);
+        try {
+            D_NAME = sms[0].getBytes("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        D_NAME_LENGTH = (byte)D_NAME.length;
+        sendData.add(D_START);
+        sendData.add(D_LENGHT);
+        sendData.add(D_TYPE_NOTI);
+        sendData.add(D_SUB_SMS);
+        sendData.add(D_SMS_COUNT);
+        sendData.add(D_NAME_LENGTH);
+        for(byte NameByte : D_NAME){
+            sendData.add(NameByte);
+        }
+        if(sendData.size() > 20) {
+            D_LENGHT = 18;
+            sendData.set(19, D_END);
+            sendData.set(1, D_LENGHT);
+        }else{
+            sendData.add(D_END);
+            sendData.set(1, (byte) (sendData.size() - 2));
+        }
 
+        for(int i = 0 ; i < sendData.size(); i++) {
+            sendByte[i] = sendData.get(i);
+        }
+        return sendByte;
+    }
+    public byte[] getKakao(String s){
+        clearData();
+        sendByte = new byte[20];
+        String [] kakao = s.split("&&&&&");
+        D_KAKAO_COUNT = (byte)Integer.parseInt(kakao[1]);
+        try {
+            D_NAME = kakao[0].getBytes("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        D_NAME_LENGTH = (byte)D_NAME.length;
+        sendData.add(D_START);
+        sendData.add(D_LENGHT);
+        sendData.add(D_TYPE_NOTI);
+        sendData.add(D_KAKAO);
+        sendData.add(D_KAKAO_COUNT);
+        sendData.add(D_NAME_LENGTH);
+        for(byte NameByte : D_NAME){
+            sendData.add(NameByte);
+        }
+        if(sendData.size() > 20) {
+            D_LENGHT = 18;
+            sendData.set(19, D_END);
+            sendData.set(1, D_LENGHT);
+        }else{
+            sendData.add(D_END);
+            sendData.set(1, (byte) (sendData.size() - 2));
+        }
+
+        for(int i = 0 ; i < sendData.size(); i++) {
+            sendByte[i] = sendData.get(i);
+        }
+        return sendByte;
+    }
+    public byte[] getSubKakao(String s){
+        clearData();
+        sendByte = new byte[20];
+        String [] kakao = s.split("&&&&&");
+        D_KAKAO_COUNT = (byte)Integer.parseInt(kakao[1]);
+        try {
+            D_NAME = kakao[0].getBytes("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        D_NAME_LENGTH = (byte)D_NAME.length;
+        sendData.add(D_START);
+        sendData.add(D_LENGHT);
+        sendData.add(D_TYPE_NOTI);
+        sendData.add(D_SUB_KAKAO);
+        sendData.add(D_KAKAO_COUNT);
+        sendData.add(D_NAME_LENGTH);
+        for(byte NameByte : D_NAME){
+            sendData.add(NameByte);
+        }
+        if(sendData.size() > 20) {
+            D_LENGHT = 18;
+            sendData.set(19, D_END);
+            sendData.set(1, D_LENGHT);
+        }else{
+            sendData.add(D_END);
+            sendData.set(1, (byte) (sendData.size() - 2));
+        }
+
+        for(int i = 0 ; i < sendData.size(); i++) {
+            sendByte[i] = sendData.get(i);
+        }
+        return sendByte;
+    }
     public int getWeek() {
         Calendar cal = Calendar.getInstance();
         int week = cal.get(cal.DAY_OF_WEEK);
@@ -187,9 +380,6 @@ public class BleProtocol {
         SimpleDateFormat mSimpleDateFormat = new SimpleDateFormat("yyyyMMddHHmmss", Locale.KOREA);
         Date currentTime = new Date();
         String mTime = mSimpleDateFormat.format(currentTime);
-
         return mTime;
     }
-
-
 }

@@ -65,7 +65,7 @@ public class MmsReceiver extends BroadcastReceiver {
 
         String numberOrName = getDisplayName(mSavedContext, message.from);
         String mmsContext = message.body;
-        String mmsData = numberOrName + "&&&&&" + mmsContext + "&&&&&" + countStr;
+        String mmsData = numberOrName + "&&&&&" + countStr;
         SmsProvider.getInstance().post(new SmsBusEvent(mmsData));
     }
 

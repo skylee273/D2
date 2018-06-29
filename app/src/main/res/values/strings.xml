@@ -55,7 +55,7 @@
         <string name="text_todayStep">TODAY STEP</string>
         <string name="text_dailystep">STEP</string>
         <string name="text_dailykcal">Kcal</string>
-        <string name="text_dailykm">Km</string>
+        <string name="text_dailykm">m</string>
         <string name="text_daliygoal">Daily goal</string>
         <string name="text_activity_tabitem0">TODAY</string>
         <string name="text_activity_tabitem1">WEEK</string>

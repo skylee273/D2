@@ -19,7 +19,6 @@ import btcore.co.kr.d2band.databinding.ActivityLoginBinding;
 import btcore.co.kr.d2band.view.find.FindIdActivity;
 import btcore.co.kr.d2band.view.login.presenter.LoginPresenter;
 import btcore.co.kr.d2band.view.register.RegisterActivity;
-import btcore.co.kr.d2band.view.step.StepActivity;
 import butterknife.OnClick;
 
 /**
@@ -31,7 +30,7 @@ public class LoginActivity extends AppCompatActivity implements Login.View {
     private final String TAG = "LoginActivity";
     private ProgressDialog progressDialog;
     private SharedPreferences.Editor editor;
-    private SharedPreferences pref = null;
+    private SharedPreferences loginPref = null;
     private boolean isAuto;
     ActivityLoginBinding mBinding;
     Login.Presenter presenter;
@@ -44,21 +43,21 @@ public class LoginActivity extends AppCompatActivity implements Login.View {
 
         Glide.with(this).load(R.drawable.logo).into(mBinding.imageLogoRegister);
 
-        pref = getSharedPreferences("pref", Activity.MODE_PRIVATE);
-        editor = pref.edit();
+        loginPref = getSharedPreferences("D2", Activity.MODE_PRIVATE);
+        editor = loginPref.edit();
 
         presenter = new LoginPresenter(this);
-        isAuto = pref.getBoolean("AUTO_LOGIN",false);
+        isAuto = loginPref.getBoolean("AUTO_LOGIN",false);
 
-        if(isAuto) AutoLogin();
+        if(isAuto) { AutoLogin(); }
         else { mBinding.btnAutologin.setBackgroundResource(R.drawable.icon_uncheck); }
 
 
     }
 
     private void AutoLogin(){
-        String id = pref.getString("ID","");
-        String pw = pref.getString("PW","");
+        String id = loginPref.getString("ID","");
+        String pw = loginPref.getString("PW","");
         progressDialog = ProgressDialog.show(LoginActivity.this, "로그인 중 입니다.",null, true, true);
         presenter.initUserData(id, pw);
         presenter.callLogin();
@@ -136,13 +135,9 @@ public class LoginActivity extends AppCompatActivity implements Login.View {
             editor.putString("ID",mBinding.editId.getText().toString());
             editor.putString("PW",mBinding.editPw.getText().toString());
             editor.commit();
-        }else{
-            editor.remove("AUTO_LOGIN");
-            editor.commit();
-
         }
-
         presenter.UserSet();
+        presenter.RecvSet();
 
         Intent intent = new Intent(getApplicationContext(), MainActivity.class);
         startActivity(intent);

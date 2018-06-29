@@ -1,5 +1,7 @@
 package btcore.co.kr.d2band.view.step.presenter;
 
+import android.util.Log;
+
 import btcore.co.kr.d2band.view.step.model.StepActivityModel;
 
 /**
@@ -8,30 +10,30 @@ import btcore.co.kr.d2band.view.step.model.StepActivityModel;
 
 public class StepActivityPresenter implements Step.Presenter{
 
-    Step.view todayView;
-    StepActivityModel todayActivityModel;
+    Step.view stepView;
+    StepActivityModel stepActivityModel;
 
-    public StepActivityPresenter(Step.view todayView){
-        this.todayView = todayView;
-        this.todayActivityModel = new StepActivityModel();
+    public StepActivityPresenter(Step.view stepView){
+        this.stepView = stepView;
+        this.stepActivityModel = new StepActivityModel();
     }
 
 
     @Override
     public void UpdateStep(String step) {
-        if(todayActivityModel.checkTodayData(step)){
-            todayView.showTodayData(todayActivityModel.makeTodayData());
+        if(stepActivityModel.checkStep(step)){
+            stepView.showTodayData(stepActivityModel.getDistance(step));
         }else{
-
+            Log.d("step","null");
         }
     }
 
     @Override
     public void UpdateGoal(String goal) {
-        if(todayActivityModel.checkGoal(goal)){
-            todayView.showGoal(goal);
+        if(stepActivityModel.checkGoal(goal)){
+            stepView.showGoal(goal);
         }else{
-            todayView.showErrorMessage("목표 설정이 잘못 되었습니다.");
+            stepView.showErrorMessage("목표 설정이 잘못 되었습니다.");
         }
     }
 }

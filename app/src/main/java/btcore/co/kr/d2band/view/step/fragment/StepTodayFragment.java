@@ -5,6 +5,7 @@ import android.content.Context;
 import android.databinding.DataBindingUtil;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -54,14 +55,10 @@ public class StepTodayFragment extends Fragment implements OnChartGestureListene
     private void initChartView(){
         todayBinding.todayChart.setOnChartGestureListener(this);
         todayBinding.todayChart.setOnChartValueSelectedListener(this);
-        // add data
         setData();
-        // get the legend (only possible after setting data)
         Legend l = todayBinding.todayChart.getLegend();
-        // modify the legend ...
-        // l.setPosition(LegendPosition.LEFT_OF_CHART);
         l.setForm(Legend.LegendForm.LINE);
-        int color = getResources().getColor(R.color.color_chart_xy);
+        int color = ContextCompat.getColor(getContext(), R.color.color_chart_xy);
         todayBinding.todayChart.setDescription("");
         todayBinding.todayChart.setNoDataTextDescription("You need to provide data for the chart.");
         todayBinding.todayChart.getAxisLeft().setAxisMinValue(0f);
@@ -69,7 +66,6 @@ public class StepTodayFragment extends Fragment implements OnChartGestureListene
         todayBinding.todayChart.getAxisLeft().setAxisMaxValue(200f);
         todayBinding.todayChart.getXAxis().setLabelsToSkip(5);
         todayBinding.todayChart.getXAxis().setTextColor(color);
-        todayBinding.todayChart.getXAxis().setLabelsToSkip(4);
         todayBinding.todayChart.getAxisLeft().setTextColor(color);
         todayBinding.todayChart.getAxisRight().setEnabled(false);
         todayBinding.todayChart.getLegend().setTextColor(Color.WHITE);
@@ -128,23 +124,18 @@ public class StepTodayFragment extends Fragment implements OnChartGestureListene
     }
     private ArrayList<String> setXAxisValues() {
         ArrayList<String> xVals = new ArrayList<String>();
-        for (int i = 0; i < 24; i++) {
+        for (int i = 1; i <= 24; i++) {
             String date = String.format("%02d", i);
             xVals.add(String.valueOf(date));
         }
-
         return xVals;
     }
 
     private ArrayList<Entry> setYAxisValues() {
         ArrayList<Entry> yVals = new ArrayList<Entry>();
-
-        for (int i = 0; i < 24; i++) {
+        for (int i = 1; i <= 24; i++) {
             yVals.add(new Entry(0, i));
         }
-
-
-
         return yVals;
     }
 
@@ -156,15 +147,9 @@ public class StepTodayFragment extends Fragment implements OnChartGestureListene
 
         LineDataSet set1;
 
-        // create a dataset and give it a type
         set1 = new LineDataSet(yVals, "심박수 선");
 
         set1.setFillAlpha(110);
-        // set1.setFillColor(Color.RED);
-
-        // set the line to be drawn like this "- - - - - -"
-        // set1.enableDashedLine(10f, 5f, 0f);
-        // set1.enableDashedHighlightLine(10f, 5f, 0f);
         set1.setColor(Color.WHITE);
         set1.setCircleColor(Color.WHITE);
         set1.setValueTextColor(Color.WHITE);
@@ -176,13 +161,8 @@ public class StepTodayFragment extends Fragment implements OnChartGestureListene
         set1.setDrawFilled(true);
 
         ArrayList<ILineDataSet> dataSets = new ArrayList<ILineDataSet>();
-        dataSets.add(set1); // add the datasets
-
-        // create a data object with the datasets
+        dataSets.add(set1);
         LineData data = new LineData(xVals, dataSets);
-
-        // set data
         todayBinding.todayChart.setData(data);
-
     }
 }

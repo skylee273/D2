@@ -9,7 +9,7 @@ import java.util.ArrayList;
 public interface Step {
 
     interface view{
-        void showTodayData(ArrayList arrayList);
+        void showTodayData(String distance);
         void showErrorMessage(String message);
         void showGoal(String goal);
     }

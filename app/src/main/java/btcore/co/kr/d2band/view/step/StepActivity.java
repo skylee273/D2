@@ -2,7 +2,6 @@ package btcore.co.kr.d2band.view.step;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -10,6 +9,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
@@ -17,21 +17,17 @@ import android.os.IBinder;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.squareup.otto.Subscribe;
 
 import java.text.DateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -42,10 +38,8 @@ import btcore.co.kr.d2band.bus.SmsBusEvent;
 import btcore.co.kr.d2band.bus.SmsProvider;
 import btcore.co.kr.d2band.databinding.ActivityStepBinding;
 import btcore.co.kr.d2band.service.BluetoothLeService;
+import btcore.co.kr.d2band.user.Contact;
 import btcore.co.kr.d2band.util.BleProtocol;
-import btcore.co.kr.d2band.view.find.fragment.FragmentId;
-import btcore.co.kr.d2band.view.find.fragment.FragmentPw;
-import btcore.co.kr.d2band.view.main.MainActivity;
 import btcore.co.kr.d2band.R;
 import btcore.co.kr.d2band.view.profile.ProfileAcitivty;
 import btcore.co.kr.d2band.view.step.dialog.StepDialog;
@@ -72,15 +66,19 @@ public class StepActivity extends AppCompatActivity implements Step.view {
     private static final int UART_PROFILE_READY = 10;
     private BluetoothAdapter mBtAdapter = null;
     private int mState = UART_PROFILE_DISCONNECTED;
-
-    ActivityStepBinding mStepBinding;
-    FragmentPagerAdapter mPagerAdapter = null;
-    public BluetoothLeService mService = null;
-    BleProtocol bleProtocol;
-    Step.Presenter presenter;
-    StepDialog stepDialog;
-    private Timer task;
-    TimerTask mnTask;
+    private SharedPreferences pref = null;
+    private SharedPreferences.Editor editor;
+    private BluetoothLeService mService = null;
+    private long startTime;
+    private long endTime;
+    private ActivityStepBinding mStepBinding;
+    private FragmentPagerAdapter mPagerAdapter = null;
+    private BleProtocol bleProtocol;
+    private Contact contact;
+    private Step.Presenter presenter;
+    private StepDialog stepDialog;
+    private Timer stepTimer;
+    private TimerTask stepTask;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -97,6 +95,9 @@ public class StepActivity extends AppCompatActivity implements Step.view {
         // 블루투스 데이터 생성
         bleProtocol = new BleProtocol();
 
+        // 연락처
+        contact = new Contact();
+
         // 프레젠터 생성
         presenter = new StepActivityPresenter(this);
 
@@ -104,19 +105,42 @@ public class StepActivity extends AppCompatActivity implements Step.view {
         CallProvider.getInstance().register(this);
         SmsProvider.getInstance().register(this);
 
+        RequestTask();
+
+        pref = getSharedPreferences("D2", Activity.MODE_PRIVATE);
+        editor = pref.edit();
+
+        int todayGoal = pref.getInt("STEPGOAL", 8000);
+        mStepBinding.textGoal.setText(String.valueOf(todayGoal));
+        mStepBinding.progressBarStep.setMax(todayGoal);
+
+    }
+
+    @Override
+    public void onBackPressed() {
+        endTime = System.currentTimeMillis();
+        Snackbar.make(getWindow().getDecorView().getRootView(), "한번더 누르면 종료됩니다.", Snackbar.LENGTH_LONG).show();
+        if (endTime - startTime < 2000) {
+            super.onBackPressed();
+            finishAffinity();
+        }
+        startTime = System.currentTimeMillis();
     }
 
     @OnClick(R.id.text_goal)
-    public void OnGoal(View view){
-        stepDialog =  new StepDialog(this);
+    public void OnGoal(View view) {
+        stepDialog = new StepDialog(this);
         stepDialog.show();
         stepDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
             @Override
             public void onDismiss(DialogInterface dialog) {
                 presenter.UpdateGoal(stepDialog.getmGoal());
+                editor.putInt("STEPGOAL", Integer.parseInt(stepDialog.getmGoal()));
+                editor.commit();
             }
         });
     }
+
     @OnClick(R.id.btn_profile)
     public void OnProfile(View view) {
         Intent intent = new Intent(getApplicationContext(), ProfileAcitivty.class);
@@ -144,15 +168,12 @@ public class StepActivity extends AppCompatActivity implements Step.view {
             public void onTabReselected(TabLayout.Tab tab) {
             }
         });
-        mStepBinding.progressBarStep.setMax(8000);
-        mStepBinding.progressBarStep.setProgress(0);
     }
 
     @Override
-    public void showTodayData(ArrayList arrayList) {
-        mStepBinding.textStep.setText(arrayList.get(0).toString());
-        mStepBinding.textKm.setText(arrayList.get(2).toString());
-        mStepBinding.progressBarStep.setProgress(Integer.parseInt(arrayList.get(0).toString()));
+    public void showTodayData(String distance) {
+        mStepBinding.textKm.setText(distance);
+        Log.d(TAG, distance);
     }
 
     @Override
@@ -206,8 +227,12 @@ public class StepActivity extends AppCompatActivity implements Step.view {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        android.util.Log.d(TAG, "onDestroy()");
-        SmsProvider.getInstance().unregister(this);
+        if (stepTimer != null) {
+            stepTimer.cancel();
+            stepTimer = null;
+        }
+
+            SmsProvider.getInstance().unregister(this);
         CallProvider.getInstance().unregister(this);
         try {
             LocalBroadcastManager.getInstance(this).unregisterReceiver(UARTStatusChangeReceiver);
@@ -258,23 +283,66 @@ public class StepActivity extends AppCompatActivity implements Step.view {
     }
 
     @Subscribe
-    public void FinishLoad(CallBusEvent callBusEvent){
-        switch (callBusEvent.getCallType()){
-            case 0:
-                SendCommand(bleProtocol.getCallStart(callBusEvent.getEventData()));
-                break;
-            case 1:
-                SendCommand(bleProtocol.getCallEnd(callBusEvent.getEventData()));
-                break;
-            case 2:
-                SendCommand(bleProtocol.getMissedCall(callBusEvent.getEventData()));
-                break;
+    public void FinishLoad(CallBusEvent callBusEvent) {
+        boolean subFlag = false;
+        try {
+            String name = callBusEvent.getEventData();
+            for (String temp : contact.getName()) {
+                if (name.equals(temp)) {
+                    subFlag = true;
+                }
+            }
+            if (STATE && subFlag != true) {
+                switch (callBusEvent.getCallType()) {
+                    case 0:
+                        send(bleProtocol.getCallStart(callBusEvent.getEventData()));
+                        break;
+                    case 1:
+                        send(bleProtocol.getCallEnd(callBusEvent.getEventData()));
+                        break;
+                    case 2:
+                        send(bleProtocol.getMissedCall(callBusEvent.getEventData()));
+                        break;
+                }
+            }
+            if (STATE && subFlag == true) {
+                switch (callBusEvent.getCallType()) {
+                    case 0:
+                        send(bleProtocol.getSubCallStart(callBusEvent.getEventData()));
+                        break;
+                    case 1:
+                        send(bleProtocol.getSubCallEnd(callBusEvent.getEventData()));
+                        break;
+                    case 2:
+                        send(bleProtocol.getSubMissedCall(callBusEvent.getEventData()));
+                        break;
+                }
+            }
+        } catch (Exception e) {
+            Log.d(TAG, e.toString());
         }
     }
+
     @Subscribe
-    public void FinishLoad(SmsBusEvent smsBusEvent){
-        SendCommand(bleProtocol.getSms(smsBusEvent.getEventData()));
+    public void FinishLoad(SmsBusEvent smsBusEvent) {
+        boolean subFlag = false;
+        String[] sms = smsBusEvent.getEventData().split("&&&&&");
+        String NameOrPhone = sms[0];
+        try {
+            for (String name : contact.getName()) {
+                if (NameOrPhone.equals(name)) subFlag = true;
+            }
+            if (STATE && subFlag == true) {
+                send(bleProtocol.getSubSms(smsBusEvent.getEventData()));
+            }
+            if (STATE && subFlag != true) {
+                send(bleProtocol.getSms(smsBusEvent.getEventData()));
+            }
+        } catch (Exception e) {
+            Log.d(TAG, e.toString());
+        }
     }
+
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
@@ -292,18 +360,25 @@ public class StepActivity extends AppCompatActivity implements Step.view {
     }
 
     public void RequestTask() {
-        task = new Timer();
-        mnTask = new TimerTask() {
+        stepTimer = new Timer();
+        stepTask = new TimerTask() {
             @Override
             public void run() {
-                if(STATE){
-                 SendCommand(bleProtocol.Requset());
+                if (STATE) {
+                    send(bleProtocol.Requset());
+                } else {
+                    String address = pref.getString("DEVICEADDR", "");
+                    if (address.length() > 0) {
+                        service_init();
+                        mService.connect(address);
+                    }
                 }
             }
         };
-        task.schedule(mnTask,0, 10000);
+        stepTimer.schedule(stepTask, 1500, 30000);
     }
-    public void SendCommand(byte[] data) {
+
+    public void send(byte[] data) {
         mService.writeRXCharacteristic(data);
     }
 
@@ -340,18 +415,6 @@ public class StepActivity extends AppCompatActivity implements Step.view {
                 mService.enableTXNotification();
             }
 
-            if (action.equals(BluetoothLeService.ACTION_DATA_AVAILABLE)) {
-                runOnUiThread(new Runnable() {
-                    public void run() {
-                        try {
-                            String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
-                            Log.d(TAG, "ACTION_DATA_AVAILABLE : " + currentDateTimeString);
-                        } catch (Exception e) {
-                            android.util.Log.e(TAG, e.toString());
-                        }
-                    }
-                });
-            }
             if (action.equals(BluetoothLeService.DEVICE_DOES_NOT_SUPPORT_UART)) {
                 String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
                 Log.d(TAG, "DEVICE_DOES_NOT_SUPPORT_UART : " + currentDateTimeString);
@@ -362,6 +425,8 @@ public class StepActivity extends AppCompatActivity implements Step.view {
                 runOnUiThread(new Runnable() {
                     public void run() {
                         try {
+                            mStepBinding.textStep.setText(Step);
+                            mStepBinding.progressBarStep.setProgress(Integer.parseInt(Step));
                             presenter.UpdateStep(Step);
                         } catch (Exception e) {
                             android.util.Log.e(TAG, e.toString());
@@ -390,12 +455,12 @@ public class StepActivity extends AppCompatActivity implements Step.view {
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_CONNECTED);
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED);
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
-        intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
         intentFilter.addAction(BluetoothLeService.DEVICE_DOES_NOT_SUPPORT_UART);
         intentFilter.addAction(BluetoothLeService.D2_STEP_DATA);
         intentFilter.addAction(BluetoothLeService.D2_CALORIE);
         return intentFilter;
     }
+
     private ServiceConnection mServiceConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder rawBinder) {
             mService = ((BluetoothLeService.LocalBinder) rawBinder).getService();
@@ -405,6 +470,7 @@ public class StepActivity extends AppCompatActivity implements Step.view {
                 finish();
             }
         }
+
         public void onServiceDisconnected(ComponentName classname) {
             mService = null;
         }

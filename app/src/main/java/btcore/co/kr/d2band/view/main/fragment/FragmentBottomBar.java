@@ -27,7 +27,7 @@ import butterknife.OnClick;
 public class FragmentBottomBar extends Fragment implements Bottom.View {
 
     private final String TAG = getClass().getSimpleName();
-    private static int currentPage = 0;
+    public static int currentPage = 0;
     FragmentBottomBinding mBinding;
     Bottom.Presenter presenter;
     public FragmentBottomBar() {

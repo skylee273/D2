@@ -22,6 +22,4 @@ public class ReceiveItem {
 
     private String phone;
 
-
-
 }

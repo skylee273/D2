@@ -2,6 +2,7 @@ package btcore.co.kr.d2band.view.sos;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -10,10 +11,13 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.databinding.DataBindingUtil;
-import android.graphics.Color;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.Ringtone;
@@ -21,26 +25,43 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.telephony.SmsManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import com.squareup.otto.Subscribe;
+
 import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import btcore.co.kr.d2band.Manifest;
 import btcore.co.kr.d2band.R;
+import btcore.co.kr.d2band.bus.CallBusEvent;
+import btcore.co.kr.d2band.bus.CallProvider;
+import btcore.co.kr.d2band.bus.SmsBusEvent;
+import btcore.co.kr.d2band.bus.SmsProvider;
 import btcore.co.kr.d2band.databinding.ActivitySosBinding;
 import btcore.co.kr.d2band.service.BluetoothLeService;
+import btcore.co.kr.d2band.service.GPSTracker;
+import btcore.co.kr.d2band.user.Contact;
 import btcore.co.kr.d2band.util.BleProtocol;
-import btcore.co.kr.d2band.view.find.FindIdActivity;
 import btcore.co.kr.d2band.view.setting.SettingActivity;
 import butterknife.OnClick;
+
+import static btcore.co.kr.d2band.service.BluetoothLeService.STATE;
 
 /**
  * Created by leehaneul on 2018-02-26.
@@ -54,15 +75,30 @@ public class SosActivity extends AppCompatActivity {
     private static final int REQUEST_SELECT_DEVICE = 1;
     private static final int REQUEST_ENABLE_BT = 2;
     private static final int UART_PROFILE_READY = 10;
-    private static boolean connection = false;
     private BluetoothAdapter mBtAdapter = null;
     private Context mContext;
     private int mState = UART_PROFILE_DISCONNECTED;
     private boolean sos = false;
-    public BluetoothLeService mService = null;
+    private BluetoothLeService mService = null;
+    private SharedPreferences pref = null;
+    private SharedPreferences.Editor editor;
+    private ActivitySosBinding mSosBinding;
+    private BleProtocol bleProtocol;
+    private long startTime;
+    private long endTime;
+    private Timer sosTimer, autoTimer;
+    private TimerTask sosTask, autoTask;
+    private LocationManager locationManager;
+    private LocationListener locationListener;
+    private Location TODO;
+    private Contact contact;
 
-    ActivitySosBinding mSosBinding;
-    BleProtocol bleProtocol;
+    // GPSTracker class
+    GPSTracker gps = null;
+    public Handler mHandler;
+
+    public static int RENEW_GPS = 1;
+    public static int SEND_PRINT = 2;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -77,17 +113,80 @@ public class SosActivity extends AppCompatActivity {
         // 블루투스 데이터 생성
         bleProtocol = new BleProtocol();
 
+        // 버스 등록
+        CallProvider.getInstance().register(this);
+        SmsProvider.getInstance().register(this);
 
+        // 연락처
+        contact = new Contact();
+        pref = getSharedPreferences("D2", Activity.MODE_PRIVATE);
+        editor = pref.edit();
+
+        try {
+            Intent intent = getIntent();
+            if (intent.getExtras().getInt("emergency") == 4) {
+                mSosBinding.content.startRippleAnimation();
+                if ( Build.VERSION.SDK_INT >= 23 &&
+                        ContextCompat.checkSelfPermission( this, android.Manifest.permission.ACCESS_FINE_LOCATION ) != PackageManager.PERMISSION_GRANTED ) {
+                    ActivityCompat.requestPermissions( this, new String[] {  android.Manifest.permission.ACCESS_FINE_LOCATION  },
+                            0 );
+                }
+
+                mHandler = new Handler(){
+                    @Override
+                    public void handleMessage(Message msg){
+                        if(msg.what==RENEW_GPS){
+                            makeNewGpsService();
+                        }
+                        if(msg.what==SEND_PRINT){
+                            logPrint((String)msg.obj);
+                        }
+                    }
+                };
+                if(gps == null) {
+                    gps = new GPSTracker(SosActivity.this,mHandler);
+                }else{
+                    gps.Update();
+                }
+                sosTask();
+                sos = true;
+            }
+        } catch (NullPointerException e) {
+            Log.d(TAG, e.toString());
+        }
+
+        AutoConnection();
+
+    }
+
+    @Override
+    public void onBackPressed() {
+        endTime = System.currentTimeMillis();
+        Snackbar.make(getWindow().getDecorView().getRootView(), "한번더 누르면 종료됩니다.", Snackbar.LENGTH_LONG).show();
+        if (endTime - startTime < 2000) {
+            super.onBackPressed();
+            finishAffinity();
+        }
+        startTime = System.currentTimeMillis();
     }
 
     @SuppressLint("ResourceAsColor")
     @OnClick(R.id.btn_alert)
-    public void OnAlert(View view){
-        if(sos == true){
+    public void OnAlert(View view) {
+        if (sos == true) {
             mSosBinding.content.stopRippleAnimation();
             sos = false;
+            try {
+                Contact contact = new Contact();
+                for (String sms : contact.getPhone()) {
+                    sendSMS(sms, "저는 괜찮아 졌습니다. 감사합니다.");
+                }
+            } catch (NullPointerException e) {
+                Log.d(TAG, e.toString());
+            }
         }
     }
+
     @OnClick(R.id.btn_112)
     public void OnPolice(View view) {
         String tel = "tel:" + "112";
@@ -148,11 +247,85 @@ public class SosActivity extends AppCompatActivity {
         questionAlert.show();
     }
 
+    @Subscribe
+    public void FinishLoad(CallBusEvent callBusEvent) {
+        boolean subFlag = false;
+        try {
+            String name = callBusEvent.getEventData();
+            for (String temp : contact.getName()) {
+                if (name.equals(temp)) {
+                    subFlag = true;
+                }
+            }
+            if (STATE && subFlag != true) {
+                switch (callBusEvent.getCallType()) {
+                    case 0:
+                        send(bleProtocol.getCallStart(callBusEvent.getEventData()));
+                        break;
+                    case 1:
+                        send(bleProtocol.getCallEnd(callBusEvent.getEventData()));
+                        break;
+                    case 2:
+                        send(bleProtocol.getMissedCall(callBusEvent.getEventData()));
+                        break;
+                }
+            }
+            if (STATE && subFlag == true) {
+                switch (callBusEvent.getCallType()) {
+                    case 0:
+                        send(bleProtocol.getSubCallStart(callBusEvent.getEventData()));
+                        break;
+                    case 1:
+                        send(bleProtocol.getSubCallEnd(callBusEvent.getEventData()));
+                        break;
+                    case 2:
+                        send(bleProtocol.getSubMissedCall(callBusEvent.getEventData()));
+                        break;
+                }
+            }
+        } catch (Exception e) {
+            Log.d(TAG, e.toString());
+        }
+    }
+
+    @Subscribe
+    public void FinishLoad(SmsBusEvent smsBusEvent) {
+        boolean subFlag = false;
+        String[] sms = smsBusEvent.getEventData().split("&&&&&");
+        String NameOrPhone = sms[0];
+        try {
+            for (String name : contact.getName()) {
+                if (NameOrPhone.equals(name)) subFlag = true;
+            }
+            if (STATE && subFlag == true) {
+                send(bleProtocol.getSubSms(smsBusEvent.getEventData()));
+            }
+            if (STATE && subFlag != true) {
+                send(bleProtocol.getSms(smsBusEvent.getEventData()));
+            }
+        } catch (Exception e) {
+            Log.d(TAG, e.toString());
+        }
+
+    }
+
     @Override
     public void onDestroy() {
         super.onDestroy();
         android.util.Log.d(TAG, "onDestroy()");
+
+        if (autoTimer != null) {
+            autoTimer.cancel();
+            autoTimer = null;
+        }
+        if (sosTimer != null) {
+            sosTimer.cancel();
+            sosTimer = null;
+        }
+
         try {
+            SmsProvider.getInstance().unregister(this);
+            CallProvider.getInstance().unregister(this);
             LocalBroadcastManager.getInstance(this).unregisterReceiver(UARTStatusChangeReceiver);
         } catch (Exception ignore) {
             android.util.Log.e(TAG, ignore.toString());
@@ -162,24 +335,6 @@ public class SosActivity extends AppCompatActivity {
             mService.stopSelf();
             mService = null;
         }
-    }
-
-    @Override
-    protected void onStop() {
-        android.util.Log.d(TAG, "onStop");
-        super.onStop();
-    }
-
-    @Override
-    protected void onPause() {
-        android.util.Log.d(TAG, "onPause");
-        super.onPause();
-    }
-
-    @Override
-    protected void onRestart() {
-        super.onRestart();
-        android.util.Log.d(TAG, "onRestart");
     }
 
     @Override
@@ -232,9 +387,10 @@ public class SosActivity extends AppCompatActivity {
         super.onConfigurationChanged(newConfig);
     }
 
-    public void SendCommand(byte[] data) {
+    public void send(byte[] data) {
         mService.writeRXCharacteristic(data);
     }
+
 
     public void service_init() {
         mBtAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -251,7 +407,6 @@ public class SosActivity extends AppCompatActivity {
     private ServiceConnection mServiceConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder rawBinder) {
             mService = ((BluetoothLeService.LocalBinder) rawBinder).getService();
-            connection = false;
             Log.d(TAG, "onServiceConnected mService= " + mService);
             if (!mService.initialize()) {
                 Log.e(TAG, "Unable to initialize Bluetooth");
@@ -260,7 +415,6 @@ public class SosActivity extends AppCompatActivity {
         }
 
         public void onServiceDisconnected(ComponentName classname) {
-            connection = false;
             mService = null;
         }
     };
@@ -273,17 +427,13 @@ public class SosActivity extends AppCompatActivity {
             final Intent mIntent = intent;
             //*********************//
             if (action.equals(BluetoothLeService.ACTION_GATT_CONNECTED)) {
-                connection = false;
                 runOnUiThread(new Runnable() {
                     public void run() {
                         mState = UART_PROFILE_CONNECTED;
                     }
                 });
             }
-
-            //*********************//
             if (action.equals(BluetoothLeService.ACTION_GATT_DISCONNECTED)) {
-                connection = false;
                 runOnUiThread(new Runnable() {
                     public void run() {
                         android.util.Log.d(TAG, "UART_DISCONNECT_MSG");
@@ -292,43 +442,11 @@ public class SosActivity extends AppCompatActivity {
                     }
                 });
             }
-
-
-            //*********************//
             if (action.equals(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED)) {
-                connection = true;
                 mService.enableTXNotification();
-            }
-            //*********************//
-            if (action.equals(BluetoothLeService.ACTION_DATA_AVAILABLE)) {
-                final byte[] txValue = intent.getByteArrayExtra(BluetoothLeService.EXTRA_DATA);
-                runOnUiThread(new Runnable() {
-                    public void run() {
-                        try {
-                            String text = new String(txValue, "UTF-8");
-                            String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
-
-                        } catch (Exception e) {
-                            android.util.Log.e(TAG, e.toString());
-                        }
-                    }
-                });
-            }
-            if (action.equals(BluetoothLeService.D2_BLUETOOTH_DATA)) {
-                runOnUiThread(new Runnable() {
-                    public void run() {
-                        try {
-                            sos = true;
-                            mSosBinding.content.startRippleAnimation();
-                        } catch (Exception e) {
-                            android.util.Log.e(TAG, e.toString());
-                        }
-                    }
-                });
             }
 
             if (action.equals(BluetoothLeService.DEVICE_DOES_NOT_SUPPORT_UART)) {
-                connection = false;
                 mService.disconnect();
             }
         }
@@ -339,9 +457,76 @@ public class SosActivity extends AppCompatActivity {
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_CONNECTED);
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED);
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
-        intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
         intentFilter.addAction(BluetoothLeService.DEVICE_DOES_NOT_SUPPORT_UART);
         return intentFilter;
+    }
+
+    public void AutoConnection() {
+        autoTimer = new Timer();
+        autoTask = new TimerTask() {
+            @Override
+            public void run() {
+                if (!STATE) {
+                    String address = pref.getString("DEVICEADDR", "");
+                    if (address.length() > 0) {
+                        service_init();
+                        mService.connect(address);
+                    }
+                }
+            }
+        };
+        autoTimer.schedule(autoTask, 5000, 60000);
+    }
+
+    public void sosTask() {
+        sosTimer = new Timer();
+        sosTask = new TimerTask() {
+            @Override
+            public void run() {
+                try {
+                    Contact contact = new Contact();
+                    String strSMS = pref.getString("EmergencyMsg", "저는 위급 상항입니다. 찾아주시기 바랍니다.");
+
+                    // check if GPS enabled
+                    if(gps.canGetLocation()){
+                        double latitude = gps.getLatitude();
+                        double longitude = gps.getLongitude();
+                        strSMS += " 위도 : " + latitude  + " 경도 : " + longitude;
+                        Log.d("SOS", getTimeStr() + " " + "Your Location is - \nLat: " + latitude + "\nLong: " + longitude);
+                    }
+                    for (String sms : contact.getPhone()) {
+                        sendSMS(sms, strSMS);
+                    }
+                } catch (NullPointerException e) {
+                    Log.d(TAG, e.toString());
+                }
+            }
+        };
+        sosTimer.schedule(sosTask, 3000);
+    }
+
+
+    public void sendSMS(String smsNumber, String smsText){
+        SmsManager mSmsManager = SmsManager.getDefault();
+        mSmsManager.sendTextMessage(smsNumber, null, smsText, null, null);
+    }
+
+    public void makeNewGpsService(){
+        if(gps == null) {
+            gps = new GPSTracker(SosActivity.this,mHandler);
+        }else{
+            gps.Update();
+        }
+
+    }
+    public void logPrint(String str){
+        Log.d("Main", getTimeStr() + " " + str);
+    }
+    public String getTimeStr(){
+        long now = System.currentTimeMillis();
+        Date date = new Date(now);
+        SimpleDateFormat sdfNow = new SimpleDateFormat("MM/dd HH:mm:ss");
+        return sdfNow.format(date);
     }
 
 }

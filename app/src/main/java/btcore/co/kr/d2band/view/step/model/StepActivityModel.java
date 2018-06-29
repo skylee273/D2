@@ -11,24 +11,19 @@ import btcore.co.kr.d2band.user.User;
 public class StepActivityModel {
 
     String step;
-    String weight, height;
+    String height;
     String mGoal;
     double distance;
-    double consumeKal;
-    double mileKal;
     User user;
-    ArrayList<String> TodayData = new ArrayList<>();
 
     public StepActivityModel() {
         user = new User();
-        weight = user.getWeight();
         height = user.getHeight();
     }
 
-    private void setCalculation() {
-        mileKal = 3.7103 + Integer.parseInt(weight) + (0.0359 * (Integer.parseInt(weight) * 60 * 0.0006213) * 2) * Integer.parseInt(weight);
+    public String getDistance(String step) {
         distance = ((Double.parseDouble(height) - 100) * Double.parseDouble(step)) / 100;
-        consumeKal = distance * mileKal * 0.0006213;
+        return String.valueOf(distance);
     }
     public boolean checkGoal(String goal){
         this.mGoal = goal;
@@ -43,9 +38,9 @@ public class StepActivityModel {
         }
     }
 
-    public boolean checkTodayData(String step) {
+    public boolean checkStep(String step) {
         try {
-            if (step.length() > 0 && weight.length() > 0 && height.length() > 0) {
+            if (step.length() > 0 && height.length() > 0) {
                 return true;
             } else {
                 return false;
@@ -54,16 +49,5 @@ public class StepActivityModel {
             return false;
         }
     }
-
-    public ArrayList makeTodayData() {
-        setCalculation();
-        TodayData.clear();
-        TodayData.add(step);
-        TodayData.add(String.valueOf(consumeKal));
-        TodayData.add(String.valueOf(distance));
-
-        return TodayData;
-    }
-
 
 }

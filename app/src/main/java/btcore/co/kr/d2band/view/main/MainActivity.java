@@ -7,15 +7,19 @@ import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.databinding.DataBindingUtil;
 import android.os.Handler;
 import android.os.IBinder;
+import android.provider.Settings;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.LocalBroadcastManager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -24,6 +28,8 @@ import android.widget.Toast;
 
 import java.text.DateFormat;
 import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import btcore.co.kr.d2band.R;
 import btcore.co.kr.d2band.databinding.ActivityMainBinding;
@@ -31,8 +37,11 @@ import btcore.co.kr.d2band.service.BluetoothLeService;
 import btcore.co.kr.d2band.util.BleProtocol;
 import btcore.co.kr.d2band.view.device.DeviceListActivity;
 
+import btcore.co.kr.d2band.view.login.LoginActivity;
 import btcore.co.kr.d2band.view.step.StepActivity;
 import butterknife.OnClick;
+
+import static btcore.co.kr.d2band.service.BluetoothLeService.STATE;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -45,12 +54,17 @@ public class MainActivity extends AppCompatActivity {
     private BluetoothAdapter mBtAdapter = null;
     private int mState = UART_PROFILE_DISCONNECTED;
     private ProgressDialog connectDialog;
-
+    private Timer task;
+    TimerTask mnTask;
     public BluetoothLeService mService = null;
     public BluetoothDevice mDevice = null;
+    public SharedPreferences pref = null;
+    public SharedPreferences.Editor editor;
 
     ActivityMainBinding mainBinding;
     BleProtocol bleProtocol;
+    String gpsEnabled;
+    Intent intent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,15 +77,17 @@ public class MainActivity extends AppCompatActivity {
         // 블루투스 서비스 시작
         service_init();
 
-        // Time DATA
         bleProtocol = new BleProtocol();
 
+        pref = getSharedPreferences("D2", Activity.MODE_PRIVATE);
+        editor = pref.edit();
+
+        chkGpsService();
     }
 
     @OnClick(R.id.btn_connect)
     public void OnConnect(View view) {
         if (!mBtAdapter.isEnabled()) {
-            android.util.Log.i(TAG, "onClick - BT not enabled yet");
             Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
         } else {
@@ -80,14 +96,20 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void SendCommand(byte[] data) {
+    public void send(byte[] data) {
         mService.writeRXCharacteristic(data);
     }
 
     @Override
+    public void onBackPressed() {
+        if(connectDialog!= null) connectDialog.dismiss();
+    }
+
+
+    @Override
     public void onDestroy() {
         super.onDestroy();
-        android.util.Log.d(TAG, "onDestroy()");
+        if(task != null) task.cancel();
         try {
             LocalBroadcastManager.getInstance(this).unregisterReceiver(UARTStatusChangeReceiver);
         } catch (Exception ignore) {
@@ -140,9 +162,14 @@ public class MainActivity extends AppCompatActivity {
 
             case REQUEST_SELECT_DEVICE:
                 if (resultCode == Activity.RESULT_OK && data != null) {
-                    connectDialog = ProgressDialog.show(MainActivity.this, "잠시 기다려주세요", "블루투스 연결중입니다.", true, false);
+                    connectDialog = ProgressDialog.show(MainActivity.this, "잠시 기다려주세요", "블루투스 연결 및 시간 동기화 중입니다.", true, false);
                     String deviceAddress = data.getStringExtra(BluetoothDevice.EXTRA_DEVICE);
                     mDevice = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(deviceAddress);
+                    if (deviceAddress != null) {
+                        editor.remove("DEVICEADDR");
+                        editor.putString("DEVICEADDR", deviceAddress);
+                        editor.commit();
+                    }
                     Log.d(TAG, "... onActivityResultdevice.address==" + mDevice + "mserviceValue" + mService);
                     try {
                         mService.connect(deviceAddress);
@@ -176,7 +203,7 @@ public class MainActivity extends AppCompatActivity {
             if (action.equals(BluetoothLeService.ACTION_GATT_CONNECTED)) {
                 runOnUiThread(new Runnable() {
                     public void run() {
-                        Snackbar.make(getWindow().getDecorView().getRootView(), "연결 되었습니다.", Snackbar.LENGTH_LONG).show();
+                        TimeInfo();
                         mState = UART_PROFILE_CONNECTED;
                     }
                 });
@@ -184,6 +211,8 @@ public class MainActivity extends AppCompatActivity {
             if (action.equals(BluetoothLeService.ACTION_GATT_DISCONNECTED)) {
                 runOnUiThread(new Runnable() {
                     public void run() {
+                        if(connectDialog != null){ connectDialog.dismiss(); }
+                        Snackbar.make(getWindow().getDecorView().getRootView(), "연결에 실패했습니다. 다시 연결해주세요", Snackbar.LENGTH_LONG).show();
                         mState = UART_PROFILE_DISCONNECTED;
                         mService.close();
                     }
@@ -193,29 +222,15 @@ public class MainActivity extends AppCompatActivity {
                 mService.enableTXNotification();
             }
 
-            if (action.equals(BluetoothLeService.ACTION_DATA_AVAILABLE)) {
-                runOnUiThread(new Runnable() {
-                    public void run() {
-                        try {
-                            String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
-                            Log.d(TAG, "ACTION_DATA_AVAILABLE : " + currentDateTimeString);
-                        } catch (Exception e) {
-                            android.util.Log.e(TAG, e.toString());
-                        }
-                    }
-                });
-            }
             if (action.equals(BluetoothLeService.DEVICE_DOES_NOT_SUPPORT_UART)) {
                 String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
                 Log.d(TAG, "DEVICE_DOES_NOT_SUPPORT_UART : " + currentDateTimeString);
                 mService.disconnect();
             }
-            if (action.equals(BluetoothLeService.D2_CONNECTION_ACK)) {
-                final String ACK = intent.getStringExtra(BluetoothLeService.EXTRA_DATA);
+            if (action.equals(BluetoothLeService.D2_TIME_ACK)) {
                 runOnUiThread(new Runnable() {
                     public void run() {
-                        if(connectDialog != null) connectDialog.dismiss();
-                        SendCommand(bleProtocol.getTimeInfo(bleProtocol.getDate(), bleProtocol.getWeek()));
+                        if(connectDialog != null){ connectDialog.dismiss(); }
                         Intent intent = new Intent(getApplicationContext(), StepActivity.class);
                         startActivity(intent);
                         finish();
@@ -225,14 +240,26 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    public void TimeInfo() {
+        task = new Timer();
+        mnTask = new TimerTask() {
+            @Override
+            public void run() {
+                if(STATE){
+                    send(bleProtocol.getTimeInfo(bleProtocol.getDate(),bleProtocol.getWeek()));
+                }
+            }
+        };
+        task.schedule(mnTask,1500, 5000);
+    }
+
     private static IntentFilter makeGattUpdateIntentFilter() {
         final IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_CONNECTED);
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED);
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
-        intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
         intentFilter.addAction(BluetoothLeService.DEVICE_DOES_NOT_SUPPORT_UART);
-        intentFilter.addAction(BluetoothLeService.D2_CONNECTION_ACK);
+        intentFilter.addAction(BluetoothLeService.D2_TIME_ACK);
         return intentFilter;
     }
 
@@ -261,4 +288,26 @@ public class MainActivity extends AppCompatActivity {
         bindService(bindIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
         LocalBroadcastManager.getInstance(this).registerReceiver(UARTStatusChangeReceiver, makeGattUpdateIntentFilter());
     }
+    private boolean chkGpsService() {
+
+        gpsEnabled = android.provider.Settings.Secure.getString(getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
+        if (!(gpsEnabled.matches(".*gps.*") && gpsEnabled.matches(".*network.*"))) {
+            //gps가 사용가능한 상태가 아니면
+            new AlertDialog.Builder(this).setMessage("계속하려면 Google 위치 서비스를 사용하는 기기 위치 기능을 사용 설정하세요.").setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int which) {
+                    Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                    startActivity(intent);
+                }
+            }).setNegativeButton("취소", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+
+                }
+            }).create().show();
+
+        }
+        return false;
+    }
+
 }

@@ -70,5 +70,22 @@ public class LoginPresenter implements Login.Presenter {
         }
     }
 
+    @Override
+    public void RecvSet() {
+        if(loginModel.checkUserId()){
+            loginModel.callSetRecv(new LoginModel.RecvApiListener() {
+                @Override
+                public void onSuccess(String message) {
+                    Log.d("RECV SET", "OK SAVE");
+                }
+
+                @Override
+                public void onFail(String message) {
+                    Log.d("RECV SET", "NOT SAVE");
+                }
+            });
+        }
+    }
+
 
 }

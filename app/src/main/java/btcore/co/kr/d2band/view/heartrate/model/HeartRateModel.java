@@ -69,8 +69,8 @@ public class HeartRateModel {
     public String getState() {
         int bpm = Integer.parseInt(heart);
         if(bpm >= 50  && bpm < 66){ State = "좋음";}
-        if(bpm >= 66  && bpm < 75){ State = "평균";}
-        if(bpm >= 75 || bpm < 50) { State = "나쁨";}
+        if(bpm >= 66  && bpm < 80){ State = "평균";}
+        if(bpm >= 80 || bpm < 50) { State = "나쁨";}
 
         return State;
     }

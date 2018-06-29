@@ -10,6 +10,7 @@ import java.text.SimpleDateFormat;
 
 import btcore.co.kr.d2band.user.User;
 
+import static btcore.co.kr.d2band.database.mySql.URL_DELETE_RECV;
 import static btcore.co.kr.d2band.database.mySql.URL_INSERT_RECV;
 import static btcore.co.kr.d2band.database.mySql.URL_REGISTER;
 import static btcore.co.kr.d2band.database.mySql.URL_SET_RECEIVE;
@@ -20,6 +21,7 @@ public class MessageModel {
     private String Receiver[];
     ApiListener apiListener;
     RecvApiListener recvApliListener;
+    DeleteApiListener deleteApiListener;
     User user;
 
 
@@ -51,6 +53,12 @@ public class MessageModel {
         }
     }
 
+    public void deleteReceiver(DeleteApiListener listener){
+        this.deleteApiListener = listener;
+        user = new User();
+        deleteTask task = new deleteTask();
+        task.execute(user.getId(), name, phone);
+    }
     public void getReceiver(RecvApiListener listener) {
         this.recvApliListener = listener;
         user = new User();
@@ -73,6 +81,10 @@ public class MessageModel {
         void onSuccess();
         void onFail();
     }
+    public interface DeleteApiListener {
+        void onSuccess();
+        void onFail();
+    }
 
     class InsertReceiver extends AsyncTask<String, Void, String> {
         ProgressDialog loading;
@@ -81,7 +93,6 @@ public class MessageModel {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-//                loading = ProgressDialog.show(Register.this, "Please Wait", null, true, true);
         }
 
         @Override
@@ -175,5 +186,58 @@ public class MessageModel {
             }
         }
     }
+
+    class deleteTask extends AsyncTask<String, Void, String> {
+        ProgressDialog loading;
+        URL receiver_url;
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+
+            if (s.contains("success")) {
+                deleteApiListener.onSuccess();
+            } else {
+                deleteApiListener.onFail();
+            }
+        }
+
+        @Override
+        protected String doInBackground(String... params) {
+
+            try {
+                String _id = params[0];
+                String _name = params[1];
+                String _phone = params[2];
+
+
+                String url_address = URL_DELETE_RECV + "?id=" + _id
+                        + "&name=" + _name
+                        + "&phone=" + _phone;
+
+
+                receiver_url = new URL(url_address);
+                BufferedReader in = new BufferedReader(new InputStreamReader(receiver_url.openStream()));
+
+                String result = "";
+                String temp = "";
+                while ((temp = in.readLine()) != null) {
+                    result += temp;
+                }
+                in.close();
+
+                return result;
+            } catch (Exception e) {
+                return new String("Message: " + e.getMessage());
+            }
+        }
+
+    }
+
 
 }

@@ -23,6 +23,8 @@ public class mySql {
 
     public static String URL_INSERT_RECV = URL + "DioBand/Message/ReceiveInsert.jsp";
 
+    public static String URL_DELETE_RECV = URL + "DioBand/Message/ReceiveDelete.jsp";
+
     public static String URL_SET_RECEIVE = URL + "DioBand/Message/ReceiveSelect.jsp";
 
     public static String URL_INSERT_STEP = URL + "DioBand/Step/StepInsert.jsp";

@@ -17,8 +17,10 @@ import android.util.Log;
 
 import btcore.co.kr.d2band.bus.SmsBusEvent;
 import btcore.co.kr.d2band.bus.SmsProvider;
+import btcore.co.kr.d2band.user.Contact;
 
 import static android.content.Context.MODE_PRIVATE;
+import static btcore.co.kr.d2band.service.BluetoothLeService.STATE;
 
 /**
  * Created by leehaneul on 2018-01-25.
@@ -27,6 +29,7 @@ import static android.content.Context.MODE_PRIVATE;
 public class SmsReceiver extends BroadcastReceiver {
     protected Context mSavedContext;
     private final String TAG = getClass().getSimpleName();
+    private Contact contact;
 
     public SmsReceiver() {
         super();

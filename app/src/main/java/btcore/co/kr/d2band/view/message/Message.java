@@ -6,12 +6,14 @@ public interface Message {
         void showErrorMessage(String msg);
         void MessageUpdate(String msg);
         void updateListView(String []Receiver);
+        void updateView();
     }
     interface Presenter{
         void changeMessage(String msg);
         void saveMsg(String msg);
         void plusReceiver(String name, String phone);
         void selectReceiver();
+        void deleteReceiver(String name, String phone);
     }
 
 

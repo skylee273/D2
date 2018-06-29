@@ -27,6 +27,8 @@ import btcore.co.kr.d2band.database.SEVER;
 import btcore.co.kr.d2band.util.ParserUtils;
 import btcore.co.kr.d2band.view.sos.SosActivity;
 
+import static btcore.co.kr.d2band.view.main.fragment.FragmentBottomBar.currentPage;
+
 /**
  * Created by leehaneul on 2018-02-20.
  */
@@ -41,33 +43,36 @@ public class BluetoothLeService extends Service {
     private int mConnectionState = STATE_DISCONNECTED;
 
     private final static String HEART_RATE = "AF-04-01";
+    private final static String HEART_RATE_EMPTY = "AF-04-01-00-00-FF";
     private final static String STPES = "AF-04-02";
+    private final static String STPES_EMPTY = "AF-04-02-00-00-FF";
     private final static String BATTERY = "AF-04-03";
     private final static String CALORIE = "AF-04-04";
+    private final static String CALORIE_EMPTY = "AF-04-04-00-00-FF";
     private final static String EMERGENCY = "AF-04-05-99-99";
-    private final static String CONNECTIONACK = "AF-04-07-99-99-FF";
-
+    private final static String TIMEACK = "AF-04-08";
     private String DATA[];
+    private String pastHeart = "0", pastStep = "0";
     private static final int STATE_DISCONNECTED = 0;
     private static final int STATE_CONNECTING = 1;
     private static final int STATE_CONNECTED = 2;
 
     public final static String ACTION_GATT_CONNECTED =
-            "btcore.co.kr.d2band.service.ACTION_GATT_CONNECTED";
+            "com.nordicsemi.nrfUART.ACTION_GATT_CONNECTED";
     public final static String ACTION_GATT_DISCONNECTED =
-            "btcore.co.kr.d2band.service.ACTION_GATT_DISCONNECTED";
+            "com.nordicsemi.nrfUART.ACTION_GATT_DISCONNECTED";
     public final static String ACTION_GATT_SERVICES_DISCOVERED =
-            "btcore.co.kr.d2band.service.ACTION_GATT_SERVICES_DISCOVERED";
+            "com.nordicsemi.nrfUART.ACTION_GATT_SERVICES_DISCOVERED";
     public final static String ACTION_DATA_AVAILABLE =
-            "btcore.co.kr.d2band.service.ACTION_DATA_AVAILABLE";
+            "com.nordicsemi.nrfUART.ACTION_DATA_AVAILABLE";
     public final static String EXTRA_DATA =
-            "btcore.co.kr.d2band.service.EXTRA_DATA";
+            "com.nordicsemi.nrfUART.EXTRA_DATA";
     public final static String DEVICE_DOES_NOT_SUPPORT_UART =
-            "btcore.co.kr.d2band.service.DEVICE_DOES_NOT_SUPPORT_UART";
+            "com.nordicsemi.nrfUART.DEVICE_DOES_NOT_SUPPORT_UART";
     public final static String D2_BLUETOOTH_DATA =
             "btcore.co.kr.d2band.service.D2_BLUETOOTH_DATA";
-    public final static String D2_CONNECTION_ACK =
-            "btcore.co.kr.d2band.service.D2_CONNECTION_ACK";
+    public final static String D2_TIME_ACK =
+            "btcore.co.kr.d2band.service.D2_TIME_ACK";
     public final static String D2_STEP_DATA =
             "btcore.co.kr.d2band.service.D2_STEP_DATA";
     public final static String D2_HEART_DATA =
@@ -98,15 +103,20 @@ public class BluetoothLeService extends Service {
 
             String intentAction;
             if (newState == BluetoothProfile.STATE_CONNECTED) {
+                STATE = true;
                 intentAction = ACTION_GATT_CONNECTED;
                 mConnectionState = STATE_CONNECTED;
                 broadcastUpdate(intentAction);
-                STATE = true;
+                Log.i(TAG, "Connected to GATT server.");
+                // Attempts to discover services after successful connection.
+                Log.i(TAG, "Attempting to start service discovery:" +
+                        mBluetoothGatt.discoverServices());
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                STATE = false;
                 intentAction = ACTION_GATT_DISCONNECTED;
                 mConnectionState = STATE_DISCONNECTED;
+                Log.i(TAG, "Disconnected from GATT server.");
                 broadcastUpdate(intentAction);
-                STATE = false;
             }
         }
 
@@ -114,7 +124,7 @@ public class BluetoothLeService extends Service {
         public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
             super.onReadRemoteRssi(gatt, rssi, status);
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                Log.d(TAG, String.format("BluetoothGatt ReadRssi[%d]", rssi));
+
             }
         }
 
@@ -123,6 +133,7 @@ public class BluetoothLeService extends Service {
             super.onServicesDiscovered(gatt, status);
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 Log.w(TAG, "mBluetoothGatt = " + mBluetoothGatt);
+
                 broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED);
             } else {
                 Log.w(TAG, "onServicesDiscovered received: " + status);
@@ -133,6 +144,7 @@ public class BluetoothLeService extends Service {
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             super.onCharacteristicRead(gatt, characteristic, status);
             if (status == BluetoothGatt.GATT_SUCCESS) {
+
                 broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
             }
         }
@@ -144,50 +156,72 @@ public class BluetoothLeService extends Service {
 
             final BluetoothGattDescriptor cccd = characteristic.getDescriptor(CCCD);
             final boolean notifications = cccd == null || cccd.getValue() == null || cccd.getValue().length != 2 || cccd.getValue()[0] == 0x01;
-
-            try {
-                if (notifications) {
-                    Log.d("Noti received from ", characteristic.getUuid() + ", value: " + data);
-                    DATA = data.split("-");
-                    if (data.contains(HEART_RATE)) {
-                        String heart = DATA[4] + DATA[5];
-                        heart = String.valueOf(Integer.parseInt(heart, 16));
+            if (notifications) {
+                DATA = data.split("-");
+                if (data.contains(HEART_RATE) && !data.contains(HEART_RATE_EMPTY)) {
+                    Log.d("HEART DATA", data);
+                    initServer();
+                    String heart = DATA[3] + DATA[4];
+                    heart = String.valueOf(Integer.parseInt(heart, 16));
+                    if(!pastHeart.equals(heart))  {
+                        pastHeart = heart;
                         sever.INSERT_HEART(getTime(), heart);
-                        broadcastUpdate(D2_HEART_DATA, heart);
                     }
-                    if (data.contains(STPES)) {
-                        String steps = DATA[4] + DATA[5];
-                        steps = String.valueOf(Integer.parseInt(steps, 16));
-                        sever.INSERT_STEP(getTime(), steps);
-                        broadcastUpdate(D2_STEP_DATA, steps);
-                    }
-                    if (data.contains(BATTERY)) {
-                        String battery = DATA[4] + DATA[5];
-                        broadcastUpdate(D2_BLUETOOTH_DATA, battery);
-                    }
-                    if (data.contains(CALORIE)) {
-                        String calorie = DATA[4] + DATA[5];
-                        broadcastUpdate(D2_CALORIE, calorie);
-                    }
-                    if (data.contains(EMERGENCY)) {
-                       Intent intent = new Intent(getApplicationContext(), SosActivity.class);
-                       startActivity(intent);
-                    }
-                    if(data.contains(CONNECTIONACK)){
-                        broadcastUpdate(D2_CONNECTION_ACK, "ACK");
-                    }
+                    broadcastUpdate(D2_HEART_DATA, heart);
+                    freeServer();
                 }
-            } catch (ArrayIndexOutOfBoundsException e) {
-                Log.d(TAG, e.toString());
+                if (data.contains(STPES) && !data.contains(STPES_EMPTY)) {
+                    Log.d("STEP DATA", data);
+                    initServer();
+                    String steps = DATA[3] + DATA[4];
+                    steps = String.valueOf(Integer.parseInt(steps, 16));
+                    if(!pastStep.equals(steps))  {
+                        pastStep = steps;
+                        sever.INSERT_STEP(getTime(), steps);
+                    }
+                    broadcastUpdate(D2_STEP_DATA, steps);
+                    freeServer();
+                }
+                if (data.contains(BATTERY)) {
+                    Log.d("BATTERY DATA", data);
+                    String battery = DATA[3] + DATA[4];
+                    broadcastUpdate(D2_BLUETOOTH_DATA, battery);
+                }
+                if (data.contains(CALORIE) && !data.contains(CALORIE_EMPTY)) {
+                    Log.d("CALORIE", data);
+                    String calorie = DATA[3] + DATA[4];
+                    calorie = String.valueOf(Integer.parseInt(calorie, 16));
+                    broadcastUpdate(D2_CALORIE, calorie);
+                }
+                if (data.contains(EMERGENCY)) {
+                    Log.d("EMERGENCY", data);
+                    currentPage = 2;
+                    Intent intent = new Intent(getApplicationContext(), SosActivity.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    intent.putExtra("emergency",4);
+                    startActivity(intent);
+                }
+                if (data.contains(TIMEACK)) {
+                    Log.d("TIMEACK", data);
+                    broadcastUpdate(D2_TIME_ACK, "ACK");
+                }
+                onCharacteristicNotified(gatt, characteristic);
             }
-            onCharacteristicNotified(gatt, characteristic);
-            broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
+            // broadcastUpdate(ACTION_DATA_AVAILABLE, data);
         }
 
         protected void onCharacteristicNotified(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic) {
+
         }
+
     };
 
+    private void initServer() {
+        sever = new SEVER();
+    }
+    private void freeServer(){
+        sever = null;
+    }
     private void broadcastUpdate(final String action) {
         final Intent intent = new Intent(action);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
@@ -197,7 +231,6 @@ public class BluetoothLeService extends Service {
         final Intent intent = new Intent(action);
         intent.putExtra(EXTRA_DATA, data);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-
     }
 
     private void broadcastUpdate(final String action,
@@ -221,6 +254,7 @@ public class BluetoothLeService extends Service {
     public IBinder onBind(Intent intent) {
         return mBinder;
     }
+
 
     @Override
     public boolean onUnbind(Intent intent) {
@@ -256,7 +290,6 @@ public class BluetoothLeService extends Service {
 
         if (mBluetoothDeviceAddress != null && address.equals(mBluetoothDeviceAddress)
                 && mBluetoothGatt != null) {
-            Log.d(TAG, "Trying to use an existing mBluetoothGatt for connection.");
             if (mBluetoothGatt.connect()) {
                 mConnectionState = STATE_CONNECTING;
                 Log.d("connect", "STATE_CONNECTING");
@@ -293,6 +326,7 @@ public class BluetoothLeService extends Service {
             return;
         }
         Log.w(TAG, "mBluetoothGatt closed");
+        STATE = false;
         mBluetoothDeviceAddress = null;
         mBluetoothGatt.close();
         mBluetoothGatt = null;
@@ -343,6 +377,32 @@ public class BluetoothLeService extends Service {
     }
 
     public void writeRXCharacteristic(byte[] value) {
+        try {
+            BluetoothGattService RxService = mBluetoothGatt.getService(RX_SERVICE_UUID);
+
+            showMessage("mBluetoothGatt null" + mBluetoothGatt);
+            if (RxService == null) {
+                showMessage("write RX Characteristic - Rx service not found!");
+                broadcastUpdate(DEVICE_DOES_NOT_SUPPORT_UART);
+                return;
+            }
+            BluetoothGattCharacteristic RxChar = RxService.getCharacteristic(RX_CHAR_UUID);
+            if (RxChar == null) {
+                showMessage("Rx charateristic not found!");
+                broadcastUpdate(DEVICE_DOES_NOT_SUPPORT_UART);
+                return;
+            }
+            RxChar.setValue(value);
+            boolean status = mBluetoothGatt.writeCharacteristic(RxChar);
+
+            Log.d(TAG, "write TXchar - status=" + status);
+        }catch (NullPointerException e){
+            Log.d(TAG, e.toString());
+        }
+
+    }
+
+    public void writeRXCharacteristic(String value) {
         BluetoothGattService RxService = mBluetoothGatt.getService(RX_SERVICE_UUID);
 
         showMessage("mBluetoothGatt null" + mBluetoothGatt);
@@ -383,3 +443,4 @@ public class BluetoothLeService extends Service {
     }
 
 }
+
