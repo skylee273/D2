@@ -223,6 +223,7 @@ public class SosActivity extends AppCompatActivity {
     @OnClick(R.id.btn_settings)
     public void OnSettings(View view) {
         Intent intent = new Intent(getApplicationContext(), SettingActivity.class);
+        intent.putExtra("sos","1");
         startActivity(intent);
         finish();
     }
@@ -486,16 +487,17 @@ public class SosActivity extends AppCompatActivity {
                 try {
                     Contact contact = new Contact();
                     String strSMS = pref.getString("EmergencyMsg", "저는 위급 상항입니다. 찾아주시기 바랍니다.");
-
+                    String strSMS2 = "위치 정보가 없습니다.";
                     // check if GPS enabled
                     if(gps.canGetLocation()){
                         double latitude = gps.getLatitude();
                         double longitude = gps.getLongitude();
-                        strSMS += " 위도 : " + latitude  + " 경도 : " + longitude;
+                        strSMS2 = "https://www.geoplaner.com/?z=10;m=5;p=" + latitude + "," + longitude + "WP01-A;;";
                         Log.d("SOS", getTimeStr() + " " + "Your Location is - \nLat: " + latitude + "\nLong: " + longitude);
                     }
                     for (String sms : contact.getPhone()) {
                         sendSMS(sms, strSMS);
+                        sendSMS(sms, strSMS2);
                     }
                 } catch (NullPointerException e) {
                     Log.d(TAG, e.toString());

@@ -32,6 +32,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import btcore.co.kr.d2band.R;
+import btcore.co.kr.d2band.database.SEVER;
 import btcore.co.kr.d2band.databinding.ActivityMainBinding;
 import btcore.co.kr.d2band.service.BluetoothLeService;
 import btcore.co.kr.d2band.util.BleProtocol;
@@ -60,11 +61,14 @@ public class MainActivity extends AppCompatActivity {
     public BluetoothDevice mDevice = null;
     public SharedPreferences pref = null;
     public SharedPreferences.Editor editor;
+    private long startTime;
+    private long endTime;
 
     ActivityMainBinding mainBinding;
     BleProtocol bleProtocol;
     String gpsEnabled;
     Intent intent;
+    SEVER sever;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,8 +87,27 @@ public class MainActivity extends AppCompatActivity {
         editor = pref.edit();
 
         chkGpsService();
+        // 서버 생성
+        sever = new SEVER();
+        sever.SELECT_STEP();
+
     }
 
+    @OnClick(R.id.image_auto)
+    public void OnAuto(View view){
+        if (!mBtAdapter.isEnabled()) {
+            Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
+        } else {
+            String address = pref.getString("DEVICEADDR", "");
+            if(address.length() > 0){
+                connectDialog = ProgressDialog.show(MainActivity.this, "잠시 기다려주세요", "블루투스 연결 및 시간 동기화 중입니다.", true, false);
+                mService.connect(address);
+            }else{
+                Snackbar.make(getWindow().getDecorView().getRootView(), "현재 저장된 기기가 없습니다.", Snackbar.LENGTH_LONG).show();
+            }
+        }
+    }
     @OnClick(R.id.btn_connect)
     public void OnConnect(View view) {
         if (!mBtAdapter.isEnabled()) {
@@ -103,6 +126,13 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         if(connectDialog!= null) connectDialog.dismiss();
+        endTime = System.currentTimeMillis();
+        Snackbar.make(getWindow().getDecorView().getRootView(), "한번더 누르면 종료됩니다.", Snackbar.LENGTH_LONG).show();
+        if (endTime - startTime < 2000) {
+            super.onBackPressed();
+            finishAffinity();
+        }
+        startTime = System.currentTimeMillis();
     }
 
 
@@ -166,7 +196,6 @@ public class MainActivity extends AppCompatActivity {
                     String deviceAddress = data.getStringExtra(BluetoothDevice.EXTRA_DEVICE);
                     mDevice = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(deviceAddress);
                     if (deviceAddress != null) {
-                        editor.remove("DEVICEADDR");
                         editor.putString("DEVICEADDR", deviceAddress);
                         editor.commit();
                     }

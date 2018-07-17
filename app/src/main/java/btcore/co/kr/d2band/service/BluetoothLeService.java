@@ -1,5 +1,6 @@
 package btcore.co.kr.d2band.service;
 
+import android.annotation.SuppressLint;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -71,6 +72,8 @@ public class BluetoothLeService extends Service {
             "com.nordicsemi.nrfUART.DEVICE_DOES_NOT_SUPPORT_UART";
     public final static String D2_BLUETOOTH_DATA =
             "btcore.co.kr.d2band.service.D2_BLUETOOTH_DATA";
+    public final static String D2_BATTERY_DATA =
+            "btcore.co.kr.d2band.service.D2_BATTERY_DATA";
     public final static String D2_TIME_ACK =
             "btcore.co.kr.d2band.service.D2_TIME_ACK";
     public final static String D2_STEP_DATA =
@@ -90,6 +93,7 @@ public class BluetoothLeService extends Service {
     public static final UUID TX_CHAR_UUID = UUID.fromString("6e400003-b5a3-f393-e0a9-e50e24dcca9e");
 
     public static boolean STATE = false;
+    @SuppressLint("SimpleDateFormat")
     SimpleDateFormat mFormat = new SimpleDateFormat("yyyy-MM-dd-hh-mm-ss");
     SEVER sever;
 
@@ -178,14 +182,15 @@ public class BluetoothLeService extends Service {
                     if(!pastStep.equals(steps))  {
                         pastStep = steps;
                         sever.INSERT_STEP(getTime(), steps);
+                        sever.SELECT_STEP();
                     }
                     broadcastUpdate(D2_STEP_DATA, steps);
                     freeServer();
                 }
                 if (data.contains(BATTERY)) {
                     Log.d("BATTERY DATA", data);
-                    String battery = DATA[3] + DATA[4];
-                    broadcastUpdate(D2_BLUETOOTH_DATA, battery);
+                    String battery = DATA[4];
+                    broadcastUpdate(D2_BATTERY_DATA, battery);
                 }
                 if (data.contains(CALORIE) && !data.contains(CALORIE_EMPTY)) {
                     Log.d("CALORIE", data);

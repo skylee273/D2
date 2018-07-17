@@ -6,7 +6,11 @@ import android.util.Log;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 
+import btcore.co.kr.d2band.item.StepItem;
 import btcore.co.kr.d2band.user.User;
 
 /**
@@ -14,6 +18,8 @@ import btcore.co.kr.d2band.user.User;
  */
 import static btcore.co.kr.d2band.database.mySql.URL_INSERT_HEART;
 import static btcore.co.kr.d2band.database.mySql.URL_INSERT_STEP;
+import static btcore.co.kr.d2band.database.mySql.URL_SELECT_STEP;
+import static btcore.co.kr.d2band.database.mySql.URL_SET_USER;
 
 public class SEVER {
 
@@ -22,11 +28,27 @@ public class SEVER {
     private String STEP;
     private String HEART;
     User user;
+    public static ArrayList<StepItem> StepList = new ArrayList<StepItem>();
 
+    public void addStep(String date, String step){
+        StepItem item = new StepItem();
+        item.setDate(date);
+        item.setStep(step);
+        StepList.add(item);
+
+    }
+
+    public ArrayList getStep(){
+        return StepList;
+    }
     public SEVER() {
         user = new User();
     }
 
+    public void SELECT_STEP(){
+        SelectStep TaskSelect = new SelectStep();
+        TaskSelect.execute(user.getId());
+    }
     public void INSERT_STEP(String date, String step) {
         this.DATE = date;
         this.STEP = step;
@@ -39,6 +61,56 @@ public class SEVER {
         this.HEART = heart;
         InsertHeart TaskHeart = new InsertHeart();
         TaskHeart.execute(user.getId(), DATE, HEART);
+    }
+
+
+
+    class SelectStep extends AsyncTask<String, Void, String> {
+        URL stepUrl;
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+
+            if(s != null && !s.equals("")){
+                StepList.clear();
+                String [] Step  = s.split("&&&&&");
+                for (String val : Step){
+                    String [] addData = val.split("#####");
+                    addStep(addData[0], addData[1]);
+                }
+            }
+        }
+
+        @Override
+        protected String doInBackground(String... params) {
+
+            try {
+                String _id = params[0];
+
+                String url_address = URL_SELECT_STEP + "?id=" + _id;
+
+                stepUrl = new URL(url_address);
+                BufferedReader in = new BufferedReader(new InputStreamReader(stepUrl.openStream()));
+
+                String result = "";
+                String temp = "";
+                while ((temp = in.readLine()) != null) {
+                    result += temp;
+                }
+                in.close();
+
+                return result;
+            } catch (Exception e) {
+                e.printStackTrace();
+                return new String("Step Exception: " + e.getMessage());
+            }
+        }
     }
 
     class InsertStep extends AsyncTask<String, Void, String> {

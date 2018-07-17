@@ -29,6 +29,8 @@ public class mySql {
 
     public static String URL_INSERT_STEP = URL + "DioBand/Step/StepInsert.jsp";
 
+    public static String URL_SELECT_STEP = URL + "DioBand/Step/StepSelect.jsp";
+
     public static String URL_INSERT_HEART = URL + "DioBand/Heart/HeartInsert.jsp";
 
     public static String URL_SELECT_HEART = URL + "DioBand/Heart/HeartSelect.jsp";

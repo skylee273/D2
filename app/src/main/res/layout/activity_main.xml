@@ -16,6 +16,16 @@
     android:layout_height="match_parent">
 
 
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="32dp"
+        android:text="자동 연결을 원하시면 아래 이미지를 클릭해주세요."
+        app:layout_constraintBottom_toTopOf="@+id/image_auto"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
     <Button
         android:id="@+id/btn_connect"
         android:layout_width="0dp"
@@ -35,7 +45,7 @@
         android:layout_marginTop="13dp"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView"
+        app:layout_constraintTop_toBottomOf="@+id/image_auto"
         app:srcCompat="@drawable/icon_arrow" />
 
     <Button
@@ -49,10 +59,11 @@
         app:layout_constraintTop_toBottomOf="@+id/text_device" />
 
     <ImageView
-        android:id="@+id/imageView"
+        android:id="@+id/image_auto"
         android:layout_width="wrap_content"
         android:layout_height="120dp"
         android:layout_marginTop="145dp"
+        android:onClick="@{MainActivity::OnAuto}"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"

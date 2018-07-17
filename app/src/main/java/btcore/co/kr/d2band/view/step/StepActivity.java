@@ -36,6 +36,7 @@ import btcore.co.kr.d2band.bus.CallBusEvent;
 import btcore.co.kr.d2band.bus.CallProvider;
 import btcore.co.kr.d2band.bus.SmsBusEvent;
 import btcore.co.kr.d2band.bus.SmsProvider;
+import btcore.co.kr.d2band.database.SEVER;
 import btcore.co.kr.d2band.databinding.ActivityStepBinding;
 import btcore.co.kr.d2band.service.BluetoothLeService;
 import btcore.co.kr.d2band.user.Contact;
@@ -80,6 +81,7 @@ public class StepActivity extends AppCompatActivity implements Step.view {
     private Timer stepTimer;
     private TimerTask stepTask;
 
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -100,6 +102,8 @@ public class StepActivity extends AppCompatActivity implements Step.view {
 
         // 프레젠터 생성
         presenter = new StepActivityPresenter(this);
+
+
 
         // 버스 등록
         CallProvider.getInstance().register(this);
@@ -134,9 +138,11 @@ public class StepActivity extends AppCompatActivity implements Step.view {
         stepDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
             @Override
             public void onDismiss(DialogInterface dialog) {
-                presenter.UpdateGoal(stepDialog.getmGoal());
-                editor.putInt("STEPGOAL", Integer.parseInt(stepDialog.getmGoal()));
-                editor.commit();
+                if(stepDialog.getmGoal() != null && !stepDialog.getmGoal().equals("")){
+                    presenter.UpdateGoal(stepDialog.getmGoal());
+                    editor.putInt("STEPGOAL", Integer.parseInt(stepDialog.getmGoal()));
+                    editor.commit();
+                }
             }
         });
     }
@@ -223,7 +229,6 @@ public class StepActivity extends AppCompatActivity implements Step.view {
         }
     }
 
-
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -267,6 +272,8 @@ public class StepActivity extends AppCompatActivity implements Step.view {
     @Override
     public void onResume() {
         super.onResume();
+
+
         LocalBroadcastManager.getInstance(this).unregisterReceiver(onNotice);
         LocalBroadcastManager.getInstance(this).registerReceiver(onNotice, new IntentFilter("LocalMsg"));
 
@@ -286,9 +293,9 @@ public class StepActivity extends AppCompatActivity implements Step.view {
     public void FinishLoad(CallBusEvent callBusEvent) {
         boolean subFlag = false;
         try {
-            String name = callBusEvent.getEventData();
+            String callName = callBusEvent.getEventData();
             for (String temp : contact.getName()) {
-                if (name.equals(temp)) {
+                if (callName.equals(temp)) {
                     subFlag = true;
                 }
             }
