@@ -1,27 +1,44 @@
 package btcore.co.kr.d2band.view.couple;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.DatePickerDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.database.Cursor;
 import android.databinding.DataBindingUtil;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.graphics.drawable.ShapeDrawable;
+import android.graphics.drawable.shapes.OvalShape;
+import android.media.ExifInterface;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.design.widget.Snackbar;
+import android.provider.MediaStore;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.DatePicker;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.squareup.otto.Subscribe;
 
+import java.io.IOException;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -30,19 +47,17 @@ import btcore.co.kr.d2band.bus.CallBusEvent;
 import btcore.co.kr.d2band.bus.CallProvider;
 import btcore.co.kr.d2band.bus.SmsBusEvent;
 import btcore.co.kr.d2band.bus.SmsProvider;
-import btcore.co.kr.d2band.databinding.ActivityCoupleBinding;
+import btcore.co.kr.d2band.databinding.ActivityCoupleSettingBinding;
 import btcore.co.kr.d2band.service.BluetoothLeService;
 import btcore.co.kr.d2band.user.Contact;
 import btcore.co.kr.d2band.util.BleProtocol;
+import btcore.co.kr.d2band.view.couple.dialog.CoupleDialog;
+import btcore.co.kr.d2band.view.couple.presenter.CouplePresenter;
 import butterknife.OnClick;
 
 import static btcore.co.kr.d2band.service.BluetoothLeService.STATE;
 
-/**
- * Created by leehaneul on 2018-02-26.
- */
-
-public class CoupleActivity extends AppCompatActivity {
+public class CoupleSettingActivitiy extends AppCompatActivity implements Couple.view {
 
     private final String TAG = getClass().getSimpleName();
     private static final int UART_PROFILE_DISCONNECTED = 21;
@@ -60,17 +75,22 @@ public class CoupleActivity extends AppCompatActivity {
     private Timer autoTimer;
     private TimerTask autoTask;
     private Contact contact;
+    private CoupleDialog coupleDialog;
+    private final int GALLERY_CODE = 1112;
+    private Couple.Presenter presenter;
 
+    int imageType = 0;
     SharedPreferences.Editor editor;
     SharedPreferences pref = null;
-    ActivityCoupleBinding mCoupleBinding;
+    String dateStart;
+    ActivityCoupleSettingBinding coupleSettingBinding;
 
     @Override
-    public void onCreate(Bundle savedInstanceState){
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mCoupleBinding = DataBindingUtil.setContentView(this, R.layout.activity_couple);
-        mCoupleBinding.setCoupleActivity(this);
+        coupleSettingBinding = DataBindingUtil.setContentView(this, R.layout.activity_couple_setting);
+        coupleSettingBinding.setCoupleSettingActivitiy(this);
 
         // 블루투스 서비스 등록
         service_init();
@@ -90,30 +110,179 @@ public class CoupleActivity extends AppCompatActivity {
 
         AutoConnection();
 
+        // 프레젠터 등록
+        presenter = new CouplePresenter(this);
     }
 
-    @OnClick(R.id.btn_setting)
-    public void onSetting(View view){
-        Intent intent = new Intent(getApplicationContext(), CoupleSettingActivitiy.class);
+    @OnClick(R.id.text_me)
+    public void onMe(View view) {
+        coupleDialog = new CoupleDialog(this);
+        coupleDialog.show();
+        coupleDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialog) {
+                if (coupleDialog.getmName() != null && !coupleDialog.getmName().equals("")) {
+                    //presenter.UpdateGoal(stepDialog.getmGoal());
+                    editor.putString("COUPLE_NAME_ME", coupleDialog.getmName());
+                    editor.commit();
+                    presenter.updateNickName(coupleDialog.getmName(), 0);
+                }
+            }
+        });
+    }
+
+    @OnClick(R.id.text_couple)
+    public void onCouple(View view) {
+        coupleDialog = new CoupleDialog(this);
+        coupleDialog.show();
+        coupleDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialog) {
+                if (coupleDialog.getmName() != null && !coupleDialog.getmName().equals("")) {
+                    //presenter.UpdateGoal(stepDialog.getmGoal());
+                    editor.putString("COUPLE_NAME_COUPLE", coupleDialog.getmName());
+                    editor.commit();
+                    presenter.updateNickName(coupleDialog.getmName(), 1);
+                }
+            }
+        });
+    }
+
+    @OnClick(R.id.image_calendar)
+    public void onCalendar(View view) {
+
+        final Calendar cal = Calendar.getInstance();
+        DatePickerDialog dialog = new DatePickerDialog(CoupleSettingActivitiy.this, new DatePickerDialog.OnDateSetListener() {
+            @Override
+            public void onDateSet(DatePicker datePicker, int year, int month, int date) {
+
+                dateStart = String.format("%04d년 %02d월 %02d일", year, month + 1, date);
+                // presenter
+            }
+        }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DATE));
+        dialog.getDatePicker().setMaxDate(new Date().getTime());    //입력한 날짜 이후로 클릭 안되게 옵션
+        dialog.show();
+
+        dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialog) {
+                editor.putString("COUPLE_DATE", dateStart);
+                editor.commit();
+                presenter.updateCalendar(dateStart);
+            }
+        });
+    }
+
+    @OnClick(R.id.btn_image)
+    public void onImage(View view) {
+        selectGallery();
+        imageType = 0;
+    }
+    @OnClick(R.id.image_me)
+    public void onImageMe(View view) {
+        selectGallery();
+        imageType = 1;
+    }
+    @OnClick(R.id.image_couple)
+    public void onImageCouple(View view) {
+        selectGallery();
+        imageType = 2;
+    }
+    private void selectGallery() {
+
+        Intent intent = new Intent(Intent.ACTION_PICK);
+        intent.setData(android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        intent.setType("image/*");
+        startActivityForResult(intent, GALLERY_CODE);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (resultCode == RESULT_OK) {
+
+            switch (requestCode) {
+
+                case GALLERY_CODE:
+                    sendPicture(data.getData(), imageType); //갤러리에서 가져오기
+                    break;
+                default:
+                    break;
+            }
+
+        }
+    }
+
+    private void sendPicture(Uri imgUri, int type) {
+        String imagePath = getRealPathFromURI(imgUri); // path 경로
+        ExifInterface exif = null;
+        try {
+            exif = new ExifInterface(imagePath);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        int exifOrientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+        int exifDegree = exifOrientationToDegrees(exifOrientation);
+
+        Bitmap bitmap = BitmapFactory.decodeFile(imagePath);//경로를 통해 비트맵으로 전환
+        switch (type){
+            case 0:
+                editor.putString("IMAGEPATH_IMAGE",imagePath);
+                editor.commit();
+                presenter.updateImage(bitmap, type);
+                break;
+            case 1:
+                editor.putString("IMAGEPATH_MY",imagePath);
+                editor.commit();
+                presenter.updateImage(bitmap, type);
+                break;
+            case 2:
+                editor.putString("IMAGEPATH_COUPLE",imagePath);
+                editor.commit();
+                presenter.updateImage(bitmap, type);
+                break;
+        }
+
+    }
+
+    private int exifOrientationToDegrees(int exifOrientation) {
+        if (exifOrientation == ExifInterface.ORIENTATION_ROTATE_90) {
+            return 90;
+        } else if (exifOrientation == ExifInterface.ORIENTATION_ROTATE_180) {
+            return 180;
+        } else if (exifOrientation == ExifInterface.ORIENTATION_ROTATE_270) {
+            return 270;
+        }
+        return 0;
+    }
+
+    private String getRealPathFromURI(Uri contentUri) {
+        int column_index=0;
+        String[] proj = {MediaStore.Images.Media.DATA};
+        @SuppressLint("Recycle") Cursor cursor = getContentResolver().query(contentUri, proj, null, null, null);
+        assert cursor != null;
+        if(cursor.moveToFirst()){
+            column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+        }
+
+        return cursor.getString(column_index);
+    }
+
+
+    @Override
+    public void onBackPressed() {
+        Intent intent = new Intent(getApplicationContext(), CoupleActivity.class);
         startActivity(intent);
         finish();
     }
 
     @Override
-    public void onBackPressed() {
-        endTime = System.currentTimeMillis();
-        Snackbar.make(getWindow().getDecorView().getRootView(), "한번더 누르면 종료됩니다.", Snackbar.LENGTH_LONG).show();
-        if (endTime - startTime < 2000) {
-            super.onBackPressed();
-            finishAffinity();
-        }
-        startTime = System.currentTimeMillis();
-    }
-
-    @Override
     public void onDestroy() {
         super.onDestroy();
-        if(autoTimer != null ) { autoTimer.cancel(); }
+        if (autoTimer != null) {
+            autoTimer.cancel();
+        }
         try {
             SmsProvider.getInstance().unregister(this);
             CallProvider.getInstance().unregister(this);
@@ -138,6 +307,7 @@ public class CoupleActivity extends AppCompatActivity {
             startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
         }
     }
+
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
@@ -295,5 +465,47 @@ public class CoupleActivity extends AppCompatActivity {
         mService.writeRXCharacteristic(data);
     }
 
+    @Override
+    public void showErrorMessage(String message) {
 
+    }
+
+    @Override
+    public void showImageBitmap(Bitmap bitmap, int type) {
+        switch (type){
+            case 0:
+                Glide.with(this).load(bitmap).into(coupleSettingBinding.btnImage);
+                coupleSettingBinding.imagePlus.setVisibility(View.INVISIBLE);
+                coupleSettingBinding.textAdd.setVisibility(View.INVISIBLE);
+                break;
+            case 1:
+                Glide.with(this).load(bitmap).apply(new RequestOptions().circleCrop()).into(coupleSettingBinding.imageMe);
+                break;
+            case 2:
+                Glide.with(this).load(bitmap).apply(new RequestOptions().circleCrop()).into(coupleSettingBinding.imageCouple);
+                break;
+        }
+    }
+
+    @Override
+    public void showNickName(String name, int type) {
+        switch (type){
+            case 0:
+                coupleSettingBinding.textMe.setText(name);
+                break;
+            case 1:
+                coupleSettingBinding.textCouple.setText(name);
+                break;
+        }
+    }
+
+    @Override
+    public void showCalendar(String date) {
+        coupleSettingBinding.textDateStart.setText(date);
+    }
+
+    @Override
+    public void nextActivity() {
+
+    }
 }

@@ -22,6 +22,8 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.CAMERA"/>
+
     <permission android:protectionLevel="signature"
         android:name="android.permission.WRITE_SETTINGS"/>
     <uses-permission
@@ -69,6 +71,19 @@
         <activity android:name=".view.profile.ProfileInfoActivity"/>
         <activity android:name=".view.setting.SettingActivity"/>
         <activity android:name=".view.lock.LockActivity"/>
+        <activity android:name=".view.couple.CoupleSettingActivitiy"/>
+
+        <provider
+            android:name="android.support.v4.content.FileProvider"
+            android:authorities="btcore.co.kr.d2band"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_path" />
+        </provider>
+
+
         <!-- 서비스 영역 -->
         <service android:enabled="true" android:name=".service.BluetoothLeService" />
 

@@ -89,6 +89,7 @@ public class MessageAtivity extends AppCompatActivity implements Message.View {
         messageBinding = DataBindingUtil.setContentView(this, R.layout.activity_message);
         messageBinding.setMessageActivity(this);
 
+        // 블루투스 서비스 등록
         service_init();
 
         // 블루투스 생성
@@ -389,7 +390,7 @@ public class MessageAtivity extends AppCompatActivity implements Message.View {
                 }
             }
         };
-        autoTimer.schedule(autoTask, 5000, 60000);
+        autoTimer.schedule(autoTask, 1500, 30000);
     }
 
     @Subscribe

@@ -119,9 +119,15 @@
 
     <!-- 커플 -->
     <!-- 커플 텍스트 -->
-    <string name="text_couple_date_title">만난일수</string>
+    <string name="text_couple_toolbar_title">커플설정</string>
+    <string name="text_couple_date_title">기념일</string>
     <string name="text_couple_date_mod">170일</string>
     <string name="text_couple_love_title">사랑한지</string>
+    <string name="text_couple_date_start">시작일</string>
+    <string name="text_copule_sub">별명입력</string>
+    <string name="dialog_couple_title">별명</string>
+    <string name="dialog_couple_hint">별명을 입력하세요.</string>
+    <string name="dialog_cuple_sub">이름 또는 별명을 입력해보세요.</string>
     <!-- 디바이스 선택 -->
         <!-- 디바이스 텍스트 -->
         <string name="text_device">디바이스</string>

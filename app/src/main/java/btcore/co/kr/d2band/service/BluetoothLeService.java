@@ -94,7 +94,7 @@ public class BluetoothLeService extends Service {
 
     public static boolean STATE = false;
     @SuppressLint("SimpleDateFormat")
-    SimpleDateFormat mFormat = new SimpleDateFormat("yyyy-MM-dd-hh-mm-ss");
+    SimpleDateFormat mFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
     SEVER sever;
 
     // GATT 이벤트에 대한 콜벡 메소드를 구현합니다.
