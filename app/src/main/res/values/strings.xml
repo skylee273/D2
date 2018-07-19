@@ -121,7 +121,7 @@
     <!-- 커플 텍스트 -->
     <string name="text_couple_toolbar_title">커플설정</string>
     <string name="text_couple_date_title">기념일</string>
-    <string name="text_couple_date_mod">170일</string>
+    <string name="text_couple_date_mod">0일</string>
     <string name="text_couple_love_title">사랑한지</string>
     <string name="text_couple_date_start">시작일</string>
     <string name="text_copule_sub">별명입력</string>

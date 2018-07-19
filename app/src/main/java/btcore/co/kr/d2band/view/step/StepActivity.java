@@ -36,7 +36,6 @@ import btcore.co.kr.d2band.bus.CallBusEvent;
 import btcore.co.kr.d2band.bus.CallProvider;
 import btcore.co.kr.d2band.bus.SmsBusEvent;
 import btcore.co.kr.d2band.bus.SmsProvider;
-import btcore.co.kr.d2band.database.SEVER;
 import btcore.co.kr.d2band.databinding.ActivityStepBinding;
 import btcore.co.kr.d2band.service.BluetoothLeService;
 import btcore.co.kr.d2band.user.Contact;
@@ -75,12 +74,11 @@ public class StepActivity extends AppCompatActivity implements Step.view {
     private ActivityStepBinding mStepBinding;
     private FragmentPagerAdapter mPagerAdapter = null;
     private BleProtocol bleProtocol;
-    private Contact contact;
     private Step.Presenter presenter;
     private StepDialog stepDialog;
     private Timer stepTimer;
     private TimerTask stepTask;
-
+    private Contact contact;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -97,13 +95,10 @@ public class StepActivity extends AppCompatActivity implements Step.view {
         // 블루투스 데이터 생성
         bleProtocol = new BleProtocol();
 
-        // 연락처
+        // 연락처 생성
         contact = new Contact();
-
         // 프레젠터 생성
         presenter = new StepActivityPresenter(this);
-
-
 
         // 버스 등록
         CallProvider.getInstance().register(this);
@@ -138,7 +133,7 @@ public class StepActivity extends AppCompatActivity implements Step.view {
         stepDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
             @Override
             public void onDismiss(DialogInterface dialog) {
-                if(stepDialog.getmGoal() != null && !stepDialog.getmGoal().equals("")){
+                if (stepDialog.getmGoal() != null && !stepDialog.getmGoal().equals("")) {
                     presenter.UpdateGoal(stepDialog.getmGoal());
                     editor.putInt("STEPGOAL", Integer.parseInt(stepDialog.getmGoal()));
                     editor.commit();
@@ -237,7 +232,7 @@ public class StepActivity extends AppCompatActivity implements Step.view {
             stepTimer = null;
         }
 
-            SmsProvider.getInstance().unregister(this);
+        SmsProvider.getInstance().unregister(this);
         CallProvider.getInstance().unregister(this);
         try {
             LocalBroadcastManager.getInstance(this).unregisterReceiver(UARTStatusChangeReceiver);
@@ -292,14 +287,18 @@ public class StepActivity extends AppCompatActivity implements Step.view {
     @Subscribe
     public void FinishLoad(CallBusEvent callBusEvent) {
         boolean subFlag = false;
-        try {
-            String callName = callBusEvent.getEventData();
-            for (String temp : contact.getName()) {
-                if (callName.equals(temp)) {
-                    subFlag = true;
+        String callName = callBusEvent.getEventData();
+        if(STATE){
+            try {
+                for (String temp : contact.getName()) {
+                    if (callName.equals(temp)) {
+                        subFlag = true;
+                    }
                 }
+            } catch (Exception e) {
+                Log.d(TAG, e.toString());
             }
-            if (STATE && subFlag != true) {
+            if (!subFlag) {
                 switch (callBusEvent.getCallType()) {
                     case 0:
                         send(bleProtocol.getCallStart(callBusEvent.getEventData()));
@@ -311,8 +310,7 @@ public class StepActivity extends AppCompatActivity implements Step.view {
                         send(bleProtocol.getMissedCall(callBusEvent.getEventData()));
                         break;
                 }
-            }
-            if (STATE && subFlag == true) {
+            }else{
                 switch (callBusEvent.getCallType()) {
                     case 0:
                         send(bleProtocol.getSubCallStart(callBusEvent.getEventData()));
@@ -325,8 +323,6 @@ public class StepActivity extends AppCompatActivity implements Step.view {
                         break;
                 }
             }
-        } catch (Exception e) {
-            Log.d(TAG, e.toString());
         }
     }
 
@@ -335,20 +331,24 @@ public class StepActivity extends AppCompatActivity implements Step.view {
         boolean subFlag = false;
         String[] sms = smsBusEvent.getEventData().split("&&&&&");
         String NameOrPhone = sms[0];
-        try {
-            for (String name : contact.getName()) {
-                if (NameOrPhone.equals(name)) subFlag = true;
+
+        if (STATE) {
+            try {
+                for (String name : contact.getName()) {
+                    if (NameOrPhone.equals(name)) subFlag = true;
+                }
+            } catch (Exception e) {
+                Log.d(TAG, e.toString());
             }
-            if (STATE && subFlag == true) {
+            if (subFlag) {
                 send(bleProtocol.getSubSms(smsBusEvent.getEventData()));
-            }
-            if (STATE && subFlag != true) {
+            } else {
                 send(bleProtocol.getSms(smsBusEvent.getEventData()));
             }
-        } catch (Exception e) {
-            Log.d(TAG, e.toString());
         }
+
     }
+
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -382,7 +382,7 @@ public class StepActivity extends AppCompatActivity implements Step.view {
                 }
             }
         };
-        stepTimer.schedule(stepTask, 1500, 30000);
+        stepTimer.schedule(stepTask, 1500, 5000);
     }
 
     public void send(byte[] data) {

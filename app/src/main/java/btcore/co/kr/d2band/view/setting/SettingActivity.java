@@ -26,12 +26,19 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import com.squareup.otto.Subscribe;
+
 import java.util.Timer;
 import java.util.TimerTask;
 
 import btcore.co.kr.d2band.R;
+import btcore.co.kr.d2band.bus.CallBusEvent;
+import btcore.co.kr.d2band.bus.CallProvider;
+import btcore.co.kr.d2band.bus.SmsBusEvent;
+import btcore.co.kr.d2band.bus.SmsProvider;
 import btcore.co.kr.d2band.databinding.ActivitySettingBinding;
 import btcore.co.kr.d2band.service.BluetoothLeService;
+import btcore.co.kr.d2band.user.Contact;
 import btcore.co.kr.d2band.util.BleProtocol;
 import btcore.co.kr.d2band.view.lock.LockActivity;
 import btcore.co.kr.d2band.view.profile.ProfileAcitivty;
@@ -56,6 +63,7 @@ public class SettingActivity extends AppCompatActivity {
     private SharedPreferences.Editor editor;
     private SharedPreferences pref = null;
     private BleProtocol bleProtocol;
+    private Contact contact;
 
     ActivitySettingBinding settingBinding;
 
@@ -69,8 +77,15 @@ public class SettingActivity extends AppCompatActivity {
         // 블루투스 서비스 시작
         service_init();
 
+        // 버스 등록
+        CallProvider.getInstance().register(this);
+        SmsProvider.getInstance().register(this);
+
         // 블루투스 데이터 생성
         bleProtocol = new BleProtocol();
+
+        // 연락처
+        contact = new Contact();
 
         pref = getSharedPreferences("D2", Activity.MODE_PRIVATE);
         editor = pref.edit();
@@ -137,6 +152,8 @@ public class SettingActivity extends AppCompatActivity {
 
         if (autoTimer != null) { autoTimer.cancel(); }
         try {
+            SmsProvider.getInstance().unregister(this);
+            CallProvider.getInstance().unregister(this);
             LocalBroadcastManager.getInstance(this).unregisterReceiver(UARTStatusChangeReceiver);
         } catch (Exception ignore) {
             android.util.Log.e(TAG, ignore.toString());
@@ -266,6 +283,73 @@ public class SettingActivity extends AppCompatActivity {
             }
         };
         autoTimer.schedule(autoTask, 5000, 60000);
+    }
+    @Subscribe
+    public void FinishLoad(CallBusEvent callBusEvent) {
+        boolean subFlag = false;
+        String callName = callBusEvent.getEventData();
+        if(STATE){
+            try {
+                for (String temp : contact.getName()) {
+                    if (callName.equals(temp)) {
+                        subFlag = true;
+                    }
+                }
+            } catch (Exception e) {
+                Log.d(TAG, e.toString());
+            }
+            if (!subFlag) {
+                switch (callBusEvent.getCallType()) {
+                    case 0:
+                        send(bleProtocol.getCallStart(callBusEvent.getEventData()));
+                        break;
+                    case 1:
+                        send(bleProtocol.getCallEnd(callBusEvent.getEventData()));
+                        break;
+                    case 2:
+                        send(bleProtocol.getMissedCall(callBusEvent.getEventData()));
+                        break;
+                }
+            }else{
+                switch (callBusEvent.getCallType()) {
+                    case 0:
+                        send(bleProtocol.getSubCallStart(callBusEvent.getEventData()));
+                        break;
+                    case 1:
+                        send(bleProtocol.getSubCallEnd(callBusEvent.getEventData()));
+                        break;
+                    case 2:
+                        send(bleProtocol.getSubMissedCall(callBusEvent.getEventData()));
+                        break;
+                }
+            }
+        }
+
+
+
+    }
+
+    @Subscribe
+    public void FinishLoad(SmsBusEvent smsBusEvent) {
+        boolean subFlag = false;
+        String[] sms = smsBusEvent.getEventData().split("&&&&&");
+        String NameOrPhone = sms[0];
+
+        if (STATE) {
+            try {
+                for (String name : contact.getName()) {
+                    if (NameOrPhone.equals(name)) subFlag = true;
+                }
+            } catch (Exception e) {
+                Log.d(TAG, e.toString());
+            }
+            if (subFlag) {
+                send(bleProtocol.getSubSms(smsBusEvent.getEventData()));
+            } else {
+                send(bleProtocol.getSms(smsBusEvent.getEventData()));
+            }
+        }
+
     }
 
 

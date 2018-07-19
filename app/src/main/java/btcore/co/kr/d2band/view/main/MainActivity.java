@@ -14,7 +14,6 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.databinding.DataBindingUtil;
-import android.os.Handler;
 import android.os.IBinder;
 import android.provider.Settings;
 import android.support.design.widget.Snackbar;
@@ -32,13 +31,12 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import btcore.co.kr.d2band.R;
-import btcore.co.kr.d2band.database.SEVER;
+import btcore.co.kr.d2band.database.ServerCommand;
 import btcore.co.kr.d2band.databinding.ActivityMainBinding;
 import btcore.co.kr.d2band.service.BluetoothLeService;
 import btcore.co.kr.d2band.util.BleProtocol;
 import btcore.co.kr.d2band.view.device.DeviceListActivity;
 
-import btcore.co.kr.d2band.view.login.LoginActivity;
 import btcore.co.kr.d2band.view.step.StepActivity;
 import butterknife.OnClick;
 
@@ -68,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
     BleProtocol bleProtocol;
     String gpsEnabled;
     Intent intent;
-    SEVER sever;
+    ServerCommand serverCommand;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,8 +86,8 @@ public class MainActivity extends AppCompatActivity {
 
         chkGpsService();
         // 서버 생성
-        sever = new SEVER();
-        sever.SELECT_STEP();
+        serverCommand = new ServerCommand();
+        serverCommand.SELECT_STEP();
 
     }
 

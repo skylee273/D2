@@ -1,5 +1,6 @@
 package btcore.co.kr.d2band.view.couple;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
@@ -11,6 +12,9 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.databinding.DataBindingUtil;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.ExifInterface;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.design.widget.Snackbar;
@@ -20,8 +24,14 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.squareup.otto.Subscribe;
 
+import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -34,6 +44,7 @@ import btcore.co.kr.d2band.databinding.ActivityCoupleBinding;
 import btcore.co.kr.d2band.service.BluetoothLeService;
 import btcore.co.kr.d2band.user.Contact;
 import btcore.co.kr.d2band.util.BleProtocol;
+import btcore.co.kr.d2band.view.couple.presenter.CouplePresenter;
 import butterknife.OnClick;
 
 import static btcore.co.kr.d2band.service.BluetoothLeService.STATE;
@@ -42,7 +53,7 @@ import static btcore.co.kr.d2band.service.BluetoothLeService.STATE;
  * Created by leehaneul on 2018-02-26.
  */
 
-public class CoupleActivity extends AppCompatActivity {
+public class CoupleActivity extends AppCompatActivity implements Couple.View {
 
     private final String TAG = getClass().getSimpleName();
     private static final int UART_PROFILE_DISCONNECTED = 21;
@@ -60,6 +71,7 @@ public class CoupleActivity extends AppCompatActivity {
     private Timer autoTimer;
     private TimerTask autoTask;
     private Contact contact;
+    private Couple.Presenter presenter;
 
     SharedPreferences.Editor editor;
     SharedPreferences pref = null;
@@ -85,10 +97,16 @@ public class CoupleActivity extends AppCompatActivity {
         CallProvider.getInstance().register(this);
         SmsProvider.getInstance().register(this);
 
+
         pref = getSharedPreferences("D2", Activity.MODE_PRIVATE);
         editor = pref.edit();
 
         AutoConnection();
+
+        // 프레젠터 생성
+        presenter = new CouplePresenter(this);
+
+        presenter.updateSaveView();
 
     }
 
@@ -232,14 +250,18 @@ public class CoupleActivity extends AppCompatActivity {
     @Subscribe
     public void FinishLoad(CallBusEvent callBusEvent) {
         boolean subFlag = false;
-        try {
-            String name = callBusEvent.getEventData();
-            for (String temp : contact.getName()) {
-                if (name.equals(temp)) {
-                    subFlag = true;
+        String callName = callBusEvent.getEventData();
+        if(STATE){
+            try {
+                for (String temp : contact.getName()) {
+                    if (callName.equals(temp)) {
+                        subFlag = true;
+                    }
                 }
+            } catch (Exception e) {
+                Log.d(TAG, e.toString());
             }
-            if (STATE && subFlag != true) {
+            if (!subFlag) {
                 switch (callBusEvent.getCallType()) {
                     case 0:
                         send(bleProtocol.getCallStart(callBusEvent.getEventData()));
@@ -251,8 +273,7 @@ public class CoupleActivity extends AppCompatActivity {
                         send(bleProtocol.getMissedCall(callBusEvent.getEventData()));
                         break;
                 }
-            }
-            if (STATE && subFlag == true) {
+            }else{
                 switch (callBusEvent.getCallType()) {
                     case 0:
                         send(bleProtocol.getSubCallStart(callBusEvent.getEventData()));
@@ -265,9 +286,10 @@ public class CoupleActivity extends AppCompatActivity {
                         break;
                 }
             }
-        } catch (Exception e) {
-            Log.d(TAG, e.toString());
         }
+
+
+
     }
 
     @Subscribe
@@ -275,18 +297,20 @@ public class CoupleActivity extends AppCompatActivity {
         boolean subFlag = false;
         String[] sms = smsBusEvent.getEventData().split("&&&&&");
         String NameOrPhone = sms[0];
-        try {
-            for (String name : contact.getName()) {
-                if (NameOrPhone.equals(name)) subFlag = true;
+
+        if (STATE) {
+            try {
+                for (String name : contact.getName()) {
+                    if (NameOrPhone.equals(name)) subFlag = true;
+                }
+            } catch (Exception e) {
+                Log.d(TAG, e.toString());
             }
-            if (STATE && subFlag == true) {
+            if (subFlag) {
                 send(bleProtocol.getSubSms(smsBusEvent.getEventData()));
-            }
-            if (STATE && subFlag != true) {
+            } else {
                 send(bleProtocol.getSms(smsBusEvent.getEventData()));
             }
-        } catch (Exception e) {
-            Log.d(TAG, e.toString());
         }
 
     }
@@ -295,5 +319,89 @@ public class CoupleActivity extends AppCompatActivity {
         mService.writeRXCharacteristic(data);
     }
 
+
+    private void sendSavePicture(String path, int type){
+        ExifInterface exif = null;
+        try {
+            exif = new ExifInterface(path);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        int exifOrientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+
+        Bitmap bitmap = BitmapFactory.decodeFile(path);//경로를 통해 비트맵으로 전환
+        switch (type){
+            case 0:
+                presenter.updateImage(bitmap, type);
+                break;
+            case 1:
+                presenter.updateImage(bitmap, type);
+                break;
+            case 2:
+                presenter.updateImage(bitmap, type);
+                break;
+        }
+    }
+
+    @Override
+    public void showErrorMessage(String message) {
+        Snackbar.make(getWindow().getDecorView().getRootView(), message, Snackbar.LENGTH_LONG).show();
+    }
+
+    @Override
+    public void showSaveView() {
+        String image = pref.getString("IMAGEPATH_IMAGE",null);
+        String imageMy = pref.getString("IMAGEPATH_MY", null);
+        String imageCouple = pref.getString("IMAGEPATH_COUPLE",null);
+        String myName = pref.getString("COUPLE_NAME_ME",null);
+        String coupleName = pref.getString("COUPLE_NAME_COUPLE",null);
+        String coupleDate = pref.getString("COUPLE_DATE_FORMAT", null);
+
+        if(image != null) { sendSavePicture(image, 0);}
+        if(imageMy != null) { sendSavePicture(imageMy, 1);}
+        if(imageCouple != null) { sendSavePicture(imageCouple, 2);}
+        if(myName != null) { presenter.updateNickName(myName, 0);}
+        if(coupleName != null) { presenter.updateNickName(coupleName, 1);}
+        if(coupleDate != null) { presenter.updateCalendar(coupleDate);}
+
+    }
+
+    @Override
+    public void showImageBitmap(Bitmap bitmap, int type) {
+        switch (type){
+            case 0:
+               Glide.with(this).load(bitmap).into(mCoupleBinding.btnImage);
+                break;
+            case 1:
+                Glide.with(this).load(bitmap).apply(new RequestOptions().circleCrop()).into(mCoupleBinding.imageMe);
+                break;
+            case 2:
+                Glide.with(this).load(bitmap).apply(new RequestOptions().circleCrop()).into(mCoupleBinding.imageCouple);
+                break;
+        }
+    }
+
+    @Override
+    public void showNickName(String name, int type) {
+        switch (type){
+            case 0:
+                mCoupleBinding.textMe.setText(name);
+                break;
+            case 1:
+                mCoupleBinding.textCouple.setText(name);
+                break;
+        }
+    }
+
+    @SuppressLint("SetTextI18n")
+    @Override
+    public void showCalendar(String date, String koreaDate, String goalDay, String dDay) {
+        mCoupleBinding.textCoupleDate.setText(date + "일");
+        mCoupleBinding.textKorea.setText(koreaDate);
+        mCoupleBinding.textAnniversary.setText(goalDay + "일");
+        mCoupleBinding.textMod.setText(dDay + "일 남음");
+        mCoupleBinding.progressBarDate.setMax(Integer.parseInt(goalDay));
+        mCoupleBinding.progressBarDate.setProgress(Integer.parseInt(goalDay) - Integer.parseInt(dDay));
+    }
 
 }

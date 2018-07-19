@@ -1,5 +1,6 @@
 package btcore.co.kr.d2band.receiver;
 
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -102,7 +103,6 @@ public class CallReceiver extends BroadcastReceiver {
     }
 
     private void onIncomingCallStarted(String number) {
-
         try {
             String numberOrName = getDisplayName(mSavedContext, number);
             CallProvider.getInstance().post(new CallBusEvent(0, numberOrName));
@@ -113,7 +113,7 @@ public class CallReceiver extends BroadcastReceiver {
 
     private void onOutgoingCallStarted(String number) {
         String numberOrName = getDisplayName(mSavedContext, number);
-        CallProvider.getInstance().post(new CallBusEvent(0, numberOrName));
+        CallProvider.getInstance().post(new CallBusEvent(1, numberOrName));
     }
 
     private void onIncomingCallEnded(String number) {
@@ -138,9 +138,11 @@ public class CallReceiver extends BroadcastReceiver {
         if (ActivityCompat.checkSelfPermission(mSavedContext, android.Manifest.permission.READ_CALL_LOG) != PackageManager.PERMISSION_GRANTED) {
             return;
         }
-        Cursor c = mSavedContext.getContentResolver().query(CallLog.Calls.CONTENT_URI, projection, where, null,
-                null);
-        c.moveToFirst();
+            Cursor c = mSavedContext.getContentResolver().query(CallLog.Calls.CONTENT_URI, projection, where, null,
+                    null);
+            if (c != null) {
+                c.moveToFirst();
+            }
         missedCount = (c.getCount() + 1) & 0xFF;
         CallProvider.getInstance().post(new CallBusEvent(2, String.valueOf(missedCount)));
     }

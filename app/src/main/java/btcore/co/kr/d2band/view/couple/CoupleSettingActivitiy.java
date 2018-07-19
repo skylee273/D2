@@ -17,14 +17,12 @@ import android.database.Cursor;
 import android.databinding.DataBindingUtil;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Matrix;
-import android.graphics.drawable.ShapeDrawable;
-import android.graphics.drawable.shapes.OvalShape;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.MediaStore;
+import android.support.design.widget.Snackbar;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -52,12 +50,13 @@ import btcore.co.kr.d2band.service.BluetoothLeService;
 import btcore.co.kr.d2band.user.Contact;
 import btcore.co.kr.d2band.util.BleProtocol;
 import btcore.co.kr.d2band.view.couple.dialog.CoupleDialog;
-import btcore.co.kr.d2band.view.couple.presenter.CouplePresenter;
+import btcore.co.kr.d2band.view.couple.presenter.CoupleSettingPresenter;
 import butterknife.OnClick;
+import me.drakeet.materialdialog.MaterialDialog;
 
 import static btcore.co.kr.d2band.service.BluetoothLeService.STATE;
 
-public class CoupleSettingActivitiy extends AppCompatActivity implements Couple.view {
+public class CoupleSettingActivitiy extends AppCompatActivity implements CoupleSetting.view {
 
     private final String TAG = getClass().getSimpleName();
     private static final int UART_PROFILE_DISCONNECTED = 21;
@@ -77,13 +76,14 @@ public class CoupleSettingActivitiy extends AppCompatActivity implements Couple.
     private Contact contact;
     private CoupleDialog coupleDialog;
     private final int GALLERY_CODE = 1112;
-    private Couple.Presenter presenter;
+    private CoupleSetting.Presenter presenter;
 
     int imageType = 0;
     SharedPreferences.Editor editor;
     SharedPreferences pref = null;
-    String dateStart;
+    String dateStart, dateForMat;
     ActivityCoupleSettingBinding coupleSettingBinding;
+    MaterialDialog mMaterialDialog;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -111,7 +111,9 @@ public class CoupleSettingActivitiy extends AppCompatActivity implements Couple.
         AutoConnection();
 
         // 프레젠터 등록
-        presenter = new CouplePresenter(this);
+        presenter = new CoupleSettingPresenter(this);
+
+        presenter.updateSaveView();
     }
 
     @OnClick(R.id.text_me)
@@ -148,15 +150,18 @@ public class CoupleSettingActivitiy extends AppCompatActivity implements Couple.
         });
     }
 
+
     @OnClick(R.id.image_calendar)
     public void onCalendar(View view) {
 
         final Calendar cal = Calendar.getInstance();
         DatePickerDialog dialog = new DatePickerDialog(CoupleSettingActivitiy.this, new DatePickerDialog.OnDateSetListener() {
+            @SuppressLint("DefaultLocale")
             @Override
             public void onDateSet(DatePicker datePicker, int year, int month, int date) {
 
                 dateStart = String.format("%04d년 %02d월 %02d일", year, month + 1, date);
+                dateForMat = String.format("%04d-%02d-%02d", year, month + 1, date);
                 // presenter
             }
         }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DATE));
@@ -167,6 +172,7 @@ public class CoupleSettingActivitiy extends AppCompatActivity implements Couple.
             @Override
             public void onDismiss(DialogInterface dialog) {
                 editor.putString("COUPLE_DATE", dateStart);
+                editor.putString("COUPLE_DATE_FORMAT", dateForMat);
                 editor.commit();
                 presenter.updateCalendar(dateStart);
             }
@@ -188,8 +194,15 @@ public class CoupleSettingActivitiy extends AppCompatActivity implements Couple.
         selectGallery();
         imageType = 2;
     }
+    @OnClick(R.id.btn_back)
+    public void onBack(View view){
+        settingSave();
+    }
+    @OnClick(R.id.btn_confirm)
+    public void onConfirm(View view){
+        presenter.isNextActivity();
+    }
     private void selectGallery() {
-
         Intent intent = new Intent(Intent.ACTION_PICK);
         intent.setData(android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         intent.setType("image/*");
@@ -199,21 +212,39 @@ public class CoupleSettingActivitiy extends AppCompatActivity implements Couple.
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
         if (resultCode == RESULT_OK) {
-
             switch (requestCode) {
-
                 case GALLERY_CODE:
                     sendPicture(data.getData(), imageType); //갤러리에서 가져오기
                     break;
                 default:
                     break;
             }
-
         }
     }
 
+    private void sendSavePicture(String path, int type){
+        ExifInterface exif = null;
+        try {
+            exif = new ExifInterface(path);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        int exifOrientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+
+        Bitmap bitmap = BitmapFactory.decodeFile(path);//경로를 통해 비트맵으로 전환
+        switch (type){
+            case 0:
+                presenter.updateImage(bitmap, type);
+                break;
+            case 1:
+                presenter.updateImage(bitmap, type);
+                break;
+            case 2:
+                presenter.updateImage(bitmap, type);
+                break;
+        }
+    }
     private void sendPicture(Uri imgUri, int type) {
         String imagePath = getRealPathFromURI(imgUri); // path 경로
         ExifInterface exif = null;
@@ -243,7 +274,6 @@ public class CoupleSettingActivitiy extends AppCompatActivity implements Couple.
                 presenter.updateImage(bitmap, type);
                 break;
         }
-
     }
 
     private int exifOrientationToDegrees(int exifOrientation) {
@@ -265,18 +295,43 @@ public class CoupleSettingActivitiy extends AppCompatActivity implements Couple.
         if(cursor.moveToFirst()){
             column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
         }
-
         return cursor.getString(column_index);
     }
 
-
     @Override
     public void onBackPressed() {
-        Intent intent = new Intent(getApplicationContext(), CoupleActivity.class);
-        startActivity(intent);
-        finish();
+        settingSave();
     }
 
+    private void settingSave(){
+        mMaterialDialog = new MaterialDialog(this)
+                .setTitle("커플설정")
+                .setMessage("설정내용을 저장 하지 않으면 모든 데이터는 초기화 됩니다. 데이터를 초기화 하시겠습니까?")
+                .setPositiveButton("OK", new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        editor.remove("IMAGEPATH_IMAGE");
+                        editor.remove("IMAGEPATH_MY");
+                        editor.remove("IMAGEPATH_COUPLE");
+                        editor.remove("COUPLE_NAME_ME");
+                        editor.remove("COUPLE_NAME_COUPLE");
+                        editor.remove("COUPLE_DATE");
+                        editor.remove("COUPLE_DATE_FORMAT");
+                        editor.commit();
+                        Intent intent = new Intent(getApplicationContext(), CoupleActivity.class);
+                        startActivity(intent);
+                        finish();
+                    }
+                })
+                .setNegativeButton("CANCEL", new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        mMaterialDialog.dismiss();
+                    }
+                });
+        mMaterialDialog.show();
+
+    }
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -402,14 +457,18 @@ public class CoupleSettingActivitiy extends AppCompatActivity implements Couple.
     @Subscribe
     public void FinishLoad(CallBusEvent callBusEvent) {
         boolean subFlag = false;
-        try {
-            String name = callBusEvent.getEventData();
-            for (String temp : contact.getName()) {
-                if (name.equals(temp)) {
-                    subFlag = true;
+        String callName = callBusEvent.getEventData();
+        if(STATE){
+            try {
+                for (String temp : contact.getName()) {
+                    if (callName.equals(temp)) {
+                        subFlag = true;
+                    }
                 }
+            } catch (Exception e) {
+                Log.d(TAG, e.toString());
             }
-            if (STATE && subFlag != true) {
+            if (!subFlag) {
                 switch (callBusEvent.getCallType()) {
                     case 0:
                         send(bleProtocol.getCallStart(callBusEvent.getEventData()));
@@ -421,8 +480,7 @@ public class CoupleSettingActivitiy extends AppCompatActivity implements Couple.
                         send(bleProtocol.getMissedCall(callBusEvent.getEventData()));
                         break;
                 }
-            }
-            if (STATE && subFlag == true) {
+            }else{
                 switch (callBusEvent.getCallType()) {
                     case 0:
                         send(bleProtocol.getSubCallStart(callBusEvent.getEventData()));
@@ -435,9 +493,10 @@ public class CoupleSettingActivitiy extends AppCompatActivity implements Couple.
                         break;
                 }
             }
-        } catch (Exception e) {
-            Log.d(TAG, e.toString());
         }
+
+
+
     }
 
     @Subscribe
@@ -445,18 +504,20 @@ public class CoupleSettingActivitiy extends AppCompatActivity implements Couple.
         boolean subFlag = false;
         String[] sms = smsBusEvent.getEventData().split("&&&&&");
         String NameOrPhone = sms[0];
-        try {
-            for (String name : contact.getName()) {
-                if (NameOrPhone.equals(name)) subFlag = true;
+
+        if (STATE) {
+            try {
+                for (String name : contact.getName()) {
+                    if (NameOrPhone.equals(name)) subFlag = true;
+                }
+            } catch (Exception e) {
+                Log.d(TAG, e.toString());
             }
-            if (STATE && subFlag == true) {
+            if (subFlag) {
                 send(bleProtocol.getSubSms(smsBusEvent.getEventData()));
-            }
-            if (STATE && subFlag != true) {
+            } else {
                 send(bleProtocol.getSms(smsBusEvent.getEventData()));
             }
-        } catch (Exception e) {
-            Log.d(TAG, e.toString());
         }
 
     }
@@ -467,7 +528,7 @@ public class CoupleSettingActivitiy extends AppCompatActivity implements Couple.
 
     @Override
     public void showErrorMessage(String message) {
-
+        Snackbar.make(getWindow().getDecorView().getRootView(), message, Snackbar.LENGTH_LONG).show();
     }
 
     @Override
@@ -506,6 +567,26 @@ public class CoupleSettingActivitiy extends AppCompatActivity implements Couple.
 
     @Override
     public void nextActivity() {
+        Snackbar.make(getWindow().getDecorView().getRootView(), "저장되었습니다.", Snackbar.LENGTH_LONG).show();
+        Intent intent = new Intent(getApplicationContext(), CoupleActivity.class);
+        startActivity(intent);
+        finish();
+    }
 
+    @Override
+    public void showSaveView() {
+        String image = pref.getString("IMAGEPATH_IMAGE",null);
+        String imageMy = pref.getString("IMAGEPATH_MY", null);
+        String imageCouple = pref.getString("IMAGEPATH_COUPLE",null);
+        String myName = pref.getString("COUPLE_NAME_ME",null);
+        String coupleName = pref.getString("COUPLE_NAME_COUPLE",null);
+        String coupleDate = pref.getString("COUPLE_DATE", null);
+
+        if(image != null ) { sendSavePicture(image, 0);}
+        if(imageMy != null) { sendSavePicture(imageMy, 1);}
+        if(imageCouple != null) { sendSavePicture(imageCouple, 2);}
+        if(myName != null) { presenter.updateNickName(myName, 0);}
+        if(coupleName != null) { presenter.updateNickName(coupleName, 1);}
+        if(coupleDate != null) { presenter.updateCalendar(coupleDate);}
     }
 }

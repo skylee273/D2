@@ -1,9 +1,16 @@
 package btcore.co.kr.d2band.user;
 
+import btcore.co.kr.d2band.database.ServerCommand;
+
 public class Contact {
+
     private static String[] phone = null;
     private static String[] name = null;
 
+    public void clear(){
+        name = null;
+        phone = null;
+    }
     public String[] getPhone() {
         return phone;
     }

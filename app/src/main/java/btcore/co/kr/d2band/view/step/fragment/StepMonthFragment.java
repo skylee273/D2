@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.Date;
 
 import btcore.co.kr.d2band.R;
-import btcore.co.kr.d2band.database.SEVER;
+import btcore.co.kr.d2band.database.ServerCommand;
 import btcore.co.kr.d2band.databinding.FragmentStepMonthBinding;
 import btcore.co.kr.d2band.item.StepItem;
 
@@ -38,7 +38,7 @@ public class StepMonthFragment extends Fragment implements OnChartGestureListene
     private final String TAG = getClass().getSimpleName();
     private Context mContext;
     FragmentStepMonthBinding monthBinding;
-    SEVER sever;
+    ServerCommand serverCommand;
     SimpleDateFormat mFormat = new SimpleDateFormat("yyyy-MM");
     ArrayList TodayList = new ArrayList<StepItem>();
     ArrayList<String> xVals;
@@ -72,15 +72,14 @@ public class StepMonthFragment extends Fragment implements OnChartGestureListene
         // l.setPosition(LegendPosition.LEFT_OF_CHART);
         l.setForm(Legend.LegendForm.LINE);
         int color = ContextCompat.getColor(getContext(), R.color.color_chart_xy);
-        monthBinding.monthChart.setDescription("");
         monthBinding.monthChart.setNoDataTextDescription("You need to provide data for the chart.");
         monthBinding.monthChart.getAxisLeft().setAxisMinValue(0f);
-        monthBinding.monthChart.setDescriptionColor(Color.WHITE);
         monthBinding.monthChart.getXAxis().setTextColor(color);
         monthBinding.monthChart.getXAxis().setLabelsToSkip(4);
         monthBinding.monthChart.getAxisLeft().setTextColor(color);
         monthBinding.monthChart.getAxisRight().setEnabled(false);
         monthBinding.monthChart.getLegend().setTextColor(Color.WHITE);
+        monthBinding.monthChart.setDescription("");
         monthBinding.monthChart.animateXY(2000, 2000);
         monthBinding.monthChart.invalidate();
     }
@@ -163,9 +162,9 @@ public class StepMonthFragment extends Fragment implements OnChartGestureListene
         return yVals;
     }
     private boolean checkMonthStep(){
-        sever = new SEVER();
+        serverCommand = new ServerCommand();
         try {
-            TodayList = sever.getStep();
+            TodayList = serverCommand.getStep();
             if(TodayList.size() > 0 ){
                 return true;
             }else{
@@ -182,7 +181,7 @@ public class StepMonthFragment extends Fragment implements OnChartGestureListene
             StepItem item = (StepItem) TodayList.get(i);
             if(item.getDate().contains(getTime())){
                 String date [] = item.getDate().split("-");
-                dateVaule[i] = Integer.parseInt(date[1]);
+                dateVaule[i] = Integer.parseInt(date[2]);
                 stepValue[i] = Integer.parseInt(item.getStep());
             }
         }
@@ -202,17 +201,15 @@ public class StepMonthFragment extends Fragment implements OnChartGestureListene
         }
 
         try {
-            if(stepValue.length > 0) {
+            if(stepValue[stepValue.length-1] != 0) {
                 yVals = setYAxisValues();
             }else{
                 yVals = setNonYAxisValues();
                 monthBinding.monthChart.getAxisLeft().setAxisMaxValue(2000f);
-
             }
         }catch (NullPointerException e){
             yVals = setNonYAxisValues();
             monthBinding.monthChart.getAxisLeft().setAxisMaxValue(2000f);
-
         }
 
         LineDataSet set1;

@@ -24,7 +24,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-import btcore.co.kr.d2band.database.SEVER;
+import btcore.co.kr.d2band.database.ServerCommand;
 import btcore.co.kr.d2band.util.ParserUtils;
 import btcore.co.kr.d2band.view.sos.SosActivity;
 
@@ -95,7 +95,7 @@ public class BluetoothLeService extends Service {
     public static boolean STATE = false;
     @SuppressLint("SimpleDateFormat")
     SimpleDateFormat mFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
-    SEVER sever;
+    ServerCommand serverCommand;
 
     // GATT 이벤트에 대한 콜벡 메소드를 구현합니다.
     private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
@@ -169,7 +169,7 @@ public class BluetoothLeService extends Service {
                     heart = String.valueOf(Integer.parseInt(heart, 16));
                     if(!pastHeart.equals(heart))  {
                         pastHeart = heart;
-                        sever.INSERT_HEART(getTime(), heart);
+                        serverCommand.INSERT_HEART(getTime(), heart);
                     }
                     broadcastUpdate(D2_HEART_DATA, heart);
                     freeServer();
@@ -181,8 +181,8 @@ public class BluetoothLeService extends Service {
                     steps = String.valueOf(Integer.parseInt(steps, 16));
                     if(!pastStep.equals(steps))  {
                         pastStep = steps;
-                        sever.INSERT_STEP(getTime(), steps);
-                        sever.SELECT_STEP();
+                        serverCommand.INSERT_STEP(getTime(), steps);
+                        serverCommand.SELECT_STEP();
                     }
                     broadcastUpdate(D2_STEP_DATA, steps);
                     freeServer();
@@ -222,10 +222,10 @@ public class BluetoothLeService extends Service {
     };
 
     private void initServer() {
-        sever = new SEVER();
+        serverCommand = new ServerCommand();
     }
     private void freeServer(){
-        sever = null;
+        serverCommand = null;
     }
     private void broadcastUpdate(final String action) {
         final Intent intent = new Intent(action);

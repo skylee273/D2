@@ -1,5 +1,4 @@
 package btcore.co.kr.d2band.view.step.fragment;
-import android.os.Build;
 import android.support.v4.app.Fragment;
 
 import android.content.Context;
@@ -26,10 +25,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Objects;
 
 import btcore.co.kr.d2band.R;
-import btcore.co.kr.d2band.database.SEVER;
+import btcore.co.kr.d2band.database.ServerCommand;
 import btcore.co.kr.d2band.databinding.FragmentStepWeekBinding;
 import btcore.co.kr.d2band.item.StepItem;
 
@@ -41,7 +39,7 @@ public class StepWeekFragment extends Fragment implements OnChartGestureListener
     private final String TAG = getClass().getSimpleName();
     private Context mContext;
     FragmentStepWeekBinding weekBinding;
-    SEVER sever;
+    ServerCommand serverCommand;
     SimpleDateFormat mFormat = new SimpleDateFormat("yyyy-MM");
     ArrayList TodayList = new ArrayList<StepItem>();
     ArrayList<String> xVals;
@@ -76,15 +74,14 @@ public class StepWeekFragment extends Fragment implements OnChartGestureListener
         // l.setPosition(LegendPosition.LEFT_OF_CHART);
         l.setForm(Legend.LegendForm.LINE);
         int color = ContextCompat.getColor(getContext(), R.color.color_chart_xy);
-        weekBinding.weekChart.setDescription("");
         weekBinding.weekChart.setNoDataTextDescription("You need to provide data for the chart.");
         weekBinding.weekChart.getAxisLeft().setAxisMinValue(0f);
-        weekBinding.weekChart.setDescriptionColor(Color.WHITE);
         weekBinding.weekChart.getXAxis().setTextColor(color);
         weekBinding.weekChart.getAxisLeft().setLabelCount(6, true);
         weekBinding.weekChart.getAxisLeft().setTextColor(color);
         weekBinding.weekChart.getAxisRight().setEnabled(false);
         weekBinding.weekChart.getLegend().setTextColor(Color.WHITE);
+        weekBinding.weekChart.setDescription("");
         weekBinding.weekChart.animateXY(2000, 2000);
         weekBinding.weekChart.invalidate();
     }
@@ -177,9 +174,9 @@ public class StepWeekFragment extends Fragment implements OnChartGestureListener
         return yVals;
     }
     private boolean checkWeekStep(){
-        sever = new SEVER();
+        serverCommand = new ServerCommand();
         try {
-            TodayList = sever.getStep();
+            TodayList = serverCommand.getStep();
             if(TodayList.size() > 0 ){
                 return true;
             }else{
@@ -205,9 +202,9 @@ public class StepWeekFragment extends Fragment implements OnChartGestureListener
             serverCalendar.set(year, mMonth-1, mDate);
             String serverWeek = String.valueOf(serverCalendar.get(Calendar.WEEK_OF_MONTH));
             String todayWeek = String.valueOf(todayCalendar.get(Calendar.WEEK_OF_MONTH));
-
+            String DayOfWeek = String.valueOf(serverCalendar.get(Calendar.DAY_OF_WEEK));
             if(serverWeek.equals(todayWeek) && item.getDate().contains(getTime())){
-                dateVaule[i] = Integer.parseInt(serverWeek);
+                dateVaule[i] = (Integer.parseInt(DayOfWeek) - 1);
                 stepValue[i] = Integer.parseInt(item.getStep());
             }
         }
@@ -228,7 +225,7 @@ public class StepWeekFragment extends Fragment implements OnChartGestureListener
         }
 
         try {
-            if(stepValue.length > 0) {
+            if(stepValue[stepValue.length-1] != 0) {
                 yVals = setYAxisValues();
             }else{
                 yVals = setNonYAxisValues();

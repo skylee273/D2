@@ -36,6 +36,7 @@ import btcore.co.kr.d2band.bus.CallBusEvent;
 import btcore.co.kr.d2band.bus.CallProvider;
 import btcore.co.kr.d2band.bus.SmsBusEvent;
 import btcore.co.kr.d2band.bus.SmsProvider;
+import btcore.co.kr.d2band.database.ServerCommand;
 import btcore.co.kr.d2band.databinding.ActivityMessageBinding;
 import btcore.co.kr.d2band.service.BluetoothLeService;
 import btcore.co.kr.d2band.user.Contact;
@@ -72,7 +73,6 @@ public class MessageAtivity extends AppCompatActivity implements Message.View {
     private long endTime;
     private Timer autoTimer;
     private TimerTask autoTask;
-    private Contact contact;
     private BleProtocol bleProtocol;
     SharedPreferences.Editor editor;
     SharedPreferences pref = null;
@@ -80,8 +80,8 @@ public class MessageAtivity extends AppCompatActivity implements Message.View {
     EmergencyDialog Dialog;
     MessageDialog MD;
     Message.Presenter presenter;
-
-
+    ServerCommand serverCommand;
+    Contact contact;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -95,12 +95,13 @@ public class MessageAtivity extends AppCompatActivity implements Message.View {
         // 블루투스 생성
         bleProtocol = new BleProtocol();
 
-        // 연락처 생성
         contact = new Contact();
 
         // 버스 등록
         CallProvider.getInstance().register(this);
         SmsProvider.getInstance().register(this);
+
+        serverCommand = new ServerCommand();
 
         messageBinding.listReceiver.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -161,7 +162,9 @@ public class MessageAtivity extends AppCompatActivity implements Message.View {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if(autoTimer != null ) { autoTimer.cancel(); }
+        if (autoTimer != null) {
+            autoTimer.cancel();
+        }
         try {
             SmsProvider.getInstance().unregister(this);
             CallProvider.getInstance().unregister(this);
@@ -290,6 +293,7 @@ public class MessageAtivity extends AppCompatActivity implements Message.View {
                 String info[] = RecvInfo.split("#####");
                 receiveAdapter.addItem(info[0], info[1]);
                 messageBinding.listReceiver.setAdapter(receiveAdapter);
+                serverCommand.SELECT_MSG();
             }
         } catch (ArrayIndexOutOfBoundsException e) {
 
@@ -307,6 +311,7 @@ public class MessageAtivity extends AppCompatActivity implements Message.View {
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
     }
+
     public void service_init() {
         mBtAdapter = BluetoothAdapter.getDefaultAdapter();
         if (mBtAdapter == null) {
@@ -396,14 +401,18 @@ public class MessageAtivity extends AppCompatActivity implements Message.View {
     @Subscribe
     public void FinishLoad(CallBusEvent callBusEvent) {
         boolean subFlag = false;
-        try {
-            String name = callBusEvent.getEventData();
-            for (String temp : contact.getName()) {
-                if (name.equals(temp)) {
-                    subFlag = true;
+        String callName = callBusEvent.getEventData();
+        if(STATE){
+            try {
+                for (String temp : contact.getName()) {
+                    if (callName.equals(temp)) {
+                        subFlag = true;
+                    }
                 }
+            } catch (Exception e) {
+                Log.d(TAG, e.toString());
             }
-            if (STATE && subFlag != true) {
+            if (!subFlag) {
                 switch (callBusEvent.getCallType()) {
                     case 0:
                         send(bleProtocol.getCallStart(callBusEvent.getEventData()));
@@ -415,8 +424,7 @@ public class MessageAtivity extends AppCompatActivity implements Message.View {
                         send(bleProtocol.getMissedCall(callBusEvent.getEventData()));
                         break;
                 }
-            }
-            if (STATE && subFlag == true) {
+            }else{
                 switch (callBusEvent.getCallType()) {
                     case 0:
                         send(bleProtocol.getSubCallStart(callBusEvent.getEventData()));
@@ -429,9 +437,10 @@ public class MessageAtivity extends AppCompatActivity implements Message.View {
                         break;
                 }
             }
-        } catch (Exception e) {
-            Log.d(TAG, e.toString());
         }
+
+
+
     }
 
     @Subscribe
@@ -439,22 +448,23 @@ public class MessageAtivity extends AppCompatActivity implements Message.View {
         boolean subFlag = false;
         String[] sms = smsBusEvent.getEventData().split("&&&&&");
         String NameOrPhone = sms[0];
-        try {
-            for (String name : contact.getName()) {
-                if (NameOrPhone.equals(name)) subFlag = true;
+
+        if (STATE) {
+            try {
+                for (String name : contact.getName()) {
+                    if (NameOrPhone.equals(name)) subFlag = true;
+                }
+            } catch (Exception e) {
+                Log.d(TAG, e.toString());
             }
-            if (STATE && subFlag == true) {
+            if (subFlag) {
                 send(bleProtocol.getSubSms(smsBusEvent.getEventData()));
-            }
-            if (STATE && subFlag != true) {
+            } else {
                 send(bleProtocol.getSms(smsBusEvent.getEventData()));
             }
-        } catch (Exception e) {
-            Log.d(TAG, e.toString());
         }
 
     }
-
     public void send(byte[] data) {
         mService.writeRXCharacteristic(data);
     }

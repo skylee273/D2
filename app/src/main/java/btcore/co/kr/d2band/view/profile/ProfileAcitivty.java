@@ -268,14 +268,18 @@ public class ProfileAcitivty  extends AppCompatActivity implements Profile.View{
     @Subscribe
     public void FinishLoad(CallBusEvent callBusEvent) {
         boolean subFlag = false;
-        try {
-            String name = callBusEvent.getEventData();
-            for (String temp : contact.getName()) {
-                if (name.equals(temp)) {
-                    subFlag = true;
+        String callName = callBusEvent.getEventData();
+        if(STATE){
+            try {
+                for (String temp : contact.getName()) {
+                    if (callName.equals(temp)) {
+                        subFlag = true;
+                    }
                 }
+            } catch (Exception e) {
+                Log.d(TAG, e.toString());
             }
-            if (STATE && subFlag != true) {
+            if (!subFlag) {
                 switch (callBusEvent.getCallType()) {
                     case 0:
                         send(bleProtocol.getCallStart(callBusEvent.getEventData()));
@@ -287,8 +291,7 @@ public class ProfileAcitivty  extends AppCompatActivity implements Profile.View{
                         send(bleProtocol.getMissedCall(callBusEvent.getEventData()));
                         break;
                 }
-            }
-            if (STATE && subFlag == true) {
+            }else{
                 switch (callBusEvent.getCallType()) {
                     case 0:
                         send(bleProtocol.getSubCallStart(callBusEvent.getEventData()));
@@ -301,9 +304,10 @@ public class ProfileAcitivty  extends AppCompatActivity implements Profile.View{
                         break;
                 }
             }
-        } catch (Exception e) {
-            Log.d(TAG, e.toString());
         }
+
+
+
     }
 
     @Subscribe
@@ -311,19 +315,22 @@ public class ProfileAcitivty  extends AppCompatActivity implements Profile.View{
         boolean subFlag = false;
         String[] sms = smsBusEvent.getEventData().split("&&&&&");
         String NameOrPhone = sms[0];
-        try {
-            for (String name : contact.getName()) {
-                if (NameOrPhone.equals(name)) subFlag = true;
+
+        if (STATE) {
+            try {
+                for (String name : contact.getName()) {
+                    if (NameOrPhone.equals(name)) subFlag = true;
+                }
+            } catch (Exception e) {
+                Log.d(TAG, e.toString());
             }
-            if (STATE && subFlag == true) {
+            if (subFlag) {
                 send(bleProtocol.getSubSms(smsBusEvent.getEventData()));
-            }
-            if (STATE && subFlag != true) {
+            } else {
                 send(bleProtocol.getSms(smsBusEvent.getEventData()));
             }
-        } catch (Exception e) {
-            Log.d(TAG, e.toString());
         }
+
     }
     public void send(byte[] data) {
         mService.writeRXCharacteristic(data);

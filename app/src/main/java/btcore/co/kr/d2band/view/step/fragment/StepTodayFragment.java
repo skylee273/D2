@@ -7,7 +7,6 @@ import android.databinding.DataBindingUtil;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -22,17 +21,14 @@ import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.github.mikephil.charting.listener.ChartTouchListener;
 import com.github.mikephil.charting.listener.OnChartGestureListener;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
-import com.github.mikephil.charting.utils.ColorTemplate;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Timer;
 
 import btcore.co.kr.d2band.R;
-import btcore.co.kr.d2band.database.SEVER;
+import btcore.co.kr.d2band.database.ServerCommand;
 import btcore.co.kr.d2band.databinding.FragmentStepTodayBinding;
-import btcore.co.kr.d2band.databinding.FragmentStepWeekBinding;
 import btcore.co.kr.d2band.item.StepItem;
 
 /**
@@ -43,7 +39,7 @@ public class StepTodayFragment extends Fragment implements OnChartGestureListene
     private final String TAG = getClass().getSimpleName();
     private Context mContext;
     FragmentStepTodayBinding todayBinding;
-    SEVER sever;
+    ServerCommand serverCommand;
     SimpleDateFormat mFormat = new SimpleDateFormat("yyyy-MM-dd");
     ArrayList TodayList = new ArrayList<StepItem>();
     ArrayList<String> xVals;
@@ -84,9 +80,7 @@ public class StepTodayFragment extends Fragment implements OnChartGestureListene
         todayBinding.todayChart.getAxisRight().setDrawLabels(false);
         todayBinding.todayChart.getAxisRight().setDrawAxisLine(false);
         todayBinding.todayChart.getAxisRight().setDrawGridLines(false);
-
         todayBinding.todayChart.getLegend().setTextColor(Color.WHITE);
-
         todayBinding.todayChart.setDrawGridBackground(false);
         todayBinding.todayChart.setDoubleTapToZoomEnabled(false);
         todayBinding.todayChart.setDescription("");
@@ -174,9 +168,9 @@ public class StepTodayFragment extends Fragment implements OnChartGestureListene
     }
 
     private boolean checkTodayStep(){
-        sever = new SEVER();
+        serverCommand = new ServerCommand();
         try {
-            TodayList = sever.getStep();
+            TodayList = serverCommand.getStep();
             if(TodayList.size() > 0 ){
                 return true;
             }else{
@@ -215,7 +209,7 @@ public class StepTodayFragment extends Fragment implements OnChartGestureListene
         }
 
         try {
-            if(stepValue.length > 0) {
+            if(stepValue[stepValue.length-1] != 0) {
                 yVals = setYAxisValues();
             }else{
                 yVals = setNonYAxisValues();

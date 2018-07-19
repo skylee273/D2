@@ -11,23 +11,24 @@ import java.util.ArrayList;
 import java.util.Date;
 
 import btcore.co.kr.d2band.item.StepItem;
+import btcore.co.kr.d2band.user.Contact;
 import btcore.co.kr.d2band.user.User;
+import btcore.co.kr.d2band.view.login.model.LoginModel;
 
-/**
- *
- */
 import static btcore.co.kr.d2band.database.mySql.URL_INSERT_HEART;
 import static btcore.co.kr.d2band.database.mySql.URL_INSERT_STEP;
 import static btcore.co.kr.d2band.database.mySql.URL_SELECT_STEP;
+import static btcore.co.kr.d2band.database.mySql.URL_SET_RECEIVE;
 import static btcore.co.kr.d2band.database.mySql.URL_SET_USER;
 
-public class SEVER {
+public class ServerCommand {
 
     private final String TAG = getClass().getSimpleName();
     private String DATE;
     private String STEP;
     private String HEART;
     User user;
+    Contact contact;
     public static ArrayList<StepItem> StepList = new ArrayList<StepItem>();
 
     public void addStep(String date, String step){
@@ -41,10 +42,14 @@ public class SEVER {
     public ArrayList getStep(){
         return StepList;
     }
-    public SEVER() {
+    public ServerCommand() {
         user = new User();
     }
 
+    public void SELECT_MSG(){
+        setMSG task = new setMSG();
+        task.execute(user.getId());
+    }
     public void SELECT_STEP(){
         SelectStep TaskSelect = new SelectStep();
         TaskSelect.execute(user.getId());
@@ -206,5 +211,60 @@ public class SEVER {
         }
 
     }
+    class setMSG extends AsyncTask<String, Void, String> {
+        URL userUrl;
 
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            try {
+                String Recv[] = s.split("&&&&&");
+                String name[] = new String[Recv.length];
+                String phone[] = new String[Recv.length];
+                int index = 0;
+                contact = new Contact();
+                contact.clear();
+                for (String recv : Recv) {
+                    String con[] = recv.split("#####");
+                    name[index] = con[0];
+                    phone[index] = con[1];
+                    index++;
+                }
+                contact.setName(name);
+                contact.setPhone(phone);
+            } catch (ArrayIndexOutOfBoundsException e) {
+            }
+
+        }
+
+        @Override
+        protected String doInBackground(String... params) {
+
+            try {
+                String _id = params[0];
+
+                String url_address = URL_SET_RECEIVE + "?id=" + _id;
+
+                userUrl = new URL(url_address);
+                BufferedReader in = new BufferedReader(new InputStreamReader(userUrl.openStream()));
+
+                String result = "";
+                String temp = "";
+                while ((temp = in.readLine()) != null) {
+                    result += temp;
+                }
+                in.close();
+
+                return result;
+            } catch (Exception e) {
+                e.printStackTrace();
+                return new String("User Exception: " + e.getMessage());
+            }
+        }
+    }
 }

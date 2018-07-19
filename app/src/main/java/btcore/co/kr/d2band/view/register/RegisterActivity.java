@@ -42,7 +42,12 @@ public class RegisterActivity extends AppCompatActivity implements Register.View
         presenter = new RegisterPresenter(this);
 
     }
-
+    @Override
+    public void onBackPressed() {
+        Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
+        startActivity(intent);
+        finish();
+    }
     @OnClick(R.id.btn_back_register)
     public void onRegister(View view) {
         Intent intent = new Intent(getApplicationContext(), LoginActivity.class);

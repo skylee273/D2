@@ -37,7 +37,6 @@ import btcore.co.kr.d2band.util.BleProtocol;
 import btcore.co.kr.d2band.view.heartrate.presenter.HeartRate;
 import btcore.co.kr.d2band.view.heartrate.presenter.HeartRatePresenter;
 import btcore.co.kr.d2band.R;
-
 import static btcore.co.kr.d2band.service.BluetoothLeService.STATE;
 
 /**
@@ -181,14 +180,18 @@ public class HeartRateActivity extends AppCompatActivity implements HeartRate.Vi
     @Subscribe
     public void FinishLoad(CallBusEvent callBusEvent) {
         boolean subFlag = false;
-        try {
-            String name = callBusEvent.getEventData();
-            for (String temp : contact.getName()) {
-                if (name.equals(temp)) {
-                    subFlag = true;
+        String callName = callBusEvent.getEventData();
+        if(STATE){
+            try {
+                for (String temp : contact.getName()) {
+                    if (callName.equals(temp)) {
+                        subFlag = true;
+                    }
                 }
+            } catch (Exception e) {
+                Log.d(TAG, e.toString());
             }
-            if (STATE && subFlag != true) {
+            if (!subFlag) {
                 switch (callBusEvent.getCallType()) {
                     case 0:
                         send(bleProtocol.getCallStart(callBusEvent.getEventData()));
@@ -200,8 +203,7 @@ public class HeartRateActivity extends AppCompatActivity implements HeartRate.Vi
                         send(bleProtocol.getMissedCall(callBusEvent.getEventData()));
                         break;
                 }
-            }
-            if (STATE && subFlag == true) {
+            }else{
                 switch (callBusEvent.getCallType()) {
                     case 0:
                         send(bleProtocol.getSubCallStart(callBusEvent.getEventData()));
@@ -214,9 +216,10 @@ public class HeartRateActivity extends AppCompatActivity implements HeartRate.Vi
                         break;
                 }
             }
-        } catch (Exception e) {
-            Log.d(TAG, e.toString());
         }
+
+
+
     }
 
     @Subscribe
@@ -224,21 +227,24 @@ public class HeartRateActivity extends AppCompatActivity implements HeartRate.Vi
         boolean subFlag = false;
         String[] sms = smsBusEvent.getEventData().split("&&&&&");
         String NameOrPhone = sms[0];
-        try {
-            for (String name : contact.getName()) {
-                if (NameOrPhone.equals(name)) subFlag = true;
+
+        if (STATE) {
+            try {
+                for (String name : contact.getName()) {
+                    if (NameOrPhone.equals(name)) subFlag = true;
+                }
+            } catch (Exception e) {
+                Log.d(TAG, e.toString());
             }
-            if (STATE && subFlag == true) {
+            if (subFlag) {
                 send(bleProtocol.getSubSms(smsBusEvent.getEventData()));
-            }
-            if (STATE && subFlag != true) {
+            } else {
                 send(bleProtocol.getSms(smsBusEvent.getEventData()));
             }
-        } catch (Exception e) {
-            Log.d(TAG, e.toString());
         }
 
     }
+
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -271,7 +277,7 @@ public class HeartRateActivity extends AppCompatActivity implements HeartRate.Vi
                 }
             }
         };
-        heartTimer.schedule(heartTask, 1500, 30000);
+        heartTimer.schedule(heartTask, 1500, 5000);
     }
 
     public void send(byte[] data) {

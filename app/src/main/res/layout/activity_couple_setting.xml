@@ -64,6 +64,7 @@
                         android:text="@string/text_couple_date_start"
                         android:textSize="16sp"
                         app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintHorizontal_bias="0.445"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/text_me" />
 
@@ -81,13 +82,17 @@
 
                     <TextView
                         android:id="@+id/text_couple"
-                        android:layout_width="wrap_content"
+                        android:layout_width="75dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginEnd="82dp"
+                        android:layout_marginEnd="70dp"
+                        android:layout_marginStart="8dp"
                         android:layout_marginTop="16dp"
+                        android:gravity="center_horizontal"
                         android:onClick="@{CoupleSettingActivitiy::onCouple}"
                         android:text="@string/text_copule_sub"
                         app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintHorizontal_bias="1.0"
+                        app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/image_couple" />
 
                     <ImageView
@@ -95,9 +100,12 @@
                         android:layout_width="64dp"
                         android:layout_height="64dp"
                         android:layout_marginEnd="75dp"
-                        android:onClick="@{CoupleSettingActivitiy::onImageCouple}"
+                        android:layout_marginStart="8dp"
                         android:layout_marginTop="60dp"
+                        android:onClick="@{CoupleSettingActivitiy::onImageCouple}"
                         app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintHorizontal_bias="1.0"
+                        app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
                         app:srcCompat="@drawable/ic_profile" />
 
@@ -105,21 +113,28 @@
                         android:id="@+id/image_me"
                         android:layout_width="64dp"
                         android:layout_height="64dp"
+                        android:layout_marginEnd="8dp"
                         android:layout_marginStart="75dp"
-                        android:onClick="@{CoupleSettingActivitiy::onImageMe}"
                         android:layout_marginTop="60dp"
+                        android:onClick="@{CoupleSettingActivitiy::onImageMe}"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintHorizontal_bias="0.026"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
                         app:srcCompat="@drawable/icon_couple_profile" />
 
                     <TextView
                         android:id="@+id/text_me"
-                        android:layout_width="wrap_content"
+                        android:layout_width="75dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="82dp"
+                        android:layout_marginEnd="8dp"
+                        android:layout_marginStart="78dp"
                         android:layout_marginTop="16dp"
+                        android:gravity="center_horizontal"
                         android:onClick="@{CoupleSettingActivitiy::onMe}"
                         android:text="@string/text_copule_sub"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintHorizontal_bias="0.0"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/image_me" />
 
@@ -130,8 +145,8 @@
                         android:layout_marginLeft="16dp"
                         android:layout_marginRight="16dp"
                         android:layout_marginTop="32dp"
-                        android:onClick="@{CoupleSettingActivitiy::onImage}"
                         android:background="@null"
+                        android:onClick="@{CoupleSettingActivitiy::onImage}"
                         android:textColor="@color/colorCoupleImageText"
                         android:textSize="20sp"
                         app:layout_constraintLeft_toLeftOf="parent"
@@ -188,6 +203,7 @@
                 <Button
                     android:id="@+id/btn_back"
                     android:layout_width="match_parent"
+                    android:onClick="@{CoupleSettingActivitiy::onBack}"
                     android:layout_height="wrap_content"
                     android:background="@drawable/toolbar_back" />
             </LinearLayout>
@@ -242,6 +258,7 @@
                     <Button
                         android:id="@+id/btn_confirm"
                         android:layout_width="match_parent"
+                        android:onClick="@{CoupleSettingActivitiy::onConfirm}"
                         android:layout_height="match_parent"
                         android:background="@drawable/ic_check"
                         />
