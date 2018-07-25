@@ -14,7 +14,7 @@ public interface Find {
 
     interface  Presenter{
         void initFindId(String name, String phone);
-        void initFindPw(String name, String phone);
+        void initFindPw(String id , String name, String phone);
         void callIdDialog();
         void callPwDialog();
     }

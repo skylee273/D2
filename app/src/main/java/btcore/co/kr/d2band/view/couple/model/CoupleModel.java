@@ -1,26 +1,24 @@
 package btcore.co.kr.d2band.view.couple.model;
 
+import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
+import android.util.Log;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.Calendar;
+
+import static android.content.ContentValues.TAG;
 
 public class CoupleModel {
-    String mName;
-    String mDate = null;
-    Bitmap mBitmap = null;
-    long calDateDays;
+    private String mDate = null;
+    private long calDateDays;
+    @SuppressLint("SimpleDateFormat")
+    private
     SimpleDateFormat mFormat = new SimpleDateFormat("yyyy-mm-dd");
 
     public boolean checkNickName(String name) {
-        this.mName = name;
         try {
-            if (mName.length() > 0) {
-                return true;
-            } else {
-                return false;
-            }
+            return name.length() > 0;
         } catch (NullPointerException e) {
             return false;
         }
@@ -29,54 +27,55 @@ public class CoupleModel {
     public boolean checkDate(String date) {
         this.mDate = date;
         try {
-            if (mDate.length() > 0) {
-                return true;
-            } else {
-                return false;
-            }
+            return mDate.length() > 0;
         } catch (NullPointerException e) {
             return false;
         }
     }
 
     public boolean checkBitmap(Bitmap bitmap) {
-        this.mBitmap = bitmap;
-        if (mBitmap != null) {
-            return true;
-        } else {
-            return false;
-        }
+        return bitmap != null;
     }
 
-    public String getDate() {
-        try {
-
-            SimpleDateFormat format = new SimpleDateFormat("yyyy-mm-dd");
-            // date1, date2 두 날짜를 parse()를 통해 Date형으로 변환.
-            Date FirstDate = format.parse(mDate);
-            Date SecondDate = format.parse(getTime());
-
-            // Date로 변환된 두 날짜를 계산한 뒤 그 리턴값으로 long type 변수를 초기화 하고 있다.
-            // 연산결과 -950400000. long type 으로 return 된다.
-            long calDate = FirstDate.getTime() - SecondDate.getTime();
-
-            // 이제 24*60*60*1000(각 시간값에 따른 차이점) 을 나눠주면 일수가 나온다.
-            calDateDays = calDate / (24 * 60 * 60 * 1000);
-
-            calDateDays = Math.abs(calDateDays);
-
-
-        } catch (ParseException e) {
-            // 예외 처리
-        }
+    public String getDate(){
         return String.valueOf(calDateDays);
+    }
+    public void setDate() {
+        try {
+            @SuppressLint("SimpleDateFormat") SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+
+            Calendar todaCal = Calendar.getInstance(); //오늘날자 가져오기
+            Calendar ddayCal = Calendar.getInstance(); //오늘날자를 가져와 변경시킴
+
+            String date [];
+            date = mDate.split("-");
+            int year = Integer.valueOf(date[0]);
+            int month = Integer.valueOf(date[1]);
+            int day = Integer.valueOf(date[2]);
+
+            month -= 1; // 받아온날자에서 -1을 해줘야함.
+            ddayCal.set(year,month,day);// D-day의 날짜를 입력
+            Log.e("테스트",simpleDateFormat.format(todaCal.getTime()) + "");
+            Log.e("테스트",simpleDateFormat.format(ddayCal.getTime()) + "");
+
+            long today = todaCal.getTimeInMillis()/86400000; //->(24 * 60 * 60 * 1000) 24시간 60분 60초 * (ms초->초 변환 1000)
+            long dday = ddayCal.getTimeInMillis()/86400000;
+            long count = today - dday; // 오늘 날짜에서 dday 날짜를 빼주게 됩니다.
+            Log.d(TAG,  "디데이 : " + String.valueOf(count));
+
+            calDateDays = count;
+        }
+        catch (Exception e)
+        {
+            Log.d(TAG, e.toString());
+        }
     }
 
     public String koreaDate() {
-        int date = Integer.parseInt(getDate());
-        int year = 0;
-        int month = 0;
-        int day = 0;
+        long date = calDateDays;
+        long year = 0;
+        long month = 0;
+        long day = 0;
         if (date >= 365) {
             year = date / 365;
            date =  date - ( 365 * year);
@@ -101,13 +100,6 @@ public class CoupleModel {
         long goalDate = (mod + 1) * 100;
         long dDay = goalDate - calDateDays;
         return String.valueOf(dDay);
-    }
-    private String getTime() {
-        long mNow;
-        Date mDate;
-        mNow = System.currentTimeMillis();
-        mDate = new Date(mNow);
-        return mFormat.format(mDate);
     }
 
 

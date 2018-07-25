@@ -14,10 +14,10 @@ import android.content.res.Configuration;
 import android.databinding.DataBindingUtil;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.media.ExifInterface;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.design.widget.Snackbar;
+import android.support.media.ExifInterface;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -29,9 +29,6 @@ import com.bumptech.glide.request.RequestOptions;
 import com.squareup.otto.Subscribe;
 
 import java.io.IOException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -42,11 +39,12 @@ import btcore.co.kr.d2band.bus.SmsBusEvent;
 import btcore.co.kr.d2band.bus.SmsProvider;
 import btcore.co.kr.d2band.databinding.ActivityCoupleBinding;
 import btcore.co.kr.d2band.service.BluetoothLeService;
-import btcore.co.kr.d2band.user.Contact;
+import btcore.co.kr.d2band.user.ContactItem;
 import btcore.co.kr.d2band.util.BleProtocol;
 import btcore.co.kr.d2band.view.couple.presenter.CouplePresenter;
 import butterknife.OnClick;
 
+import static btcore.co.kr.d2band.database.ServerCommand.contactArrayList;
 import static btcore.co.kr.d2band.service.BluetoothLeService.STATE;
 
 /**
@@ -67,16 +65,14 @@ public class CoupleActivity extends AppCompatActivity implements Couple.View {
     private BluetoothLeService mService = null;
     private BleProtocol bleProtocol;
     private long startTime;
-    private long endTime;
     private Timer autoTimer;
-    private TimerTask autoTask;
-    private Contact contact;
     private Couple.Presenter presenter;
 
     SharedPreferences.Editor editor;
     SharedPreferences pref = null;
     ActivityCoupleBinding mCoupleBinding;
 
+    @SuppressLint("CommitPrefEdits")
     @Override
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
@@ -89,9 +85,6 @@ public class CoupleActivity extends AppCompatActivity implements Couple.View {
 
         // 블루투스 생성
         bleProtocol = new BleProtocol();
-
-        // 연락처 생성
-        contact = new Contact();
 
         // 버스 등록
         CallProvider.getInstance().register(this);
@@ -106,8 +99,6 @@ public class CoupleActivity extends AppCompatActivity implements Couple.View {
         // 프레젠터 생성
         presenter = new CouplePresenter(this);
 
-        presenter.updateSaveView();
-
     }
 
     @OnClick(R.id.btn_setting)
@@ -119,7 +110,7 @@ public class CoupleActivity extends AppCompatActivity implements Couple.View {
 
     @Override
     public void onBackPressed() {
-        endTime = System.currentTimeMillis();
+        long endTime = System.currentTimeMillis();
         Snackbar.make(getWindow().getDecorView().getRootView(), "한번더 누르면 종료됩니다.", Snackbar.LENGTH_LONG).show();
         if (endTime - startTime < 2000) {
             super.onBackPressed();
@@ -150,6 +141,7 @@ public class CoupleActivity extends AppCompatActivity implements Couple.View {
     public void onResume() {
         super.onResume();
         // 바텀바 셋
+        presenter.updateSaveView();
         if (!mBtAdapter.isEnabled()) {
             android.util.Log.i(TAG, "onResume - BT not enabled yet");
             Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
@@ -193,8 +185,8 @@ public class CoupleActivity extends AppCompatActivity implements Couple.View {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
 
-            final Intent mIntent = intent;
             //*********************//
+            assert action != null;
             if (action.equals(BluetoothLeService.ACTION_GATT_CONNECTED)) {
                 runOnUiThread(new Runnable() {
                     public void run() {
@@ -232,7 +224,7 @@ public class CoupleActivity extends AppCompatActivity implements Couple.View {
 
     public void AutoConnection() {
         autoTimer = new Timer();
-        autoTask = new TimerTask() {
+        TimerTask autoTask = new TimerTask() {
             @Override
             public void run() {
                 if (!STATE) {
@@ -253,8 +245,9 @@ public class CoupleActivity extends AppCompatActivity implements Couple.View {
         String callName = callBusEvent.getEventData();
         if(STATE){
             try {
-                for (String temp : contact.getName()) {
-                    if (callName.equals(temp)) {
+                for (ContactItem aContactArrayList : contactArrayList) {
+                    String name = aContactArrayList.getName();
+                    if (callName.equals(name)) {
                         subFlag = true;
                     }
                 }
@@ -300,8 +293,11 @@ public class CoupleActivity extends AppCompatActivity implements Couple.View {
 
         if (STATE) {
             try {
-                for (String name : contact.getName()) {
-                    if (NameOrPhone.equals(name)) subFlag = true;
+                for (ContactItem aContactArrayList : contactArrayList) {
+                    String name = aContactArrayList.getName();
+                    if (NameOrPhone.equals(name)) {
+                        subFlag = true;
+                    }
                 }
             } catch (Exception e) {
                 Log.d(TAG, e.toString());
@@ -327,6 +323,7 @@ public class CoupleActivity extends AppCompatActivity implements Couple.View {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        assert exif != null;
         int exifOrientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
 
         Bitmap bitmap = BitmapFactory.decodeFile(path);//경로를 통해 비트맵으로 전환
@@ -363,7 +360,6 @@ public class CoupleActivity extends AppCompatActivity implements Couple.View {
         if(myName != null) { presenter.updateNickName(myName, 0);}
         if(coupleName != null) { presenter.updateNickName(coupleName, 1);}
         if(coupleDate != null) { presenter.updateCalendar(coupleDate);}
-
     }
 
     @Override

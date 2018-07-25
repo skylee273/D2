@@ -1,15 +1,21 @@
 package btcore.co.kr.d2band.view.register.model;
 
+import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.os.AsyncTask;
+import android.util.Log;
 
 import java.io.BufferedReader;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
 
 import btcore.co.kr.d2band.util.SHA256Util;
 
-import static btcore.co.kr.d2band.database.mySql.URL_REGISTER;
+import static android.support.constraint.Constraints.TAG;
+import static btcore.co.kr.d2band.database.mySql.URL_CALL_REGISTER;
 
 /**
  * Created by leehaneul on 2018-01-22.
@@ -17,30 +23,20 @@ import static btcore.co.kr.d2band.database.mySql.URL_REGISTER;
 
 public class RegisterModel {
 
-    String id;
-    String pw;
-    String pwConfirm;
-    String salt;
-    String newPw;
-    String name;
-    String birthday;
-    String gender;
-    String height;
-    String weight;
-    String phone;
-    String address;
-    ApiListener apiListener;
-    /**
-     * 생성자와 같은 역활
-     * @param id
-     * @param pw
-     * @param pwConfirm
-     * @param name
-     * @param birthday
-     * @param height
-     * @param weight
-     * @param phone
-     */
+    private String id;
+    private String pw;
+    private String pwConfirm;
+    private String salt;
+    private String newPw;
+    private String name;
+    private String birthday;
+    private String gender;
+    private String height;
+    private String weight;
+    private String phone;
+    private String address;
+    private ApiListener apiListener;
+
     public void setUserData(String id, String pw, String pwConfirm, String name, String birthday, String gender, String height, String weight, String phone, String address) {
         this.id = id;
         this.pw = pw;
@@ -56,10 +52,7 @@ public class RegisterModel {
     }
 
     public boolean checkPw(){
-        if(pw.length() > 0){
-            return true;
-        }else
-            return false;
+        return pw.length() > 0;
     }
 
     public void setSalt(){
@@ -99,8 +92,8 @@ public class RegisterModel {
 
     public void callSignup(ApiListener listener){
         this.apiListener = listener;
-        RegisterUser task = new RegisterUser();
-        task.execute(id, newPw, salt, name, birthday, gender, height, weight, phone, address);
+        CallRegister callRegister = new CallRegister();
+        callRegister.execute(URL_CALL_REGISTER, id, newPw, salt, name, birthday, gender, height, weight, phone, address);
     }
 
     public interface ApiListener {
@@ -108,73 +101,122 @@ public class RegisterModel {
         void onFail (String message);
     }
 
-    class RegisterUser extends AsyncTask<String, Void, String> {
-        ProgressDialog loading;
-        URL register_url;
+    @SuppressLint("StaticFieldLeak")
+    private class CallRegister extends AsyncTask<String, Void, String> {
+
+        ProgressDialog progressDialog;
+        String errorString = null;
 
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-//                loading = ProgressDialog.show(Register.this, "Please Wait", null, true, true);
         }
 
         @Override
-        protected void onPostExecute(String s) {
-            super.onPostExecute(s);
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
 
-            if(s.contains("success")){
-                apiListener.onSuccess("회원가입 성공");
-            }else{
-                apiListener.onFail("회원가입 실패");
+            Log.d(TAG, "response - " + result);
+
+            try {
+                if (result == null || result.equals("ERROR") || result.equals("FAIL")) {
+                    Log.d(TAG, "Error - " + errorString);
+                } else if (result.equals("SUCCESS")) {
+                    apiListener.onSuccess("회원가입 성공");
+                } else {
+                    apiListener.onFail("회원가입 실패");
+                    Log.d(TAG, "Error - " + errorString);
+                }
+            } catch (NullPointerException ignored) {
+
             }
+
         }
+
 
         @Override
         protected String doInBackground(String... params) {
 
+            String id = params[1];
+            String pw = params[2];
+            String salt = params[3];
+            String name = params[4];
+            String birthday = params[5];
+            String gender = params[6];
+            String height = params[7];
+            String weight = params[8];
+            String phone = params[9];
+            String address = params[10];
+
+            String serverURL = params[0];
+
+            String postParameters = "id=" + id
+                    + "&pw=" + pw
+                    + "&salt=" + salt
+                    + "&name=" + name
+                    + "&birthday=" + birthday
+                    + "&gender=" + gender
+                    + "&height=" + height
+                    + "&weight=" + weight
+                    + "&phone=" + phone
+                    + "&address=" + address;
+
             try {
-                String _id = params[0];
-                String _pw = params[1];
-                String _salt = params[2];
-                String _name = params[3];
-                String _birthday = params[4];
-                String _gender = params[5];
-                String _height = params[6];
-                String _weight = params[7];
-                String _phone = params[8];
-                String _address = params[9];
 
-                String url_address = URL_REGISTER + "?id=" + _id
-                        + "&pw=" + _pw
-                        + "&salt=" + _salt
-                        + "&name=" + _name
-                        + "&birthday=" + _birthday
-                        + "&gender=" + _gender
-                        + "&height=" + _height
-                        + "&weight=" + _weight
-                        + "&phone=" + _phone
-                        + "&address=" + _address;
+                URL url = new URL(serverURL);
+                HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
 
-                register_url = new URL(url_address);
-                BufferedReader in = new BufferedReader(new InputStreamReader(register_url.openStream()));
 
-                String result = "";
-                String temp = "";
-                while ((temp = in.readLine()) != null) {
-                    result += temp;
+                httpURLConnection.setReadTimeout(5000);
+                httpURLConnection.setConnectTimeout(5000);
+                httpURLConnection.setRequestMethod("POST");
+                //httpURLConnection.setDoInput(true);
+                httpURLConnection.connect();
+
+
+                OutputStream outputStream = httpURLConnection.getOutputStream();
+                outputStream.write(postParameters.getBytes("UTF-8"));
+                outputStream.flush();
+                outputStream.close();
+
+
+                int responseStatusCode = httpURLConnection.getResponseCode();
+                Log.d(TAG, "POST response code - " + responseStatusCode);
+
+                InputStream inputStream;
+
+                if (responseStatusCode == HttpURLConnection.HTTP_OK) {
+                    inputStream = httpURLConnection.getInputStream();
+                } else {
+                    inputStream = httpURLConnection.getErrorStream();
                 }
-                in.close();
 
-                return result;
+
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream, "UTF-8");
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+
+                StringBuilder sb = new StringBuilder();
+                String line;
+
+                while ((line = bufferedReader.readLine()) != null) {
+                    sb.append(line);
+                }
+
+                bufferedReader.close();
+
+                return sb.toString().trim();
+
+
             } catch (Exception e) {
-                return new String("RegisterExcepTion: " + e.getMessage());
+
+                Log.d(TAG, "InsertData : Error ", e);
+                errorString = e.toString();
+
+                return null;
             }
+
         }
-
     }
-
-
-
 
 
 }

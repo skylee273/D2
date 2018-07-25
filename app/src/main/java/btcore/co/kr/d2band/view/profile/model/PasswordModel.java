@@ -1,24 +1,30 @@
 package btcore.co.kr.d2band.view.profile.model;
 
+import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.os.AsyncTask;
+import android.util.Log;
 
 import java.io.BufferedReader;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
 
 import btcore.co.kr.d2band.user.User;
 import btcore.co.kr.d2band.util.SHA256Util;
 
-import static btcore.co.kr.d2band.database.mySql.URL_REGISTER;
-import static btcore.co.kr.d2band.database.mySql.URL_UPDATE_PASSWORD;
+import static android.support.constraint.Constraints.TAG;
+import static btcore.co.kr.d2band.database.mySql.URL_GET_PW;
 
 public class PasswordModel {
 
     private String newPassword;
     private String salt;
-    ApiListener apiListener;
-    User user;
+
+    private ApiListener apiListener;
+
     public boolean checkPassword(String password){
         this.newPassword = password;
 
@@ -33,7 +39,7 @@ public class PasswordModel {
         return  true;
     }
 
-    public void setSalt(){
+    private void setSalt(){
         this.salt = SHA256Util.generateSalt();
         newPassword= SHA256Util.getEncrypt(newPassword,salt);
     }
@@ -41,10 +47,10 @@ public class PasswordModel {
 
     public void UpdatePassword(ApiListener listener){
         this.apiListener = listener;
-        user = new User();
+        User user = new User();
         setSalt();
-        UpdatePassword updatePassword = new UpdatePassword();
-        updatePassword.execute(user.getId(), newPassword, salt);
+        GetPassword getPassword = new GetPassword();
+        getPassword.execute(URL_GET_PW, user.getId(), user.getName(), user.getPhone(), newPassword, salt);
     }
 
     public interface ApiListener {
@@ -53,57 +59,112 @@ public class PasswordModel {
 
     }
 
-    class UpdatePassword extends AsyncTask<String, Void, String> {
-        ProgressDialog loading;
-        URL update_url;
+    @SuppressLint("StaticFieldLeak")
+    private class GetPassword extends AsyncTask<String, Void, String> {
+
+        ProgressDialog progressDialog;
+        String errorString = null;
 
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-//                loading = ProgressDialog.show(Register.this, "Please Wait", null, true, true);
         }
 
         @Override
-        protected void onPostExecute(String s) {
-            super.onPostExecute(s);
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
 
-            if(s.contains("success")){
-                apiListener.onSuccess("비밀번호 변경 성공");
-            }else{
-                apiListener.onFail("비밀번호 변경 실패");
+            //mTextViewResult.setText(result);
+            Log.d(TAG, "response - " + result);
+
+            try {
+                if (result == null || result.equals("ERROR") || result.equals("FAIL")) {
+                    Log.d(TAG, "Error - " + errorString);
+                } else if (result.equals("SUCCESS")) {
+                    apiListener.onSuccess("비밀번호 변경 성공");
+                } else {
+                    apiListener.onFail("비밀번호 변경 실패");
+                    Log.d(TAG, "Error - " + errorString);
+                }
+            } catch (NullPointerException ignored) {
+
             }
+
         }
+
 
         @Override
         protected String doInBackground(String... params) {
 
+            String id = params[1];
+            String name = params[2];
+            String phone = params[3];
+            String pw = params[4];
+            String salt = params[5];
+
+            String serverURL = params[0];
+            String postParameters = "id=" + id + "&name=" + name
+                    + "&phone=" + phone
+                    + "&pw=" + pw
+                    + "&salt=" + salt;
+
             try {
-                String _id = params[0];
-                String _pw = params[1];
-                String _salt = params[2];
+
+                URL url = new URL(serverURL);
+                HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
 
 
-                String url_address = URL_UPDATE_PASSWORD + "?id=" + _id
-                        + "&pw=" + _pw
-                        + "&salt=" + _salt;
+                httpURLConnection.setReadTimeout(5000);
+                httpURLConnection.setConnectTimeout(5000);
+                httpURLConnection.setRequestMethod("POST");
+                //httpURLConnection.setDoInput(true);
+                httpURLConnection.connect();
 
-                update_url = new URL(url_address);
-                BufferedReader in = new BufferedReader(new InputStreamReader(update_url.openStream()));
 
-                String result = "";
-                String temp = "";
-                while ((temp = in.readLine()) != null) {
-                    result += temp;
+                OutputStream outputStream = httpURLConnection.getOutputStream();
+                outputStream.write(postParameters.getBytes("UTF-8"));
+                outputStream.flush();
+                outputStream.close();
+
+
+                int responseStatusCode = httpURLConnection.getResponseCode();
+                Log.d(TAG, "response code - " + responseStatusCode);
+
+                InputStream inputStream;
+
+                if (responseStatusCode == HttpURLConnection.HTTP_OK) {
+                    inputStream = httpURLConnection.getInputStream();
+                } else {
+                    inputStream = httpURLConnection.getErrorStream();
                 }
-                in.close();
 
-                return result;
+
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream, "UTF-8");
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+
+                StringBuilder sb = new StringBuilder();
+                String line;
+
+                while ((line = bufferedReader.readLine()) != null) {
+                    sb.append(line);
+                }
+
+                bufferedReader.close();
+
+                return sb.toString().trim();
+
+
             } catch (Exception e) {
-                return new String("PasswordChangeUpdateErro: " + e.getMessage());
-            }
-        }
 
+                Log.d(TAG, "GetData : Error ", e);
+                errorString = e.toString();
+
+                return null;
+            }
+
+        }
     }
+
 
 
 }

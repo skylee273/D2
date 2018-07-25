@@ -1,77 +1,77 @@
 package btcore.co.kr.d2band.database;
 
+import android.annotation.SuppressLint;
+import android.app.ProgressDialog;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 
 import btcore.co.kr.d2band.item.StepItem;
-import btcore.co.kr.d2band.user.Contact;
+import btcore.co.kr.d2band.user.ContactItem;
 import btcore.co.kr.d2band.user.User;
-import btcore.co.kr.d2band.view.login.model.LoginModel;
 
-import static btcore.co.kr.d2band.database.mySql.URL_INSERT_HEART;
-import static btcore.co.kr.d2band.database.mySql.URL_INSERT_STEP;
-import static btcore.co.kr.d2band.database.mySql.URL_SELECT_STEP;
-import static btcore.co.kr.d2band.database.mySql.URL_SET_RECEIVE;
-import static btcore.co.kr.d2band.database.mySql.URL_SET_USER;
+import static btcore.co.kr.d2band.database.mySql.URL_GET_RECEIVER;
+import static btcore.co.kr.d2band.database.mySql.URL_GET_STEP;
+import static btcore.co.kr.d2band.database.mySql.URL_SET_HEART;
+import static btcore.co.kr.d2band.database.mySql.URL_SET_STEP;
+
 
 public class ServerCommand {
 
     private final String TAG = getClass().getSimpleName();
     private String DATE;
-    private String STEP;
-    private String HEART;
-    User user;
-    Contact contact;
-    public static ArrayList<StepItem> StepList = new ArrayList<StepItem>();
+    private String mJsonString;
+    private User user;
+    private static ArrayList<StepItem> StepList = new ArrayList<StepItem>();
+    public static ArrayList<ContactItem> contactArrayList = null;
 
-    public void addStep(String date, String step){
-        StepItem item = new StepItem();
-        item.setDate(date);
-        item.setStep(step);
-        StepList.add(item);
-
-    }
 
     public ArrayList getStep(){
         return StepList;
     }
+
     public ServerCommand() {
         user = new User();
     }
 
     public void SELECT_MSG(){
-        setMSG task = new setMSG();
-        task.execute(user.getId());
+        contactArrayList = new ArrayList<>();
+        GetReceiver getReceiver = new GetReceiver();
+        getReceiver.execute(URL_GET_RECEIVER, user.getId());
     }
     public void SELECT_STEP(){
-        SelectStep TaskSelect = new SelectStep();
-        TaskSelect.execute(user.getId());
+        GetStep getStep = new GetStep();
+        getStep.execute(URL_GET_STEP, user.getId());
     }
     public void INSERT_STEP(String date, String step) {
         this.DATE = date;
-        this.STEP = step;
-        InsertStep TaskStep = new InsertStep();
-        TaskStep.execute(user.getId(), DATE, STEP);
+        SetStep setStep = new SetStep();
+        setStep.execute(URL_SET_STEP, user.getId(), DATE, step);
     }
 
     public void INSERT_HEART(String date, String heart) {
         this.DATE = date;
-        this.HEART = heart;
-        InsertHeart TaskHeart = new InsertHeart();
-        TaskHeart.execute(user.getId(), DATE, HEART);
+        SetHeart setHeart = new SetHeart();
+        setHeart.execute(URL_SET_HEART, user.getId(), DATE, heart);
     }
 
 
+    @SuppressLint("StaticFieldLeak")
+    private class SetStep extends AsyncTask<String, Void, String> {
 
-    class SelectStep extends AsyncTask<String, Void, String> {
-        URL stepUrl;
+        ProgressDialog progressDialog;
+        String errorString = null;
 
         @Override
         protected void onPreExecute() {
@@ -79,192 +79,448 @@ public class ServerCommand {
         }
 
         @Override
-        protected void onPostExecute(String s) {
-            super.onPostExecute(s);
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
 
-            if(s != null && !s.equals("")){
+            Log.d(TAG, "response - " + result);
+
+            try {
+                if (result == null || result.equals("ERROR") || result.equals("FAIL")) {
+                    Log.d(TAG, "STEP DATA INSERT FAILE");
+                } else if (result.equals("SUCCESS")) {
+                    Log.d(TAG, "STEP DATA INSERT SUCCESS");
+                } else {
+                    Log.d(TAG, "STEP DATA INSERT FAILE");
+                }
+            } catch (NullPointerException ignored) {
+
+            }
+
+        }
+
+
+        @Override
+        protected String doInBackground(String... params) {
+
+            String id = params[1];
+            String date = params[2];
+            String step = params[3];
+
+            String serverURL = params[0];
+
+            String postParameters = "id=" + id
+                    + "&date=" + date
+                    + "&step=" + step;
+
+            try {
+
+                URL url = new URL(serverURL);
+                HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
+
+
+                httpURLConnection.setReadTimeout(5000);
+                httpURLConnection.setConnectTimeout(5000);
+                httpURLConnection.setRequestMethod("POST");
+                //httpURLConnection.setDoInput(true);
+                httpURLConnection.connect();
+
+
+                OutputStream outputStream = httpURLConnection.getOutputStream();
+                outputStream.write(postParameters.getBytes("UTF-8"));
+                outputStream.flush();
+                outputStream.close();
+
+
+                int responseStatusCode = httpURLConnection.getResponseCode();
+                Log.d(TAG, "POST response code - " + responseStatusCode);
+
+                InputStream inputStream;
+
+                if (responseStatusCode == HttpURLConnection.HTTP_OK) {
+                    inputStream = httpURLConnection.getInputStream();
+                } else {
+                    inputStream = httpURLConnection.getErrorStream();
+                }
+
+
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream, "UTF-8");
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+
+                StringBuilder sb = new StringBuilder();
+                String line;
+
+                while ((line = bufferedReader.readLine()) != null) {
+                    sb.append(line);
+                }
+
+                bufferedReader.close();
+
+                return sb.toString().trim();
+
+
+            } catch (Exception e) {
+
+                Log.d(TAG, "InsertData : Error ", e);
+                errorString = e.toString();
+
+                return null;
+            }
+
+        }
+    }
+
+    private class SetHeart extends AsyncTask<String, Void, String> {
+
+        ProgressDialog progressDialog;
+        String errorString = null;
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+
+            Log.d(TAG, "response - " + result);
+
+            try {
+                if (result == null || result.equals("ERROR") || result.equals("FAIL")) {
+                    Log.d(TAG, "HEART DATA INSERT FAILE");
+                } else if (result.equals("SUCCESS")) {
+                    Log.d(TAG, "HEART DATA INSERT SUCCESS");
+                } else {
+                    Log.d(TAG, "HEART DATA INSERT FAILE");
+                }
+            } catch (NullPointerException ignored) {
+
+            }
+
+        }
+
+
+        @Override
+        protected String doInBackground(String... params) {
+
+            String id = params[1];
+            String date = params[2];
+            String heart = params[3];
+
+            String serverURL = params[0];
+
+            String postParameters = "id=" + id
+                    + "&date=" + date
+                    + "&heart=" + heart;
+
+            try {
+
+                URL url = new URL(serverURL);
+                HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
+
+
+                httpURLConnection.setReadTimeout(5000);
+                httpURLConnection.setConnectTimeout(5000);
+                httpURLConnection.setRequestMethod("POST");
+                //httpURLConnection.setDoInput(true);
+                httpURLConnection.connect();
+
+
+                OutputStream outputStream = httpURLConnection.getOutputStream();
+                outputStream.write(postParameters.getBytes("UTF-8"));
+                outputStream.flush();
+                outputStream.close();
+
+
+                int responseStatusCode = httpURLConnection.getResponseCode();
+                Log.d(TAG, "POST response code - " + responseStatusCode);
+
+                InputStream inputStream;
+
+                if (responseStatusCode == HttpURLConnection.HTTP_OK) {
+                    inputStream = httpURLConnection.getInputStream();
+                } else {
+                    inputStream = httpURLConnection.getErrorStream();
+                }
+
+
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream, "UTF-8");
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+
+                StringBuilder sb = new StringBuilder();
+                String line;
+
+                while ((line = bufferedReader.readLine()) != null) {
+                    sb.append(line);
+                }
+
+                bufferedReader.close();
+
+                return sb.toString().trim();
+
+
+            } catch (Exception e) {
+
+                Log.d(TAG, "InsertData : Error ", e);
+                errorString = e.toString();
+
+                return null;
+            }
+
+        }
+    }
+
+    private class GetStep extends AsyncTask<String, Void, String>{
+
+        ProgressDialog progressDialog;
+        String errorString = null;
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+        @Override
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+
+            //mTextViewResult.setText(result);
+            Log.d(TAG, "response - " + result);
+
+            if (result == null || result.equals("ERROR") || result.equals("")){
+                Log.d(TAG, "Error - " + errorString);
+            }
+            else {
+                mJsonString = result;
                 StepList.clear();
-                String [] Step  = s.split("&&&&&");
-                for (String val : Step){
-                    String [] addData = val.split("#####");
-                    addStep(addData[0], addData[1]);
-                }
+                showStepResult();
             }
         }
+
 
         @Override
         protected String doInBackground(String... params) {
 
+            String id = params[1];
+            String serverURL = params[0];
+            String postParameters = "id=" + id;
+
+
             try {
-                String _id = params[0];
 
-                String url_address = URL_SELECT_STEP + "?id=" + _id;
+                URL url = new URL(serverURL);
+                HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
 
-                stepUrl = new URL(url_address);
-                BufferedReader in = new BufferedReader(new InputStreamReader(stepUrl.openStream()));
 
-                String result = "";
-                String temp = "";
-                while ((temp = in.readLine()) != null) {
-                    result += temp;
+                httpURLConnection.setReadTimeout(5000);
+                httpURLConnection.setConnectTimeout(5000);
+                httpURLConnection.setRequestMethod("POST");
+                //httpURLConnection.setDoInput(true);
+                httpURLConnection.connect();
+
+
+                OutputStream outputStream = httpURLConnection.getOutputStream();
+                outputStream.write(postParameters.getBytes("UTF-8"));
+                outputStream.flush();
+                outputStream.close();
+
+
+                int responseStatusCode = httpURLConnection.getResponseCode();
+                Log.d(TAG, "response code - " + responseStatusCode);
+
+                InputStream inputStream;
+
+                if(responseStatusCode == HttpURLConnection.HTTP_OK) {
+                    inputStream = httpURLConnection.getInputStream();
                 }
-                in.close();
+                else{
+                    inputStream = httpURLConnection.getErrorStream();
+                }
 
-                return result;
+
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream, "UTF-8");
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+
+                StringBuilder sb = new StringBuilder();
+                String line;
+
+                while((line = bufferedReader.readLine()) != null){
+                    sb.append(line);
+                }
+
+                bufferedReader.close();
+
+                return sb.toString().trim();
+
+
             } catch (Exception e) {
-                e.printStackTrace();
-                return new String("Step Exception: " + e.getMessage());
+
+                Log.d(TAG, "GetData : Error ", e);
+                errorString = e.toString();
+
+                return null;
             }
+
         }
     }
 
-    class InsertStep extends AsyncTask<String, Void, String> {
-        URL step_url;
+
+
+    private class GetReceiver extends AsyncTask<String, Void, String>{
+
+        ProgressDialog progressDialog;
+        String errorString = null;
 
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
         }
-
         @Override
-        protected void onPostExecute(String s) {
-            super.onPostExecute(s);
-            if (s.contains("success")) {
-                Log.d(TAG, "STEP DATA INSERT SUCCESS");
-            } else {
-                Log.d(TAG, "STEP DATA INSERT FAILE");
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+
+            //mTextViewResult.setText(result);
+            Log.d(TAG, "response - " + result);
+
+            if (result == null || result.equals("ERROR") || result.equals("")){
+                Log.d(TAG, "Error - " + errorString);
+            }
+            else {
+                mJsonString = result;
+                contactArrayList.clear();
+                showReceiverResult();
             }
         }
+
 
         @Override
         protected String doInBackground(String... params) {
 
+            String id = params[1];
+            String serverURL = params[0];
+            String postParameters = "id=" + id;
+
+
             try {
-                String _id = params[0];
-                String _date = params[1];
-                String _step = params[2];
 
-                String url_address = URL_INSERT_STEP + "?id=" + _id
-                        + "&date=" + _date
-                        + "&step=" + _step;
+                URL url = new URL(serverURL);
+                HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
 
-                step_url = new URL(url_address);
-                BufferedReader in = new BufferedReader(new InputStreamReader(step_url.openStream()));
-                String result = "";
-                String temp = "";
 
-                while ((temp = in.readLine()) != null) {
-                    result += temp;
+                httpURLConnection.setReadTimeout(5000);
+                httpURLConnection.setConnectTimeout(5000);
+                httpURLConnection.setRequestMethod("POST");
+                //httpURLConnection.setDoInput(true);
+                httpURLConnection.connect();
+
+
+                OutputStream outputStream = httpURLConnection.getOutputStream();
+                outputStream.write(postParameters.getBytes("UTF-8"));
+                outputStream.flush();
+                outputStream.close();
+
+
+                int responseStatusCode = httpURLConnection.getResponseCode();
+                Log.d(TAG, "response code - " + responseStatusCode);
+
+                InputStream inputStream;
+
+                if(responseStatusCode == HttpURLConnection.HTTP_OK) {
+                    inputStream = httpURLConnection.getInputStream();
                 }
-                in.close();
-                return result;
+                else{
+                    inputStream = httpURLConnection.getErrorStream();
+                }
+
+
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream, "UTF-8");
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+
+                StringBuilder sb = new StringBuilder();
+                String line;
+
+                while((line = bufferedReader.readLine()) != null){
+                    sb.append(line);
+                }
+
+                bufferedReader.close();
+
+                return sb.toString().trim();
+
+
             } catch (Exception e) {
-                return new String(TAG + e.getMessage());
+
+                Log.d(TAG, "GetData : Error ", e);
+                errorString = e.toString();
+
+                return null;
             }
+
         }
     }
 
-    class InsertHeart extends AsyncTask<String, Void, String> {
-        URL heart_url;
+    private void showReceiverResult(){
 
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
+        String TAG_JSON="RECEIVER";
+        String TAG_NAME = "NAME";
+        String TAG_PHONE = "PHONE";
 
-        @Override
-        protected void onPostExecute(String s) {
-            super.onPostExecute(s);
 
-            if (s.contains("success")) {
-                Log.d(TAG, "HEART DATA INSERT SUCCESS");
-            } else {
-                Log.d(TAG, "HEART DATA INSERT FAILE");
+        try {
+            JSONObject jsonObject = new JSONObject(mJsonString);
+            JSONArray jsonArray = jsonObject.getJSONArray(TAG_JSON);
+
+            for(int i=0;i<jsonArray.length();i++){
+
+                JSONObject item = jsonArray.getJSONObject(i);
+
+                String name = item.getString(TAG_NAME);
+                String phone = item.getString(TAG_PHONE);
+
+                ContactItem contactItem = new ContactItem();
+
+                contactItem.setName(name);
+                contactItem.setPhone(phone);
+
+                contactArrayList.add(contactItem);
+
             }
-        }
+        } catch (JSONException e) {
 
-        @Override
-        protected String doInBackground(String... params) {
-
-            try {
-                String _id = params[0];
-                String _date = params[1];
-                String _heart = params[2];
-
-                String url_address = URL_INSERT_HEART + "?id=" + _id
-                        + "&date=" + _date
-                        + "&heart=" + _heart;
-
-                heart_url = new URL(url_address);
-                BufferedReader in = new BufferedReader(new InputStreamReader(heart_url.openStream()));
-
-                String result = "";
-                String temp = "";
-                while ((temp = in.readLine()) != null) {
-                    result += temp;
-                }
-                in.close();
-                return result;
-            } catch (Exception e) {
-                return new String(TAG + e.getMessage());
-            }
+            Log.d(TAG, "showUserResult : ", e);
         }
 
     }
-    class setMSG extends AsyncTask<String, Void, String> {
-        URL userUrl;
+    private void showStepResult(){
 
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
+        String TAG_JSON="STEP";
+        String TAG_DATE = "DATE";
+        String TAG_STEP = "STEP";
 
-        @Override
-        protected void onPostExecute(String s) {
-            super.onPostExecute(s);
-            try {
-                String Recv[] = s.split("&&&&&");
-                String name[] = new String[Recv.length];
-                String phone[] = new String[Recv.length];
-                int index = 0;
-                contact = new Contact();
-                contact.clear();
-                for (String recv : Recv) {
-                    String con[] = recv.split("#####");
-                    name[index] = con[0];
-                    phone[index] = con[1];
-                    index++;
-                }
-                contact.setName(name);
-                contact.setPhone(phone);
-            } catch (ArrayIndexOutOfBoundsException e) {
+
+        try {
+            JSONObject jsonObject = new JSONObject(mJsonString);
+            JSONArray jsonArray = jsonObject.getJSONArray(TAG_JSON);
+
+            for(int i=0;i<jsonArray.length();i++){
+
+                JSONObject item = jsonArray.getJSONObject(i);
+
+                String date = item.getString(TAG_DATE);
+                String step = item.getString(TAG_STEP);
+
+
+                StepItem stepItem = new StepItem();
+
+                stepItem.setStep(step);
+                stepItem.setDate(date);
+
+                StepList.add(stepItem);
+
             }
+        } catch (JSONException e) {
 
+            Log.d(TAG, "showUserResult : ", e);
         }
 
-        @Override
-        protected String doInBackground(String... params) {
-
-            try {
-                String _id = params[0];
-
-                String url_address = URL_SET_RECEIVE + "?id=" + _id;
-
-                userUrl = new URL(url_address);
-                BufferedReader in = new BufferedReader(new InputStreamReader(userUrl.openStream()));
-
-                String result = "";
-                String temp = "";
-                while ((temp = in.readLine()) != null) {
-                    result += temp;
-                }
-                in.close();
-
-                return result;
-            } catch (Exception e) {
-                e.printStackTrace();
-                return new String("User Exception: " + e.getMessage());
-            }
-        }
     }
 }

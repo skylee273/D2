@@ -1,5 +1,6 @@
 package btcore.co.kr.d2band.view.message;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
@@ -39,7 +40,7 @@ import btcore.co.kr.d2band.bus.SmsProvider;
 import btcore.co.kr.d2band.database.ServerCommand;
 import btcore.co.kr.d2band.databinding.ActivityMessageBinding;
 import btcore.co.kr.d2band.service.BluetoothLeService;
-import btcore.co.kr.d2band.user.Contact;
+import btcore.co.kr.d2band.user.ContactItem;
 import btcore.co.kr.d2band.util.BleProtocol;
 import btcore.co.kr.d2band.view.message.adapter.ReceiveAdapter;
 import btcore.co.kr.d2band.view.message.dialog.EmergencyDialog;
@@ -48,6 +49,7 @@ import btcore.co.kr.d2band.view.message.item.ReceiveItem;
 import btcore.co.kr.d2band.view.message.presenter.MessagePresenter;
 import butterknife.OnClick;
 
+import static btcore.co.kr.d2band.database.ServerCommand.contactArrayList;
 import static btcore.co.kr.d2band.service.BluetoothLeService.STATE;
 
 /**
@@ -70,10 +72,9 @@ public class MessageAtivity extends AppCompatActivity implements Message.View {
     private ReceiveAdapter receiveAdapter;
     private final int PICK_CONTACT = 1;
     private long startTime;
-    private long endTime;
     private Timer autoTimer;
-    private TimerTask autoTask;
     private BleProtocol bleProtocol;
+
     SharedPreferences.Editor editor;
     SharedPreferences pref = null;
     ActivityMessageBinding messageBinding;
@@ -81,7 +82,7 @@ public class MessageAtivity extends AppCompatActivity implements Message.View {
     MessageDialog MD;
     Message.Presenter presenter;
     ServerCommand serverCommand;
-    Contact contact;
+    @SuppressLint("CommitPrefEdits")
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -94,8 +95,6 @@ public class MessageAtivity extends AppCompatActivity implements Message.View {
 
         // 블루투스 생성
         bleProtocol = new BleProtocol();
-
-        contact = new Contact();
 
         // 버스 등록
         CallProvider.getInstance().register(this);
@@ -136,7 +135,7 @@ public class MessageAtivity extends AppCompatActivity implements Message.View {
 
     @Override
     public void onBackPressed() {
-        endTime = System.currentTimeMillis();
+        long endTime = System.currentTimeMillis();
         Snackbar.make(getWindow().getDecorView().getRootView(), "한번더 누르면 종료됩니다.", Snackbar.LENGTH_LONG).show();
         if (endTime - startTime < 2000) {
             super.onBackPressed();
@@ -217,7 +216,9 @@ public class MessageAtivity extends AppCompatActivity implements Message.View {
                 if (resultCode == Activity.RESULT_OK) {
                     Uri contactData = data.getData();
                     ContentResolver cr = getContentResolver();
-                    Cursor c = getContentResolver().query(contactData, null, null, null, null);
+                    assert contactData != null;
+                    @SuppressLint("Recycle") Cursor c = getContentResolver().query(contactData, null, null, null, null);
+                    assert c != null;
                     if (c.moveToFirst()) {
                         String name = c.getString(c.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
                         String contactId =
@@ -286,24 +287,17 @@ public class MessageAtivity extends AppCompatActivity implements Message.View {
     }
 
     @Override
-    public void updateListView(String[] Receiver) {
-        receiveAdapter.clearItem();
-        try {
-            for (String RecvInfo : Receiver) {
-                String info[] = RecvInfo.split("#####");
-                receiveAdapter.addItem(info[0], info[1]);
-                messageBinding.listReceiver.setAdapter(receiveAdapter);
-                serverCommand.SELECT_MSG();
-            }
-        } catch (ArrayIndexOutOfBoundsException e) {
-
+    public void updateListView() {
+        if(receiveAdapter != null) { receiveAdapter.clearItem(); }
+        for (ContactItem aContactArrayList : contactArrayList){
+            receiveAdapter.addItem(aContactArrayList.getName(), aContactArrayList.getPhone());
+            receiveAdapter.notifyDataSetChanged();
+            messageBinding.listReceiver.setAdapter(receiveAdapter);
         }
     }
 
     @Override
     public void updateView() {
-        receiveAdapter.clearItem();
-        messageBinding.listReceiver.setAdapter(receiveAdapter);
         presenter.selectReceiver();
     }
 
@@ -344,8 +338,8 @@ public class MessageAtivity extends AppCompatActivity implements Message.View {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
 
-            final Intent mIntent = intent;
             //*********************//
+            assert action != null;
             if (action.equals(BluetoothLeService.ACTION_GATT_CONNECTED)) {
                 runOnUiThread(new Runnable() {
                     public void run() {
@@ -383,7 +377,7 @@ public class MessageAtivity extends AppCompatActivity implements Message.View {
 
     public void AutoConnection() {
         autoTimer = new Timer();
-        autoTask = new TimerTask() {
+        TimerTask autoTask = new TimerTask() {
             @Override
             public void run() {
                 if (!STATE) {
@@ -404,8 +398,9 @@ public class MessageAtivity extends AppCompatActivity implements Message.View {
         String callName = callBusEvent.getEventData();
         if(STATE){
             try {
-                for (String temp : contact.getName()) {
-                    if (callName.equals(temp)) {
+                for (ContactItem aContactArrayList : contactArrayList) {
+                    String name = aContactArrayList.getName();
+                    if (callName.equals(name)) {
                         subFlag = true;
                     }
                 }
@@ -451,8 +446,11 @@ public class MessageAtivity extends AppCompatActivity implements Message.View {
 
         if (STATE) {
             try {
-                for (String name : contact.getName()) {
-                    if (NameOrPhone.equals(name)) subFlag = true;
+                for (ContactItem aContactArrayList : contactArrayList) {
+                    String name = aContactArrayList.getName();
+                    if (NameOrPhone.equals(name)) {
+                        subFlag = true;
+                    }
                 }
             } catch (Exception e) {
                 Log.d(TAG, e.toString());

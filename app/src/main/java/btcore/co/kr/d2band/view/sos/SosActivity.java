@@ -2,7 +2,6 @@ package btcore.co.kr.d2band.view.sos;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -19,7 +18,6 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.media.AudioAttributes;
-import android.media.AudioManager;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
@@ -41,9 +39,9 @@ import android.widget.Toast;
 
 import com.squareup.otto.Subscribe;
 
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -56,11 +54,12 @@ import btcore.co.kr.d2band.bus.SmsProvider;
 import btcore.co.kr.d2band.databinding.ActivitySosBinding;
 import btcore.co.kr.d2band.service.BluetoothLeService;
 import btcore.co.kr.d2band.service.GPSTracker;
-import btcore.co.kr.d2band.user.Contact;
+import btcore.co.kr.d2band.user.ContactItem;
 import btcore.co.kr.d2band.util.BleProtocol;
 import btcore.co.kr.d2band.view.setting.SettingActivity;
 import butterknife.OnClick;
 
+import static btcore.co.kr.d2band.database.ServerCommand.contactArrayList;
 import static btcore.co.kr.d2band.service.BluetoothLeService.STATE;
 
 /**
@@ -81,17 +80,13 @@ public class SosActivity extends AppCompatActivity {
     private boolean sos = false;
     private BluetoothLeService mService = null;
     private SharedPreferences pref = null;
-    private SharedPreferences.Editor editor;
     private ActivitySosBinding mSosBinding;
     private BleProtocol bleProtocol;
     private long startTime;
-    private long endTime;
     private Timer sosTimer, autoTimer;
-    private TimerTask sosTask, autoTask;
     private LocationManager locationManager;
     private LocationListener locationListener;
     private Location TODO;
-    private Contact contact;
 
     // GPSTracker class
     GPSTracker gps = null;
@@ -100,6 +95,7 @@ public class SosActivity extends AppCompatActivity {
     public static int RENEW_GPS = 1;
     public static int SEND_PRINT = 2;
 
+    @SuppressLint("HandlerLeak")
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -117,14 +113,12 @@ public class SosActivity extends AppCompatActivity {
         CallProvider.getInstance().register(this);
         SmsProvider.getInstance().register(this);
 
-        // 연락처
-        contact = new Contact();
         pref = getSharedPreferences("D2", Activity.MODE_PRIVATE);
-        editor = pref.edit();
+        @SuppressLint("CommitPrefEdits") SharedPreferences.Editor editor = pref.edit();
 
         try {
             Intent intent = getIntent();
-            if (intent.getExtras().getInt("emergency") == 4) {
+            if (Objects.requireNonNull(intent.getExtras()).getInt("emergency") == 4) {
                 mSosBinding.content.startRippleAnimation();
                 if ( Build.VERSION.SDK_INT >= 23 &&
                         ContextCompat.checkSelfPermission( this, android.Manifest.permission.ACCESS_FINE_LOCATION ) != PackageManager.PERMISSION_GRANTED ) {
@@ -161,7 +155,7 @@ public class SosActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        endTime = System.currentTimeMillis();
+        long endTime = System.currentTimeMillis();
         Snackbar.make(getWindow().getDecorView().getRootView(), "한번더 누르면 종료됩니다.", Snackbar.LENGTH_LONG).show();
         if (endTime - startTime < 2000) {
             super.onBackPressed();
@@ -173,14 +167,14 @@ public class SosActivity extends AppCompatActivity {
     @SuppressLint("ResourceAsColor")
     @OnClick(R.id.btn_alert)
     public void OnAlert(View view) {
-        if (sos == true) {
+        if (sos) {
             mSosBinding.content.stopRippleAnimation();
             sos = false;
             try {
-                Contact contact = new Contact();
-                for (String sms : contact.getPhone()) {
-                    sendSMS(sms, "저는 괜찮아 졌습니다. 감사합니다.");
+                for (ContactItem aContactArrayList : contactArrayList) {
+                    sendSMS(aContactArrayList.getPhone(), "저는 괜찮아 졌습니다. 감사합니다.");
                 }
+
             } catch (NullPointerException e) {
                 Log.d(TAG, e.toString());
             }
@@ -254,8 +248,9 @@ public class SosActivity extends AppCompatActivity {
         String callName = callBusEvent.getEventData();
         if(STATE){
             try {
-                for (String temp : contact.getName()) {
-                    if (callName.equals(temp)) {
+                for (ContactItem aContactArrayList : contactArrayList) {
+                    String name = aContactArrayList.getName();
+                    if (callName.equals(name)) {
                         subFlag = true;
                     }
                 }
@@ -298,8 +293,11 @@ public class SosActivity extends AppCompatActivity {
 
         if (STATE) {
             try {
-                for (String name : contact.getName()) {
-                    if (NameOrPhone.equals(name)) subFlag = true;
+                for (ContactItem aContactArrayList : contactArrayList) {
+                    String name = aContactArrayList.getName();
+                    if (NameOrPhone.equals(name)) {
+                        subFlag = true;
+                    }
                 }
             } catch (Exception e) {
                 Log.d(TAG, e.toString());
@@ -359,13 +357,8 @@ public class SosActivity extends AppCompatActivity {
                 if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_SETTINGS) == PackageManager.PERMISSION_GRANTED) {
                     Uri uri = RingtoneManager.getActualDefaultRingtoneUri(getApplicationContext(), RingtoneManager.TYPE_RINGTONE);
                     Ringtone ringtone = RingtoneManager.getRingtone(getApplicationContext(), uri);
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        ringtone.setAudioAttributes(new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_ALARM).build());
-                    } else {
-                        ringtone.setStreamType(AudioManager.STREAM_ALARM);
-                    }
+                    ringtone.setAudioAttributes(new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_ALARM).build());
                     ringtone.play();
-                } else {
                 }
 
                 break;
@@ -428,8 +421,8 @@ public class SosActivity extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
 
-            final Intent mIntent = intent;
             //*********************//
+            assert action != null;
             if (action.equals(BluetoothLeService.ACTION_GATT_CONNECTED)) {
                 runOnUiThread(new Runnable() {
                     public void run() {
@@ -467,7 +460,7 @@ public class SosActivity extends AppCompatActivity {
 
     public void AutoConnection() {
         autoTimer = new Timer();
-        autoTask = new TimerTask() {
+        TimerTask autoTask = new TimerTask() {
             @Override
             public void run() {
                 if (!STATE) {
@@ -484,23 +477,22 @@ public class SosActivity extends AppCompatActivity {
 
     public void sosTask() {
         sosTimer = new Timer();
-        sosTask = new TimerTask() {
+        TimerTask sosTask = new TimerTask() {
             @Override
             public void run() {
                 try {
-                    Contact contact = new Contact();
                     String strSMS = pref.getString("EmergencyMsg", "저는 위급 상항입니다. 찾아주시기 바랍니다.");
                     String strSMS2 = "위치 정보가 없습니다.";
                     // check if GPS enabled
-                    if(gps.canGetLocation()){
+                    if (gps.canGetLocation()) {
                         double latitude = gps.getLatitude();
                         double longitude = gps.getLongitude();
                         strSMS2 = "https://www.geoplaner.com/?z=10;m=5;p=" + latitude + "," + longitude + "WP01-A;;";
                         Log.d("SOS", getTimeStr() + " " + "Your Location is - \nLat: " + latitude + "\nLong: " + longitude);
                     }
-                    for (String sms : contact.getPhone()) {
-                        sendSMS(sms, strSMS);
-                        sendSMS(sms, strSMS2);
+                    for (ContactItem aContactArrayList : contactArrayList) {
+                        sendSMS(aContactArrayList.getPhone(), strSMS);
+                        sendSMS(aContactArrayList.getPhone(), strSMS2);
                     }
                 } catch (NullPointerException e) {
                     Log.d(TAG, e.toString());
@@ -530,7 +522,7 @@ public class SosActivity extends AppCompatActivity {
     public String getTimeStr(){
         long now = System.currentTimeMillis();
         Date date = new Date(now);
-        SimpleDateFormat sdfNow = new SimpleDateFormat("MM/dd HH:mm:ss");
+        @SuppressLint("SimpleDateFormat") SimpleDateFormat sdfNow = new SimpleDateFormat("MM/dd HH:mm:ss");
         return sdfNow.format(date);
     }
 

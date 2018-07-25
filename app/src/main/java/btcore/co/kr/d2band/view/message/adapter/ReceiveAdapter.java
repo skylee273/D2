@@ -14,8 +14,7 @@ import btcore.co.kr.d2band.view.message.item.ReceiveItem;
 
 public class ReceiveAdapter extends BaseAdapter {
 
-    private TextView mName, mPhone;
-    public ArrayList<ReceiveItem> listViewItemList = new ArrayList<ReceiveItem>();
+    private ArrayList<ReceiveItem> listViewItemList = new ArrayList<>();
 
     @Override
     public int getCount() {
@@ -34,17 +33,17 @@ public class ReceiveAdapter extends BaseAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        int pos = position;
         Context context = parent.getContext();
 
         if (convertView == null) {
             LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            assert inflater != null;
             convertView = inflater.inflate(R.layout.list_receive, parent, false);
         }
-        mName = convertView.findViewById(R.id.text_name);
-        mPhone = convertView.findViewById(R.id.text_phone);
+        TextView mName = convertView.findViewById(R.id.text_name);
+        TextView mPhone = convertView.findViewById(R.id.text_phone);
 
-        ReceiveItem listViewItem = (ReceiveItem) getItem(pos);
+        ReceiveItem listViewItem = (ReceiveItem) getItem(position);
 
         mName.setText(listViewItem.getName());
         mPhone.setText(listViewItem.getPhone());

@@ -32,8 +32,7 @@ import btcore.co.kr.d2band.bus.SmsBusEvent;
 import btcore.co.kr.d2band.bus.SmsProvider;
 import btcore.co.kr.d2band.databinding.ActivityProfileBinding;
 import btcore.co.kr.d2band.service.BluetoothLeService;
-import btcore.co.kr.d2band.user.Contact;
-import btcore.co.kr.d2band.user.User;
+import btcore.co.kr.d2band.user.ContactItem;
 import btcore.co.kr.d2band.util.BleProtocol;
 import btcore.co.kr.d2band.view.login.LoginActivity;
 import btcore.co.kr.d2band.view.profile.dialog.PasswordChangeActivity;
@@ -42,6 +41,7 @@ import btcore.co.kr.d2band.view.setting.SettingActivity;
 import btcore.co.kr.d2band.view.step.StepActivity;
 import butterknife.OnClick;
 
+import static btcore.co.kr.d2band.database.ServerCommand.contactArrayList;
 import static btcore.co.kr.d2band.service.BluetoothLeService.STATE;
 import static btcore.co.kr.d2band.view.main.fragment.FragmentBottomBar.currentPage;
 
@@ -56,15 +56,12 @@ public class ProfileAcitivty  extends AppCompatActivity implements Profile.View{
     private static final int UART_PROFILE_CONNECTED = 20;
     private static final int REQUEST_SELECT_DEVICE = 1;
     private static final int UART_PROFILE_READY = 10;
-    private BluetoothAdapter mBtAdapter = null;
     private Context mContext;
     private int mState = UART_PROFILE_DISCONNECTED;
     private Timer autoTimer;
-    private TimerTask autoTask;
     private BluetoothLeService mService = null;
     private SharedPreferences.Editor editor;
     private SharedPreferences pref = null;
-    private Contact contact;
     private BleProtocol bleProtocol;
 
     ActivityProfileBinding mProfileBinding;
@@ -83,9 +80,6 @@ public class ProfileAcitivty  extends AppCompatActivity implements Profile.View{
 
         // 블루투스 프로토콜
         bleProtocol = new BleProtocol();
-
-        // 연락처
-        contact = new Contact();
 
         // 버스 등록
         CallProvider.getInstance().register(this);
@@ -133,6 +127,7 @@ public class ProfileAcitivty  extends AppCompatActivity implements Profile.View{
         startActivity(intent);
         finish();
     }
+
     @OnClick(R.id.btn_password)
     public void OnPasswordChange(View view){
         PasswordChangeActivity Dialog = new PasswordChangeActivity(this);
@@ -180,7 +175,7 @@ public class ProfileAcitivty  extends AppCompatActivity implements Profile.View{
 
 
     public void service_init() {
-        mBtAdapter = BluetoothAdapter.getDefaultAdapter();
+        BluetoothAdapter mBtAdapter = BluetoothAdapter.getDefaultAdapter();
         if (mBtAdapter == null) {
             Toast.makeText(this, "Bluetooth is not available", Toast.LENGTH_LONG).show();
             finish();
@@ -250,7 +245,7 @@ public class ProfileAcitivty  extends AppCompatActivity implements Profile.View{
 
     public void AutoConnection() {
         autoTimer = new Timer();
-        autoTask = new TimerTask() {
+        TimerTask autoTask = new TimerTask() {
             @Override
             public void run() {
                 if (!STATE) {
@@ -271,8 +266,9 @@ public class ProfileAcitivty  extends AppCompatActivity implements Profile.View{
         String callName = callBusEvent.getEventData();
         if(STATE){
             try {
-                for (String temp : contact.getName()) {
-                    if (callName.equals(temp)) {
+                for (ContactItem aContactArrayList : contactArrayList) {
+                    String name = aContactArrayList.getName();
+                    if (callName.equals(name)) {
                         subFlag = true;
                     }
                 }
@@ -318,8 +314,11 @@ public class ProfileAcitivty  extends AppCompatActivity implements Profile.View{
 
         if (STATE) {
             try {
-                for (String name : contact.getName()) {
-                    if (NameOrPhone.equals(name)) subFlag = true;
+                for (ContactItem aContactArrayList : contactArrayList) {
+                    String name = aContactArrayList.getName();
+                    if (NameOrPhone.equals(name)) {
+                        subFlag = true;
+                    }
                 }
             } catch (Exception e) {
                 Log.d(TAG, e.toString());

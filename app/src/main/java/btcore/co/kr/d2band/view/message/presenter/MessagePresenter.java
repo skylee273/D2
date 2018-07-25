@@ -2,12 +2,11 @@ package btcore.co.kr.d2band.view.message.presenter;
 
 import btcore.co.kr.d2band.view.message.Message;
 import btcore.co.kr.d2band.view.message.model.MessageModel;
-import btcore.co.kr.d2band.view.profile.model.ProfileModel;
 
 public class MessagePresenter implements Message.Presenter {
 
-    Message.View messageView;
-    MessageModel messageModel;
+    private Message.View messageView;
+    private MessageModel messageModel;
 
     public MessagePresenter(Message.View messageView) {
         this.messageView = messageView;
@@ -50,16 +49,7 @@ public class MessagePresenter implements Message.Presenter {
             messageModel.InsertReceiver(new MessageModel.ApiListener() {
                 @Override
                 public void onSuccess() {
-                    messageModel.getReceiver(new MessageModel.RecvApiListener() {
-                        @Override
-                        public void onSuccess(String[] Recv) {
-                            messageView.updateListView(Recv);
-                        }
-                        @Override
-                        public void onFail() {
-
-                        }
-                    });
+                    messageView.updateListView();
                 }
                 @Override
                 public void onFail() {
@@ -74,16 +64,8 @@ public class MessagePresenter implements Message.Presenter {
 
     @Override
     public void selectReceiver() {
-        messageModel.getReceiver(new MessageModel.RecvApiListener() {
-            @Override
-            public void onSuccess(String[] Recv) {
-                messageView.updateListView(Recv);
-            }
-            @Override
-            public void onFail() {
-
-            }
-        });
+        messageModel.getReceiver();
+        messageView.updateListView();
     }
 
     @Override

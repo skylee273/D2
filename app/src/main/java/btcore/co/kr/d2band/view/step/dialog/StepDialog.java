@@ -9,22 +9,17 @@ import android.view.View;
 import android.widget.TextView;
 
 import btcore.co.kr.d2band.R;
-import btcore.co.kr.d2band.view.message.dialog.MessageDialog;
 
 public class StepDialog extends Dialog implements View.OnClickListener {
 
     private static final int LAYOUT = R.layout.dialog_step;
-    private Context context;
 
     private TextInputEditText goal;
     private TextView state;
-    private TextView cancel;
-    private TextView confirm;
     private String mGoal;
 
     public StepDialog(@NonNull Context context) {
         super(context);
-        this.context = context;
     }
 
     @Override
@@ -35,8 +30,8 @@ public class StepDialog extends Dialog implements View.OnClickListener {
         goal = findViewById(R.id.edit_goal);
 
         state = findViewById(R.id.text_state);
-        cancel = findViewById(R.id.btn_cancel);
-        confirm = findViewById(R.id.btn_change);
+        TextView cancel = findViewById(R.id.btn_cancel);
+        TextView confirm = findViewById(R.id.btn_change);
 
         cancel.setOnClickListener(this);
         confirm.setOnClickListener(this);

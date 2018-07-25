@@ -1,5 +1,6 @@
 package btcore.co.kr.d2band.service;
 
+import android.annotation.SuppressLint;
 import android.app.Service;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -22,6 +23,7 @@ import java.util.Set;
 
 import btcore.co.kr.d2band.view.sos.SosActivity;
 
+@SuppressLint("Registered")
 public class GPSTracker extends Service implements LocationListener {
 
     private final Context mContext;
@@ -41,7 +43,7 @@ public class GPSTracker extends Service implements LocationListener {
     private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 10; // 10 meters
 
     // The minimum time between updates in milliseconds
-    private static final long MIN_TIME_BW_UPDATES = 1000 * 60 * 1; // 1 minute
+    private static final long MIN_TIME_BW_UPDATES = 1000 * 60; // 1 minute
 
     // Declaring a Location Manager
     protected LocationManager locationManager;
@@ -56,17 +58,18 @@ public class GPSTracker extends Service implements LocationListener {
     public void Update(){
         getLocation();
     }
-    public Location getLocation() {
+    public void getLocation() {
 
         if ( Build.VERSION.SDK_INT >= 23 &&
                 ContextCompat.checkSelfPermission( mContext, android.Manifest.permission.ACCESS_FINE_LOCATION ) != PackageManager.PERMISSION_GRANTED ) {
-            return null;
+            return;
         }
         try {
             locationManager = (LocationManager) mContext
                     .getSystemService(LOCATION_SERVICE);
 
             // getting GPS status
+            assert locationManager != null;
             isGPSEnabled = locationManager
                     .isProviderEnabled(LocationManager.GPS_PROVIDER);
 
@@ -118,7 +121,6 @@ public class GPSTracker extends Service implements LocationListener {
             e.printStackTrace();
         }
 
-        return location;
     }
 
     /**
@@ -238,28 +240,26 @@ public class GPSTracker extends Service implements LocationListener {
     private void sendString(String str){
         Message msg = mHandler.obtainMessage();
         msg.what = SosActivity.SEND_PRINT;
-        msg.obj = new String(str);
+        msg.obj = str;
         mHandler.sendMessage(msg);
     }
 
     public static String printBundle(Bundle extras) {
         StringBuilder sb = new StringBuilder();
         try {
-            sb.append("extras = " + extras);
+            sb.append("extras = ").append(extras);
             sb.append("\n");
             if (extras != null) {
                 Set keys = extras.keySet();
-                sb.append("++ bundle key count = " + keys.size());
+                sb.append("++ bundle key count = ").append(keys.size());
                 sb.append("\n");
 
                 for (String _key : extras.keySet()) {
-                    sb.append("key=" + _key + " : " + extras.get(_key)+",");
+                    sb.append("key=").append(_key).append(" : ").append(extras.get(_key)).append(",");
                 }
                 sb.append("\n");
             }
-        } catch (Exception e) {
-
-        } finally {
+        } catch (Exception ignored) {
 
         }
         return sb.toString();

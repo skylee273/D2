@@ -1,7 +1,5 @@
 package btcore.co.kr.d2band.view.find.presenter;
 
-import android.content.Intent;
-
 import btcore.co.kr.d2band.view.find.model.FindModel;
 
 /**
@@ -10,8 +8,8 @@ import btcore.co.kr.d2band.view.find.model.FindModel;
 
 public class FindPresenter implements Find.Presenter {
 
-    Find.View findView;
-    FindModel findModel;
+    private Find.View findView;
+    private FindModel findModel;
 
     public FindPresenter(Find.View findView) {
         this.findView = findView;
@@ -24,8 +22,8 @@ public class FindPresenter implements Find.Presenter {
     }
 
     @Override
-    public void initFindPw(String name, String phone) {
-        findModel.setPwInfo(name, phone);
+    public void initFindPw(String id, String name, String phone) {
+        findModel.setPwInfo(id, name, phone);
     }
 
     @Override

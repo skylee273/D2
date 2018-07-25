@@ -2,11 +2,10 @@ package btcore.co.kr.d2band.view.profile.presenter;
 
 import btcore.co.kr.d2band.view.profile.Info;
 import btcore.co.kr.d2band.view.profile.model.InfoModel;
-import btcore.co.kr.d2band.view.profile.model.ProfileModel;
 
 public class InfoPresenter implements Info.Presenter{
-    Info.View infoView;
-    InfoModel infoModel;
+    private Info.View infoView;
+    private InfoModel infoModel;
 
     public InfoPresenter(Info.View infoView){
         this.infoView = infoView;

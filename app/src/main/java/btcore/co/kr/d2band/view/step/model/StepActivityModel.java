@@ -1,7 +1,5 @@
 package btcore.co.kr.d2band.view.step.model;
 
-import java.util.ArrayList;
-
 import btcore.co.kr.d2band.user.User;
 
 /**
@@ -10,29 +8,20 @@ import btcore.co.kr.d2band.user.User;
 
 public class StepActivityModel {
 
-    String step;
-    String height;
-    String mGoal;
-    double distance;
-    User user;
+    private String height;
 
     public StepActivityModel() {
-        user = new User();
+        User user = new User();
         height = user.getHeight();
     }
 
     public String getDistance(String step) {
-        distance = ((Double.parseDouble(height) - 100) * Double.parseDouble(step)) / 100;
+        double distance = ((Double.parseDouble(height) - 100) * Double.parseDouble(step)) / 100;
         return String.valueOf(distance);
     }
     public boolean checkGoal(String goal){
-        this.mGoal = goal;
         try{
-            if(mGoal.length() > 0){
-                return  true;
-            }else{
-                return false;
-            }
+            return goal.length() > 0;
         }catch (NullPointerException e){
             return false;
         }
@@ -40,11 +29,7 @@ public class StepActivityModel {
 
     public boolean checkStep(String step) {
         try {
-            if (step.length() > 0 && height.length() > 0) {
-                return true;
-            } else {
-                return false;
-            }
+            return step.length() > 0 && height.length() > 0;
         } catch (NullPointerException e) {
             return false;
         }

@@ -1,18 +1,26 @@
 package btcore.co.kr.d2band.view.login.model;
 
+import android.annotation.SuppressLint;
+import android.app.ProgressDialog;
 import android.os.AsyncTask;
+import android.util.Log;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
 
-import btcore.co.kr.d2band.user.Contact;
 import btcore.co.kr.d2band.user.User;
 import btcore.co.kr.d2band.util.SHA256Util;
 
-import static btcore.co.kr.d2band.database.mySql.URL_LOGIN;
-import static btcore.co.kr.d2band.database.mySql.URL_SET_RECEIVE;
-import static btcore.co.kr.d2band.database.mySql.URL_SET_USER;
+import static android.support.constraint.Constraints.TAG;
+import static btcore.co.kr.d2band.database.mySql.URL_CALL_LOGIN;
 
 /**
  * Created by leehaneul on 2018-01-22.
@@ -20,126 +28,37 @@ import static btcore.co.kr.d2band.database.mySql.URL_SET_USER;
 
 public class LoginModel {
 
-    String id, pw;
-    String encrypt_password, encrypt_salt;
-    ApiListener apiListener, UserApi;
-    RecvApiListener recvApiListener;
-    User user;
-    Contact contact;
-    public void setUserData(String id, String pw){
+    private String mJsonString;
+    private String id, pw;
+    private ApiListener apiListener;
+    private User user;
+
+    public void setUserData(String id, String pw) {
         this.id = id;
         this.pw = pw;
     }
 
-    public boolean checkUserId(){
-
-            if(id.length() >  0){
-                return  true;
-            }else{
-                return false;
-            }
-
-    }
-    public boolean checkUserData(){
-
-        if(id.length() == 0){
-            return  false;
-        }else if(pw.length() == 0){
-            return false;
-        }else {
-            return true;
-        }
+    public boolean checkUserData() {
+        return id.length() != 0 && pw.length() != 0;
     }
 
-    public void callSetUser(ApiListener listener){
-        this.UserApi = listener;
-        setUser setUser = new setUser();
-        setUser.execute(id);
-    }
 
-    public void callSetRecv(RecvApiListener listener){
-        this.recvApiListener = listener;
-        setMSG task = new setMSG();
-        task.execute(id);
-    }
-
-    public void callLogin(ApiListener listener){
+    public void callLogin(ApiListener listener) {
         this.apiListener = listener;
-        Login task = new Login();
-        task.execute(id);
+        CallLogin callLogin =new CallLogin();
+        callLogin.execute(URL_CALL_LOGIN, id);
     }
 
     public interface ApiListener {
         void onSuccess(String message);
-        void onFail (String message);
-    }
-    public interface RecvApiListener {
-        void onSuccess(String message);
-        void onFail (String message);
+        void onFail(String message);
     }
 
-    class Login extends AsyncTask<String, Void, String> {
-        URL login_url;
+    @SuppressLint("StaticFieldLeak")
+    private class CallLogin extends AsyncTask<String, Void, String> {
 
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-
-        }
-
-        @Override
-        protected void onPostExecute(String s) {
-            super.onPostExecute(s);
-            String loginValue = s;
-
-            if(!loginValue.equals("")){
-                String [] Value = loginValue.split(",");
-                try {
-                    encrypt_password = Value[0].toString();
-                    encrypt_salt = Value[1].toString();
-                    String newPassword = SHA256Util.getEncrypt(pw, encrypt_salt);
-                    if(newPassword.equals(encrypt_password)){
-                        apiListener.onSuccess("로그인 성공");
-                    }else{
-                        apiListener.onFail("아이디 또는 비밀번호가 잘못 되었습니다.");
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }else {
-                apiListener.onFail("아이디 또는 비밀번호가 잘못 되었습니다.");
-            }
-
-        }
-
-        @Override
-        protected String doInBackground(String... params) {
-
-            try {
-                String _id = params[0];
-
-
-                String url_address = URL_LOGIN + "?id=" + _id;
-
-                login_url = new URL(url_address);
-                BufferedReader in = new BufferedReader(new InputStreamReader(login_url.openStream()));
-
-                String result = "";
-                String temp = "";
-                while ((temp = in.readLine()) != null) {
-                    result += temp;
-                }
-                in.close();
-
-                return result;
-            } catch (Exception e) {
-                e.printStackTrace();
-                return new String("Login Exception: " + e.getMessage());
-            }
-        }
-    }
-    class setUser extends AsyncTask<String, Void, String> {
-        URL userUrl;
+        ProgressDialog progressDialog;
+        String errorString = null;
 
         @Override
         protected void onPreExecute() {
@@ -147,110 +66,145 @@ public class LoginModel {
         }
 
         @Override
-        protected void onPostExecute(String s) {
-            super.onPostExecute(s);
-            try {
-                String User[] = s.split("#####");
-                user = new User();
-                user.setId(User[0]);
-                user.setName(User[1]);
-                user.setBirthday(User[2]);
-                user.setGender(User[3]);
-                user.setHeight(User[4]);
-                user.setWeight(User[5]);
-                user.setPhone(User[6]);
-                user.setAddress(User[7]);
-                UserApi.onSuccess("유저 정보 저장 완료");
-            }catch (ArrayIndexOutOfBoundsException e){
-                UserApi.onFail("유저 정보 저장 실패");
-            }
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
 
+            Log.d(TAG, "response - " + result);
+
+            if (result == null || result.equals("ERROR")) {
+                Log.d(TAG, "Error - " + errorString);
+            } else {
+                mJsonString = result;
+                showLoginResult();
+            }
         }
+
 
         @Override
         protected String doInBackground(String... params) {
 
+            String id = params[1];
+            String serverURL = params[0];
+            String postParameters = "id=" + id;
+
+
             try {
-                String _id = params[0];
 
-                String url_address = URL_SET_USER + "?id=" + _id;
+                URL url = new URL(serverURL);
+                HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
 
-                userUrl = new URL(url_address);
-                BufferedReader in = new BufferedReader(new InputStreamReader(userUrl.openStream()));
 
-                String result = "";
-                String temp = "";
-                while ((temp = in.readLine()) != null) {
-                    result += temp;
+                httpURLConnection.setReadTimeout(5000);
+                httpURLConnection.setConnectTimeout(5000);
+                httpURLConnection.setRequestMethod("POST");
+                //httpURLConnection.setDoInput(true);
+                httpURLConnection.connect();
+
+
+                OutputStream outputStream = httpURLConnection.getOutputStream();
+                outputStream.write(postParameters.getBytes("UTF-8"));
+                outputStream.flush();
+                outputStream.close();
+
+
+                int responseStatusCode = httpURLConnection.getResponseCode();
+                Log.d(TAG, "response code - " + responseStatusCode);
+
+                InputStream inputStream;
+
+                if (responseStatusCode == HttpURLConnection.HTTP_OK) {
+                    inputStream = httpURLConnection.getInputStream();
+                } else {
+                    inputStream = httpURLConnection.getErrorStream();
                 }
-                in.close();
 
-                return result;
+
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream, "UTF-8");
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+
+                StringBuilder sb = new StringBuilder();
+                String line;
+
+                while ((line = bufferedReader.readLine()) != null) {
+                    sb.append(line);
+                }
+
+                bufferedReader.close();
+
+                return sb.toString().trim();
+
+
             } catch (Exception e) {
-                e.printStackTrace();
-                return new String("User Exception: " + e.getMessage());
-            }
-        }
-    }
 
-    class setMSG extends AsyncTask<String, Void, String> {
-        URL userUrl;
+                Log.d(TAG, "GetData : Error ", e);
+                errorString = e.toString();
 
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
-
-        @Override
-        protected void onPostExecute(String s) {
-            super.onPostExecute(s);
-            try {
-                String Recv[] = s.split("&&&&&");
-                String name[] = new String[Recv.length];
-                String phone[] = new String[Recv.length];
-                int index = 0;
-                contact = new Contact();
-                for(String recv : Recv){
-                    String con[] = recv.split("#####");
-                    name[index] = con[0];
-                    phone[index] = con[1];
-                    index++;
-                }
-                contact.setName(name);
-                contact.setPhone(phone);
-                recvApiListener.onSuccess("수신자 저장");
-            }catch (ArrayIndexOutOfBoundsException e){
-                recvApiListener.onSuccess("수신자 저장 실패");
+                return null;
             }
 
-        }
-
-        @Override
-        protected String doInBackground(String... params) {
-
-            try {
-                String _id = params[0];
-
-                String url_address = URL_SET_RECEIVE + "?id=" + _id;
-
-                userUrl = new URL(url_address);
-                BufferedReader in = new BufferedReader(new InputStreamReader(userUrl.openStream()));
-
-                String result = "";
-                String temp = "";
-                while ((temp = in.readLine()) != null) {
-                    result += temp;
-                }
-                in.close();
-
-                return result;
-            } catch (Exception e) {
-                e.printStackTrace();
-                return new String("User Exception: " + e.getMessage());
-            }
         }
     }
 
 
+    private void showLoginResult() {
+
+        String TAG_JSON = "LOGIN";
+        String TAG_PW = "PW";
+        String TAG_SALT = "SALT";
+        String TAG_NUMBER = "NUMBER";
+        String TAG_TIME = "TIME";
+        String TAG_ID = "ID";
+        String TAG_NAME = "NAME";
+        String TAG_BIRTHDAY = "BIRTHDAY";
+        String TAG_GENDER = "GENDER";
+        String TAG_HEIGHT = "HEIGHT";
+        String TAG_WEIGHT = "WEIGHT";
+        String TAG_PHONE = "PHONE";
+        String TAG_ADDR = "ADDR";
+
+
+        try {
+            JSONObject jsonObject = new JSONObject(mJsonString);
+            JSONArray jsonArray = jsonObject.getJSONArray(TAG_JSON);
+
+            for (int i = 0; i < jsonArray.length(); i++) {
+
+                JSONObject item = jsonArray.getJSONObject(i);
+
+                String id = item.getString(TAG_ID);
+                String password = item.getString(TAG_PW);
+                String salt = item.getString(TAG_SALT);
+                String name = item.getString(TAG_NAME);
+                String birthday = item.getString(TAG_BIRTHDAY);
+                String gender = item.getString(TAG_GENDER);
+                String height = item.getString(TAG_HEIGHT);
+                String weight = item.getString(TAG_WEIGHT);
+                String phone = item.getString(TAG_PHONE);
+                String addr = item.getString(TAG_ADDR);
+
+                String newPassword = SHA256Util.getEncrypt(pw, salt);
+                if (newPassword.equals(password)) {
+                    user = new User();
+                    user.setId(id);
+                    user.setName(name);
+                    user.setBirthday(birthday);
+                    user.setGender(gender);
+                    user.setHeight(height);
+                    user.setWeight(weight);
+                    user.setPhone(phone);
+                    user.setAddress(addr);
+                    apiListener.onSuccess("로그인 성공");
+                } else {
+                    apiListener.onFail("아이디 또는 비밀번호가 잘못 되었습니다.");
+                }
+
+
+            }
+        } catch (JSONException e) {
+
+            Log.d(TAG, "showUserResult : ", e);
+        }
+
+    }
 
 }

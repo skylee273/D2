@@ -1,12 +1,11 @@
 package btcore.co.kr.d2band.view.profile.presenter;
 
-import btcore.co.kr.d2band.view.login.model.LoginModel;
 import btcore.co.kr.d2band.view.profile.Profile;
 import btcore.co.kr.d2band.view.profile.model.ProfileModel;
 
 public class ProfilePresenter  implements Profile.Presenter{
-    Profile.View profileView;
-    ProfileModel profileModel;
+    private Profile.View profileView;
+    private ProfileModel profileModel;
 
 
     public ProfilePresenter(Profile.View profileView){

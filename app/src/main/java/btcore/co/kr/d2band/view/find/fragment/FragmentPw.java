@@ -2,6 +2,7 @@ package btcore.co.kr.d2band.view.find.fragment;
 
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,7 +19,7 @@ public class FragmentPw extends Fragment {
 
     private final String TAG = getClass().getSimpleName();
     private static final String ARG_COLUMN_COUNT = "colum-count";
-    String pw, phone, email;
+    String pw, phone, id;
     public FragmentPwBinding mBinding;
 
     public  FragmentPw (){
@@ -33,7 +34,7 @@ public class FragmentPw extends Fragment {
 
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup contanier, Bundle savedInstanceState){
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup contanier, Bundle savedInstanceState){
         mBinding = DataBindingUtil.inflate(inflater, R.layout.fragment_pw, contanier, false);
         mBinding.setFindPw(this);
 
@@ -41,8 +42,12 @@ public class FragmentPw extends Fragment {
     }
 
 
-    public String getPhone(){
+    public String getID(){
+        this.id = mBinding.editId.getText().toString();
+        return id;
+    }
 
+    public String getPhone(){
         this.phone = mBinding.editPhone.getText().toString();
         return phone;
     }

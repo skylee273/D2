@@ -1,7 +1,5 @@
 package btcore.co.kr.d2band.user;
 
-import android.app.Application;
-
 public class User {
 
     private static String id;
@@ -18,7 +16,7 @@ public class User {
     }
 
     public void setId(String id) {
-        this.id = id;
+        User.id = id;
     }
 
     public String getName() {
@@ -26,7 +24,7 @@ public class User {
     }
 
     public void setName(String name) {
-        this.name = name;
+        User.name = name;
     }
 
     public String getBirthday() {
@@ -34,7 +32,7 @@ public class User {
     }
 
     public void setBirthday(String birthday) {
-        this.birthday = birthday;
+        User.birthday = birthday;
     }
 
     public String getGender() {
@@ -42,7 +40,7 @@ public class User {
     }
 
     public void setGender(String gender) {
-        this.gender = gender;
+        User.gender = gender;
     }
 
     public String getHeight() {
@@ -50,7 +48,7 @@ public class User {
     }
 
     public void setHeight(String height) {
-        this.height = height;
+        User.height = height;
     }
 
     public String getWeight() {
@@ -58,7 +56,7 @@ public class User {
     }
 
     public void setWeight(String weight) {
-        this.weight = weight;
+        User.weight = weight;
     }
 
     public String getPhone() {
@@ -66,7 +64,7 @@ public class User {
     }
 
     public void setPhone(String phone) {
-        this.phone = phone;
+        User.phone = phone;
     }
 
     public String getAddress() {
@@ -74,7 +72,7 @@ public class User {
     }
 
     public void setAddress(String address) {
-        this.address = address;
+        User.address = address;
     }
 
 

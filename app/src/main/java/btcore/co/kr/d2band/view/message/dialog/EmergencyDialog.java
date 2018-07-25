@@ -13,17 +13,13 @@ import btcore.co.kr.d2band.R;
 public class EmergencyDialog extends Dialog implements View.OnClickListener {
 
     private static final int LAYOUT = R.layout.dialog_emergency;
-    private Context context;
 
     private TextInputEditText newPassword;
     private TextView state;
-    private TextView cancel;
-    private TextView change;
     private String changeContext;
 
     public EmergencyDialog(@NonNull Context context) {
         super(context);
-        this.context = context;
     }
 
     @Override
@@ -34,8 +30,8 @@ public class EmergencyDialog extends Dialog implements View.OnClickListener {
         newPassword = findViewById(R.id.edit_msg);
 
         state = findViewById(R.id.text_state);
-        cancel = findViewById(R.id.btn_cancel);
-        change = findViewById(R.id.btn_change);
+        TextView cancel = findViewById(R.id.btn_cancel);
+        TextView change = findViewById(R.id.btn_change);
 
         cancel.setOnClickListener(this);
         change.setOnClickListener(this);

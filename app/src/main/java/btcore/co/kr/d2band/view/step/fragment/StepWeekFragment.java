@@ -1,10 +1,12 @@
 package btcore.co.kr.d2band.view.step.fragment;
-import android.support.v4.app.Fragment;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.databinding.DataBindingUtil;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -25,6 +27,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Objects;
 
 import btcore.co.kr.d2band.R;
 import btcore.co.kr.d2band.database.ServerCommand;
@@ -37,9 +40,9 @@ import btcore.co.kr.d2band.item.StepItem;
 
 public class StepWeekFragment extends Fragment implements OnChartGestureListener, OnChartValueSelectedListener {
     private final String TAG = getClass().getSimpleName();
-    private Context mContext;
     FragmentStepWeekBinding weekBinding;
     ServerCommand serverCommand;
+    @SuppressLint("SimpleDateFormat")
     SimpleDateFormat mFormat = new SimpleDateFormat("yyyy-MM");
     ArrayList TodayList = new ArrayList<StepItem>();
     ArrayList<String> xVals;
@@ -53,13 +56,13 @@ public class StepWeekFragment extends Fragment implements OnChartGestureListener
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         weekBinding = DataBindingUtil.inflate(inflater, R.layout.fragment_step_week, container, false);
         weekBinding.setStepWeek(this);
 
         initChartView();
 
-        mContext = this.getActivity();
+        Context mContext = this.getActivity();
         return weekBinding.getRoot();
     }
 
@@ -73,7 +76,7 @@ public class StepWeekFragment extends Fragment implements OnChartGestureListener
         // modify the legend ...
         // l.setPosition(LegendPosition.LEFT_OF_CHART);
         l.setForm(Legend.LegendForm.LINE);
-        int color = ContextCompat.getColor(getContext(), R.color.color_chart_xy);
+        int color = ContextCompat.getColor(Objects.requireNonNull(getContext()), R.color.color_chart_xy);
         weekBinding.weekChart.setNoDataTextDescription("You need to provide data for the chart.");
         weekBinding.weekChart.getAxisLeft().setAxisMinValue(0f);
         weekBinding.weekChart.getXAxis().setTextColor(color);
@@ -177,11 +180,7 @@ public class StepWeekFragment extends Fragment implements OnChartGestureListener
         serverCommand = new ServerCommand();
         try {
             TodayList = serverCommand.getStep();
-            if(TodayList.size() > 0 ){
-                return true;
-            }else{
-                return false;
-            }
+            return TodayList.size() > 0;
         }catch (NullPointerException e){
             return false;
         }

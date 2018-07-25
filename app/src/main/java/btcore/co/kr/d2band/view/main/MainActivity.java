@@ -14,13 +14,13 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.databinding.DataBindingUtil;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.Settings;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
@@ -36,7 +36,6 @@ import btcore.co.kr.d2band.databinding.ActivityMainBinding;
 import btcore.co.kr.d2band.service.BluetoothLeService;
 import btcore.co.kr.d2band.util.BleProtocol;
 import btcore.co.kr.d2band.view.device.DeviceListActivity;
-
 import btcore.co.kr.d2band.view.step.StepActivity;
 import butterknife.OnClick;
 
@@ -227,6 +226,7 @@ public class MainActivity extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
 
+            assert action != null;
             if (action.equals(BluetoothLeService.ACTION_GATT_CONNECTED)) {
                 runOnUiThread(new Runnable() {
                     public void run() {
@@ -315,7 +315,7 @@ public class MainActivity extends AppCompatActivity {
         bindService(bindIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
         LocalBroadcastManager.getInstance(this).registerReceiver(UARTStatusChangeReceiver, makeGattUpdateIntentFilter());
     }
-    private boolean chkGpsService() {
+    private void chkGpsService() {
 
         gpsEnabled = android.provider.Settings.Secure.getString(getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
         if (!(gpsEnabled.matches(".*gps.*") && gpsEnabled.matches(".*network.*"))) {
@@ -334,7 +334,6 @@ public class MainActivity extends AppCompatActivity {
             }).create().show();
 
         }
-        return false;
     }
 
 }

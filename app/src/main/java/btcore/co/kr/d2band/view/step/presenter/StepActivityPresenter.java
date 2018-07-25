@@ -10,8 +10,8 @@ import btcore.co.kr.d2band.view.step.model.StepActivityModel;
 
 public class StepActivityPresenter implements Step.Presenter{
 
-    Step.view stepView;
-    StepActivityModel stepActivityModel;
+    private Step.view stepView;
+    private StepActivityModel stepActivityModel;
 
     public StepActivityPresenter(Step.view stepView){
         this.stepView = stepView;

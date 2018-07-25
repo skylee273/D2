@@ -1,5 +1,6 @@
 package btcore.co.kr.d2band.view.step;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
@@ -32,15 +33,15 @@ import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import btcore.co.kr.d2band.R;
 import btcore.co.kr.d2band.bus.CallBusEvent;
 import btcore.co.kr.d2band.bus.CallProvider;
 import btcore.co.kr.d2band.bus.SmsBusEvent;
 import btcore.co.kr.d2band.bus.SmsProvider;
 import btcore.co.kr.d2band.databinding.ActivityStepBinding;
 import btcore.co.kr.d2band.service.BluetoothLeService;
-import btcore.co.kr.d2band.user.Contact;
+import btcore.co.kr.d2band.user.ContactItem;
 import btcore.co.kr.d2band.util.BleProtocol;
-import btcore.co.kr.d2band.R;
 import btcore.co.kr.d2band.view.profile.ProfileAcitivty;
 import btcore.co.kr.d2band.view.step.dialog.StepDialog;
 import btcore.co.kr.d2band.view.step.fragment.StepMonthFragment;
@@ -50,6 +51,7 @@ import btcore.co.kr.d2band.view.step.presenter.Step;
 import btcore.co.kr.d2band.view.step.presenter.StepActivityPresenter;
 import butterknife.OnClick;
 
+import static btcore.co.kr.d2band.database.ServerCommand.contactArrayList;
 import static btcore.co.kr.d2band.service.BluetoothLeService.STATE;
 
 /**
@@ -70,16 +72,13 @@ public class StepActivity extends AppCompatActivity implements Step.view {
     private SharedPreferences.Editor editor;
     private BluetoothLeService mService = null;
     private long startTime;
-    private long endTime;
     private ActivityStepBinding mStepBinding;
-    private FragmentPagerAdapter mPagerAdapter = null;
     private BleProtocol bleProtocol;
     private Step.Presenter presenter;
     private StepDialog stepDialog;
     private Timer stepTimer;
-    private TimerTask stepTask;
-    private Contact contact;
 
+    @SuppressLint("CommitPrefEdits")
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -95,8 +94,6 @@ public class StepActivity extends AppCompatActivity implements Step.view {
         // 블루투스 데이터 생성
         bleProtocol = new BleProtocol();
 
-        // 연락처 생성
-        contact = new Contact();
         // 프레젠터 생성
         presenter = new StepActivityPresenter(this);
 
@@ -117,7 +114,7 @@ public class StepActivity extends AppCompatActivity implements Step.view {
 
     @Override
     public void onBackPressed() {
-        endTime = System.currentTimeMillis();
+        long endTime = System.currentTimeMillis();
         Snackbar.make(getWindow().getDecorView().getRootView(), "한번더 누르면 종료됩니다.", Snackbar.LENGTH_LONG).show();
         if (endTime - startTime < 2000) {
             super.onBackPressed();
@@ -150,7 +147,7 @@ public class StepActivity extends AppCompatActivity implements Step.view {
     }
 
     private void initView() {
-        mPagerAdapter = new pagerAdapter(getSupportFragmentManager());
+        FragmentPagerAdapter mPagerAdapter = new pagerAdapter(getSupportFragmentManager());
         mStepBinding.viewPagerStep.setAdapter(new pagerAdapter(getSupportFragmentManager()));
         mStepBinding.viewPagerStep.setCurrentItem(0);
         mStepBinding.viewPagerStep.setOffscreenPageLimit(3);
@@ -190,9 +187,9 @@ public class StepActivity extends AppCompatActivity implements Step.view {
 
     public class pagerAdapter extends FragmentPagerAdapter {
 
-        public static final String ARG_PAGE = "page";
+        static final String ARG_PAGE = "page";
 
-        public pagerAdapter(FragmentManager fragmentManager) {
+        pagerAdapter(FragmentManager fragmentManager) {
             super(fragmentManager);
         }
 
@@ -214,6 +211,7 @@ public class StepActivity extends AppCompatActivity implements Step.view {
             }
             Bundle args = new Bundle();
             args.putInt(ARG_PAGE, position);
+            assert fragment != null;
             fragment.setArguments(args);
             return fragment;
         }
@@ -290,8 +288,9 @@ public class StepActivity extends AppCompatActivity implements Step.view {
         String callName = callBusEvent.getEventData();
         if(STATE){
             try {
-                for (String temp : contact.getName()) {
-                    if (callName.equals(temp)) {
+                for (ContactItem aContactArrayList : contactArrayList) {
+                    String name = aContactArrayList.getName();
+                    if (callName.equals(name)) {
                         subFlag = true;
                     }
                 }
@@ -334,8 +333,11 @@ public class StepActivity extends AppCompatActivity implements Step.view {
 
         if (STATE) {
             try {
-                for (String name : contact.getName()) {
-                    if (NameOrPhone.equals(name)) subFlag = true;
+                for (ContactItem aContactArrayList : contactArrayList) {
+                    String name = aContactArrayList.getName();
+                    if (NameOrPhone.equals(name)) {
+                        subFlag = true;
+                    }
                 }
             } catch (Exception e) {
                 Log.d(TAG, e.toString());
@@ -368,7 +370,7 @@ public class StepActivity extends AppCompatActivity implements Step.view {
 
     public void RequestTask() {
         stepTimer = new Timer();
-        stepTask = new TimerTask() {
+        TimerTask stepTask = new TimerTask() {
             @Override
             public void run() {
                 if (STATE) {
@@ -402,6 +404,7 @@ public class StepActivity extends AppCompatActivity implements Step.view {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
 
+            assert action != null;
             if (action.equals(BluetoothLeService.ACTION_GATT_CONNECTED)) {
                 runOnUiThread(new Runnable() {
                     public void run() {

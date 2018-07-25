@@ -45,8 +45,9 @@
         <string name="text_find_email">생년월일 </string>
 
         <!-- 아이디 비밀번호 찾기 Edit 텍스트 -->
-    <string name="edit_find_hint_name">이름을 적어주세요</string>
-    <string name="edit_find_hint_pwconfirm">비밀번호를 적어주세요</string>
+        <string name="edit_find_hint_id">아이디를 적어주세요</string>
+        <string name="edit_find_hint_name">이름을 적어주세요</string>
+        <string name="edit_find_hint_pwconfirm">비밀번호를 적어주세요</string>
         <string name="edit_find_hint_phone">휴대폰 번호를 적어주세요</string>
         <string name="edit_find_hint_email">이메일 주소를 적어주세요</string>
 

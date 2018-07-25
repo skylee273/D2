@@ -1,26 +1,22 @@
 package btcore.co.kr.d2band.view.setting;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.databinding.DataBindingUtil;
-import android.location.LocationManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.Settings;
-import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -28,6 +24,7 @@ import android.widget.Toast;
 
 import com.squareup.otto.Subscribe;
 
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -38,13 +35,14 @@ import btcore.co.kr.d2band.bus.SmsBusEvent;
 import btcore.co.kr.d2band.bus.SmsProvider;
 import btcore.co.kr.d2band.databinding.ActivitySettingBinding;
 import btcore.co.kr.d2band.service.BluetoothLeService;
-import btcore.co.kr.d2band.user.Contact;
+import btcore.co.kr.d2band.user.ContactItem;
 import btcore.co.kr.d2band.util.BleProtocol;
 import btcore.co.kr.d2band.view.lock.LockActivity;
 import btcore.co.kr.d2band.view.profile.ProfileAcitivty;
 import btcore.co.kr.d2band.view.sos.SosActivity;
 import butterknife.OnClick;
 
+import static btcore.co.kr.d2band.database.ServerCommand.contactArrayList;
 import static btcore.co.kr.d2band.service.BluetoothLeService.STATE;
 
 public class SettingActivity extends AppCompatActivity {
@@ -54,16 +52,12 @@ public class SettingActivity extends AppCompatActivity {
     private static final int UART_PROFILE_CONNECTED = 20;
     private static final int REQUEST_SELECT_DEVICE = 1;
     private static final int UART_PROFILE_READY = 10;
-    private BluetoothAdapter mBtAdapter = null;
     private Context mContext;
     private int mState = UART_PROFILE_DISCONNECTED;
     private Timer autoTimer;
-    private TimerTask autoTask;
     private BluetoothLeService mService = null;
-    private SharedPreferences.Editor editor;
     private SharedPreferences pref = null;
     private BleProtocol bleProtocol;
-    private Contact contact;
 
     ActivitySettingBinding settingBinding;
 
@@ -84,11 +78,8 @@ public class SettingActivity extends AppCompatActivity {
         // 블루투스 데이터 생성
         bleProtocol = new BleProtocol();
 
-        // 연락처
-        contact = new Contact();
-
         pref = getSharedPreferences("D2", Activity.MODE_PRIVATE);
-        editor = pref.edit();
+        @SuppressLint("CommitPrefEdits") SharedPreferences.Editor editor = pref.edit();
 
         AutoConnection();
 
@@ -124,7 +115,8 @@ public class SettingActivity extends AppCompatActivity {
     public void onBackPressed(){
         Intent intent = getIntent();
         try{
-            String name = intent.getExtras().getString("sos");
+            String name = Objects.requireNonNull(intent.getExtras()).getString("sos");
+            assert name != null;
             if(name.equals("1")){
                 intent = new Intent(getApplicationContext(), SosActivity.class);
                 startActivity(intent);
@@ -167,7 +159,7 @@ public class SettingActivity extends AppCompatActivity {
 
 
     public void service_init() {
-        mBtAdapter = BluetoothAdapter.getDefaultAdapter();
+        BluetoothAdapter mBtAdapter = BluetoothAdapter.getDefaultAdapter();
         if (mBtAdapter == null) {
             Toast.makeText(this, "Bluetooth is not available", Toast.LENGTH_LONG).show();
             finish();
@@ -198,8 +190,8 @@ public class SettingActivity extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
 
-            final Intent mIntent = intent;
             //*********************//
+            assert action != null;
             if (action.equals(BluetoothLeService.ACTION_GATT_CONNECTED)) {
                 runOnUiThread(new Runnable() {
                     public void run() {
@@ -270,10 +262,10 @@ public class SettingActivity extends AppCompatActivity {
 
     public void AutoConnection() {
         autoTimer = new Timer();
-        autoTask = new TimerTask() {
+        TimerTask autoTask = new TimerTask() {
             @Override
             public void run() {
-                if (!STATE){
+                if (!STATE) {
                     String address = pref.getString("DEVICEADDR", "");
                     if (address.length() > 0) {
                         service_init();
@@ -290,8 +282,9 @@ public class SettingActivity extends AppCompatActivity {
         String callName = callBusEvent.getEventData();
         if(STATE){
             try {
-                for (String temp : contact.getName()) {
-                    if (callName.equals(temp)) {
+                for (ContactItem aContactArrayList : contactArrayList) {
+                    String name = aContactArrayList.getName();
+                    if (callName.equals(name)) {
                         subFlag = true;
                     }
                 }
@@ -337,8 +330,11 @@ public class SettingActivity extends AppCompatActivity {
 
         if (STATE) {
             try {
-                for (String name : contact.getName()) {
-                    if (NameOrPhone.equals(name)) subFlag = true;
+                for (ContactItem aContactArrayList : contactArrayList) {
+                    String name = aContactArrayList.getName();
+                    if (NameOrPhone.equals(name)) {
+                        subFlag = true;
+                    }
                 }
             } catch (Exception e) {
                 Log.d(TAG, e.toString());

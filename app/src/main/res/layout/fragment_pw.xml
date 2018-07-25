@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools">
+<layout xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data>
         <variable
@@ -15,6 +15,41 @@
     android:focusable="true"
     android:focusableInTouchMode="true"
     android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/text_id"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="47dp"
+        android:layout_marginTop="15dp"
+        android:text="아이디"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/box_id"
+        android:layout_width="0dp"
+        android:background="@drawable/box_large_register"
+        android:layout_height="54dp"
+        android:layout_marginEnd="47dp"
+        android:layout_marginStart="47dp"
+        android:layout_marginTop="6dp"
+        android:orientation="vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/text_id">
+
+        <EditText
+            android:id="@+id/edit_id"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginStart="@dimen/register_largebox_margin"
+            android:background="@null"
+            android:ems="10"
+            android:hint="@string/edit_find_hint_id"
+            android:inputType="text" />
+    </LinearLayout>
+
 
     <LinearLayout
         android:id="@+id/box_phone"
@@ -33,11 +68,12 @@
             android:id="@+id/edit_phone"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginLeft="@dimen/register_largebox_margin"
+            android:layout_marginStart="@dimen/register_largebox_margin"
             android:background="@null"
             android:ems="10"
             android:hint="@string/edit_find_hint_phone"
-            android:inputType="number" />
+            android:inputType="number"
+            tools:ignore="TextFields" />
     </LinearLayout>
 
     <TextView
@@ -54,11 +90,11 @@
     <LinearLayout
         android:id="@+id/box_name"
         android:layout_width="0dp"
-        android:background="@drawable/box_large_register"
         android:layout_height="54dp"
         android:layout_marginEnd="47dp"
         android:layout_marginStart="47dp"
         android:layout_marginTop="6dp"
+        android:background="@drawable/box_large_register"
         android:orientation="vertical"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -80,11 +116,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="47dp"
-        android:layout_marginTop="52dp"
+        android:layout_marginTop="15dp"
         android:text="@string/text_find_name"
         android:textColor="@color/colorFindTextColor"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/box_id" />
 </android.support.constraint.ConstraintLayout>
 
 </layout>

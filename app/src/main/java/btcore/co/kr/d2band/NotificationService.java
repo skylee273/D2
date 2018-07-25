@@ -21,7 +21,7 @@ import java.util.Locale;
 public class NotificationService extends NotificationListenerService {
 
     private static final String TAG = NotificationService.class.getSimpleName();
-    private String mTitle = null, body = null, mMissText = null, mTime;
+    private String mTime;
     private String title, miss, content;
     private static boolean MissedMessageFlag = false;
     Context context;
@@ -51,11 +51,11 @@ public class NotificationService extends NotificationListenerService {
 
         if (packName.equalsIgnoreCase("com.kakao.talk")) {
 
-            mMissText = extras.getString(Notification.EXTRA_SUB_TEXT);
+            String mMissText = extras.getString(Notification.EXTRA_SUB_TEXT);
 
-            mTitle = extras.getString(Notification.EXTRA_TITLE);
+            String mTitle = extras.getString(Notification.EXTRA_TITLE);
 
-            body = extras.getString(Notification.EXTRA_TEXT);
+            String body = extras.getString(Notification.EXTRA_TEXT);
 
             if(mMissText != null){
                 miss = mMissText;
@@ -66,7 +66,7 @@ public class NotificationService extends NotificationListenerService {
             if(context != null){
                 content = body;
             }
-            if(miss == null && title != null && content != null && MissedMessageFlag == false ){
+            if(miss == null && title != null && content != null && !MissedMessageFlag){
                 sendZeroMessage();
             }
             if(miss != null && title != null && content != null ){

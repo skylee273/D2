@@ -1,38 +1,34 @@
 package btcore.co.kr.d2band.view.message.model;
 
+import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.os.AsyncTask;
+import android.util.Log;
 
 import java.io.BufferedReader;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
-import java.text.SimpleDateFormat;
 
+import btcore.co.kr.d2band.database.ServerCommand;
 import btcore.co.kr.d2band.user.User;
 
-import static btcore.co.kr.d2band.database.mySql.URL_DELETE_RECV;
+import static android.support.constraint.Constraints.TAG;
+import static btcore.co.kr.d2band.database.mySql.URL_DELETE_RECEIVER;
 import static btcore.co.kr.d2band.database.mySql.URL_INSERT_RECV;
-import static btcore.co.kr.d2band.database.mySql.URL_REGISTER;
-import static btcore.co.kr.d2band.database.mySql.URL_SET_RECEIVE;
 
 public class MessageModel {
-    private String msg;
     private String name, phone;
-    private String Receiver[];
-    ApiListener apiListener;
-    RecvApiListener recvApliListener;
-    DeleteApiListener deleteApiListener;
-    User user;
+    private ApiListener apiListener;
+    private DeleteApiListener deleteApiListener;
+    private User user;
 
 
     public boolean checkMessage(String msg) {
-        this.msg = msg;
         try {
-            if (msg.length() > 0) {
-                return true;
-            } else {
-                return false;
-            }
+            return msg.length() > 0;
         } catch (NullPointerException e) {
             return false;
         }
@@ -43,11 +39,7 @@ public class MessageModel {
         this.phone = _phone;
 
         try {
-            if (name.length() > 0 && phone.length() > 0) {
-                return true;
-            } else {
-                return false;
-            }
+            return name.length() > 0 && phone.length() > 0;
         } catch (NullPointerException e) {
             return false;
         }
@@ -56,14 +48,15 @@ public class MessageModel {
     public void deleteReceiver(DeleteApiListener listener){
         this.deleteApiListener = listener;
         user = new User();
-        deleteTask task = new deleteTask();
-        task.execute(user.getId(), name, phone);
+        DeleteReceiver deleteReceiver = new DeleteReceiver();
+        deleteReceiver.execute(URL_DELETE_RECEIVER, user.getId(), name, phone);
     }
-    public void getReceiver(RecvApiListener listener) {
-        this.recvApliListener = listener;
+
+
+    public void getReceiver() {
         user = new User();
-        GetReceiver task = new GetReceiver();
-        task.execute(user.getId());
+        ServerCommand serverCommand = new ServerCommand();
+        serverCommand.SELECT_MSG();
     }
 
     public void InsertReceiver(ApiListener listener) {
@@ -86,6 +79,7 @@ public class MessageModel {
         void onFail();
     }
 
+    @SuppressLint("StaticFieldLeak")
     class InsertReceiver extends AsyncTask<String, Void, String> {
         ProgressDialog loading;
         URL receiver_url;
@@ -123,23 +117,27 @@ public class MessageModel {
                 receiver_url = new URL(url_address);
                 BufferedReader in = new BufferedReader(new InputStreamReader(receiver_url.openStream()));
 
-                String result = "";
+                StringBuilder result = new StringBuilder();
                 String temp = "";
                 while ((temp = in.readLine()) != null) {
-                    result += temp;
+                    result.append(temp);
                 }
                 in.close();
 
-                return result;
+                return result.toString();
             } catch (Exception e) {
-                return new String("Message: " + e.getMessage());
+                return "Message: " + e.getMessage();
             }
         }
 
     }
 
-    class GetReceiver extends AsyncTask<String, Void, String> {
-        URL userUrl;
+
+    @SuppressLint("StaticFieldLeak")
+    private class DeleteReceiver extends AsyncTask<String, Void, String> {
+
+        ProgressDialog progressDialog;
+        String errorString = null;
 
         @Override
         protected void onPreExecute() {
@@ -147,97 +145,95 @@ public class MessageModel {
         }
 
         @Override
-        protected void onPostExecute(String s) {
-            super.onPostExecute(s);
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+
+            //mTextViewResult.setText(result);
+            Log.d(TAG, "response - " + result);
+
             try {
-                if (s != null) {
-                    Receiver = s.split("&&&&&");
-                    recvApliListener.onSuccess(Receiver);
-                }else{
-                    recvApliListener.onFail();
+                if (result == null || result.equals("ERROR") || result.equals("FAIL")) {
+                    deleteApiListener.onFail();
+                    Log.d(TAG, "Error - " + errorString);
+                } else if (result.equals("SUCCESS")) {
+                    deleteApiListener.onSuccess();
+                } else {
+                    deleteApiListener.onFail();
+                    Log.d(TAG, "Error - " + errorString);
                 }
-            } catch (ArrayIndexOutOfBoundsException e) {
-                recvApliListener.onFail();
+            } catch (NullPointerException ignored) {
+
             }
 
         }
+
 
         @Override
         protected String doInBackground(String... params) {
 
-            try {
-                String _id = params[0];
+            String id = params[1];
+            String name = params[2];
+            String phone = params[3];
 
-                String url_address = URL_SET_RECEIVE + "?id=" + _id;
 
-                userUrl = new URL(url_address);
-                BufferedReader in = new BufferedReader(new InputStreamReader(userUrl.openStream()));
-
-                String result = "";
-                String temp = "";
-                while ((temp = in.readLine()) != null) {
-                    result += temp;
-                }
-                in.close();
-                return result;
-            } catch (Exception e) {
-                e.printStackTrace();
-                return new String("User Exception: " + e.getMessage());
-            }
-        }
-    }
-
-    class deleteTask extends AsyncTask<String, Void, String> {
-        ProgressDialog loading;
-        URL receiver_url;
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
-
-        @Override
-        protected void onPostExecute(String s) {
-            super.onPostExecute(s);
-
-            if (s.contains("success")) {
-                deleteApiListener.onSuccess();
-            } else {
-                deleteApiListener.onFail();
-            }
-        }
-
-        @Override
-        protected String doInBackground(String... params) {
+            String serverURL = params[0];
+            String postParameters = "id=" + id + "&name=" + name
+                    + "&phone=" + phone;
 
             try {
-                String _id = params[0];
-                String _name = params[1];
-                String _phone = params[2];
+
+                URL url = new URL(serverURL);
+                HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
 
 
-                String url_address = URL_DELETE_RECV + "?id=" + _id
-                        + "&name=" + _name
-                        + "&phone=" + _phone;
+                httpURLConnection.setReadTimeout(5000);
+                httpURLConnection.setConnectTimeout(5000);
+                httpURLConnection.setRequestMethod("POST");
+                //httpURLConnection.setDoInput(true);
+                httpURLConnection.connect();
 
 
-                receiver_url = new URL(url_address);
-                BufferedReader in = new BufferedReader(new InputStreamReader(receiver_url.openStream()));
+                OutputStream outputStream = httpURLConnection.getOutputStream();
+                outputStream.write(postParameters.getBytes("UTF-8"));
+                outputStream.flush();
+                outputStream.close();
 
-                String result = "";
-                String temp = "";
-                while ((temp = in.readLine()) != null) {
-                    result += temp;
+
+                int responseStatusCode = httpURLConnection.getResponseCode();
+                Log.d(TAG, "response code - " + responseStatusCode);
+
+                InputStream inputStream;
+
+                if (responseStatusCode == HttpURLConnection.HTTP_OK) {
+                    inputStream = httpURLConnection.getInputStream();
+                } else {
+                    inputStream = httpURLConnection.getErrorStream();
                 }
-                in.close();
 
-                return result;
+
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream, "UTF-8");
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+
+                StringBuilder sb = new StringBuilder();
+                String line;
+
+                while ((line = bufferedReader.readLine()) != null) {
+                    sb.append(line);
+                }
+
+                bufferedReader.close();
+
+                return sb.toString().trim();
+
+
             } catch (Exception e) {
-                return new String("Message: " + e.getMessage());
+
+                Log.d(TAG, "GetData : Error ", e);
+                errorString = e.toString();
+
+                return null;
             }
+
         }
-
     }
-
-
 }

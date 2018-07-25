@@ -4,9 +4,7 @@ import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputEditText;
-import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -22,10 +20,8 @@ public class PasswordChangeActivity extends Dialog implements View.OnClickListen
 
     private TextInputEditText newPassword;
     private TextView state;
-    private TextView cancel;
-    private TextView change;
 
-    PasswordPresenter presenter;
+    private PasswordPresenter presenter;
 
     public PasswordChangeActivity(@NonNull Context context) {
         super(context);
@@ -39,8 +35,8 @@ public class PasswordChangeActivity extends Dialog implements View.OnClickListen
         newPassword = findViewById(R.id.edit_newpassword);
 
         state = findViewById(R.id.text_state);
-        cancel = findViewById(R.id.btn_cancel);
-        change = findViewById(R.id.btn_change);
+        TextView cancel = findViewById(R.id.btn_cancel);
+        TextView change = findViewById(R.id.btn_change);
 
         cancel.setOnClickListener(this);
         change.setOnClickListener(this);
@@ -72,6 +68,7 @@ public class PasswordChangeActivity extends Dialog implements View.OnClickListen
 
     @Override
     public void Update(String msg) {
+        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
         cancel();
     }
 }

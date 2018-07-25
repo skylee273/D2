@@ -7,8 +7,8 @@ import btcore.co.kr.d2band.view.couple.model.CoupleSettingModel;
 
 public class CoupleSettingPresenter implements CoupleSetting.Presenter {
 
-    CoupleSetting.view coupleView;
-    CoupleSettingModel coupleSettingModel;
+    private CoupleSetting.view coupleView;
+    private CoupleSettingModel coupleSettingModel;
 
     public CoupleSettingPresenter(CoupleSetting.view coupleView){
         this.coupleView = coupleView;

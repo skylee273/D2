@@ -128,7 +128,7 @@ public class BluetoothLeService extends Service {
         public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
             super.onReadRemoteRssi(gatt, rssi, status);
             if (status == BluetoothGatt.GATT_SUCCESS) {
-
+                Log.d(TAG, "GAT_SUCCESS");
             }
         }
 
@@ -215,7 +215,7 @@ public class BluetoothLeService extends Service {
             // broadcastUpdate(ACTION_DATA_AVAILABLE, data);
         }
 
-        protected void onCharacteristicNotified(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic) {
+        void onCharacteristicNotified(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic) {
 
         }
 
@@ -243,7 +243,6 @@ public class BluetoothLeService extends Service {
         final Intent intent = new Intent(action);
         if (TX_CHAR_UUID.equals(characteristic.getUuid())) {
             intent.putExtra(EXTRA_DATA, characteristic.getValue());
-        } else {
         }
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
@@ -349,7 +348,7 @@ public class BluetoothLeService extends Service {
 
     public void enableTXNotification() {
         if (mBluetoothGatt == null) {
-            showMessage("mBluetoothGatt null" + mBluetoothGatt);
+            showMessage("mBluetoothGatt null" + null);
             broadcastUpdate(DEVICE_DOES_NOT_SUPPORT_UART);
             return;
         }
@@ -368,11 +367,6 @@ public class BluetoothLeService extends Service {
             this.readCharacteristic(TxChar);
         }
 
-        if (TxChar == null) {
-            showMessage("Tx charateristic not found!");
-            broadcastUpdate(DEVICE_DOES_NOT_SUPPORT_UART);
-            return;
-        }
         mBluetoothGatt.setCharacteristicNotification(TxChar, true);
         mBluetoothGatt.readCharacteristic(TxChar);
         BluetoothGattDescriptor descriptor = TxChar.getDescriptor(CCCD);

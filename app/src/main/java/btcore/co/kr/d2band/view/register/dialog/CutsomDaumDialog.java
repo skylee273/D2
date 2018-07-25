@@ -11,22 +11,18 @@ import android.view.LayoutInflater;
 import android.view.Window;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
-import android.widget.EditText;
-import android.widget.TableRow;
+
+import java.util.Objects;
 
 import btcore.co.kr.d2band.R;
 import btcore.co.kr.d2band.databinding.DialogAddressBinding;
-import butterknife.BindView;
-import butterknife.ButterKnife;
 
 /**
  * Created by leehaneul on 2018-02-09.
  */
 
 public class CutsomDaumDialog extends Dialog {
-    DialogAddressBinding mBinding;
+    private DialogAddressBinding mBinding;
     private Handler handler;
     private String address;
     public CutsomDaumDialog(Context context) { super(context); }
@@ -36,7 +32,7 @@ public class CutsomDaumDialog extends Dialog {
     protected  void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
-        getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        Objects.requireNonNull(getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         mBinding = DataBindingUtil.inflate(LayoutInflater.from(getContext()), R.layout.dialog_address, null, false);
         setContentView(mBinding.getRoot());
 
@@ -52,7 +48,7 @@ public class CutsomDaumDialog extends Dialog {
         mBinding.webView.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
         mBinding.webView.addJavascriptInterface(new AndroidBridge(), "CutsomDaumDialog");
         mBinding.webView.setWebChromeClient(new WebChromeClient());
-        mBinding.webView.loadUrl("http://103.60.125.37/getAddress.php");
+        mBinding.webView.loadUrl("http://211.110.139.145/diotalk/getAddress.php");
 
     }
 

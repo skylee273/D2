@@ -5,7 +5,7 @@ public interface Message {
     interface View{
         void showErrorMessage(String msg);
         void MessageUpdate(String msg);
-        void updateListView(String []Receiver);
+        void updateListView();
         void updateView();
     }
     interface Presenter{

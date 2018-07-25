@@ -1,5 +1,6 @@
 package btcore.co.kr.d2band.view.login;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
@@ -13,11 +14,11 @@ import android.view.View;
 
 import com.bumptech.glide.Glide;
 
-import btcore.co.kr.d2band.view.main.MainActivity;
 import btcore.co.kr.d2band.R;
 import btcore.co.kr.d2band.databinding.ActivityLoginBinding;
 import btcore.co.kr.d2band.view.find.FindIdActivity;
 import btcore.co.kr.d2band.view.login.presenter.LoginPresenter;
+import btcore.co.kr.d2band.view.main.MainActivity;
 import btcore.co.kr.d2band.view.register.RegisterActivity;
 import butterknife.OnClick;
 
@@ -35,6 +36,7 @@ public class LoginActivity extends AppCompatActivity implements Login.View {
     ActivityLoginBinding mBinding;
     Login.Presenter presenter;
 
+    @SuppressLint("CommitPrefEdits")
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -121,6 +123,7 @@ public class LoginActivity extends AppCompatActivity implements Login.View {
         if(progressDialog != null){
             progressDialog.dismiss();
         }
+        isAuto = false;
         Snackbar.make(getWindow().getDecorView().getRootView(), msg, Snackbar.LENGTH_LONG).show();
     }
 
@@ -136,8 +139,6 @@ public class LoginActivity extends AppCompatActivity implements Login.View {
             editor.putString("PW",mBinding.editPw.getText().toString());
             editor.commit();
         }
-        presenter.UserSet();
-        presenter.RecvSet();
 
         Intent intent = new Intent(getApplicationContext(), MainActivity.class);
         startActivity(intent);

@@ -1,5 +1,6 @@
 package btcore.co.kr.d2band.view.profile;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
@@ -32,14 +33,13 @@ import btcore.co.kr.d2band.bus.SmsBusEvent;
 import btcore.co.kr.d2band.bus.SmsProvider;
 import btcore.co.kr.d2band.databinding.ActivityProfileinfoBinding;
 import btcore.co.kr.d2band.service.BluetoothLeService;
-import btcore.co.kr.d2band.user.Contact;
+import btcore.co.kr.d2band.user.ContactItem;
 import btcore.co.kr.d2band.user.User;
 import btcore.co.kr.d2band.util.BleProtocol;
 import btcore.co.kr.d2band.view.profile.presenter.InfoPresenter;
-import btcore.co.kr.d2band.view.setting.SettingActivity;
-import btcore.co.kr.d2band.view.step.StepActivity;
 import butterknife.OnClick;
 
+import static btcore.co.kr.d2band.database.ServerCommand.contactArrayList;
 import static btcore.co.kr.d2band.service.BluetoothLeService.STATE;
 
 public class ProfileInfoActivity extends AppCompatActivity implements Info.View{
@@ -49,17 +49,13 @@ public class ProfileInfoActivity extends AppCompatActivity implements Info.View{
     private static final int UART_PROFILE_CONNECTED = 20;
     private static final int REQUEST_SELECT_DEVICE = 1;
     private static final int UART_PROFILE_READY = 10;
-    private BluetoothAdapter mBtAdapter = null;
     private Context mContext;
     private int mState = UART_PROFILE_DISCONNECTED;
     private Timer autoTimer;
-    private TimerTask autoTask;
     private BluetoothLeService mService = null;
-    private Contact contact;
     private BleProtocol bleProtocol;
 
     ActivityProfileinfoBinding mInfoBinding;
-    private SharedPreferences.Editor editor;
     private SharedPreferences pref = null;
 
     Info.Presenter presenter;
@@ -81,15 +77,12 @@ public class ProfileInfoActivity extends AppCompatActivity implements Info.View{
         // 블루투스 프로토콜
         bleProtocol = new BleProtocol();
 
-        // 연락처
-        contact = new Contact();
-
         user = new User();
         presenter = new InfoPresenter(this);
         presenter.setUser(user.getName(), user.getBirthday(), user.getGender(), user.getHeight(), user.getWeight(), user.getPhone(), user.getAddress());
 
         pref = getSharedPreferences("D2", Activity.MODE_PRIVATE);
-        editor = pref.edit();
+        @SuppressLint("CommitPrefEdits") SharedPreferences.Editor editor = pref.edit();
 
         AutoConnection();
     }
@@ -120,6 +113,7 @@ public class ProfileInfoActivity extends AppCompatActivity implements Info.View{
 
     }
 
+    @SuppressLint("SetTextI18n")
     @Override
     public void showUserInfo(String name, String birthday, String gender, String height, String weight, String phone, String addr) {
         mInfoBinding.textInfoName.setText(name);
@@ -158,7 +152,7 @@ public class ProfileInfoActivity extends AppCompatActivity implements Info.View{
 
 
     public void service_init() {
-        mBtAdapter = BluetoothAdapter.getDefaultAdapter();
+        BluetoothAdapter mBtAdapter = BluetoothAdapter.getDefaultAdapter();
         if (mBtAdapter == null) {
             Toast.makeText(this, "Bluetooth is not available", Toast.LENGTH_LONG).show();
             finish();
@@ -189,7 +183,6 @@ public class ProfileInfoActivity extends AppCompatActivity implements Info.View{
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
 
-            final Intent mIntent = intent;
             //*********************//
             if (action.equals(BluetoothLeService.ACTION_GATT_CONNECTED)) {
                 runOnUiThread(new Runnable() {
@@ -228,7 +221,7 @@ public class ProfileInfoActivity extends AppCompatActivity implements Info.View{
 
     public void AutoConnection() {
         autoTimer = new Timer();
-        autoTask = new TimerTask() {
+        TimerTask autoTask = new TimerTask() {
             @Override
             public void run() {
                 if (!STATE) {
@@ -249,8 +242,9 @@ public class ProfileInfoActivity extends AppCompatActivity implements Info.View{
         String callName = callBusEvent.getEventData();
         if(STATE){
             try {
-                for (String temp : contact.getName()) {
-                    if (callName.equals(temp)) {
+                for (ContactItem aContactArrayList : contactArrayList) {
+                    String name = aContactArrayList.getName();
+                    if (callName.equals(name)) {
                         subFlag = true;
                     }
                 }
@@ -296,8 +290,11 @@ public class ProfileInfoActivity extends AppCompatActivity implements Info.View{
 
         if (STATE) {
             try {
-                for (String name : contact.getName()) {
-                    if (NameOrPhone.equals(name)) subFlag = true;
+                for (ContactItem aContactArrayList : contactArrayList) {
+                    String name = aContactArrayList.getName();
+                    if (NameOrPhone.equals(name)) {
+                        subFlag = true;
+                    }
                 }
             } catch (Exception e) {
                 Log.d(TAG, e.toString());

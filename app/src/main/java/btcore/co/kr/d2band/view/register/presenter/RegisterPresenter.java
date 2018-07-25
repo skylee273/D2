@@ -8,8 +8,8 @@ import btcore.co.kr.d2band.view.register.model.RegisterModel;
 
 public class RegisterPresenter implements Register.Presenter {
 
-    Register.View registerView;
-    RegisterModel registerModel;
+    private Register.View registerView;
+    private RegisterModel registerModel;
 
     public RegisterPresenter(Register.View registerView){
         this.registerView = registerView;

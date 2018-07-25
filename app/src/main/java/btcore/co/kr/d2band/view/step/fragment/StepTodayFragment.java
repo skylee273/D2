@@ -1,11 +1,12 @@
 package btcore.co.kr.d2band.view.step.fragment;
 
 import android.annotation.SuppressLint;
-import android.support.v4.app.Fragment;
 import android.content.Context;
 import android.databinding.DataBindingUtil;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -25,6 +26,7 @@ import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Objects;
 
 import btcore.co.kr.d2band.R;
 import btcore.co.kr.d2band.database.ServerCommand;
@@ -37,9 +39,9 @@ import btcore.co.kr.d2band.item.StepItem;
 
 public class StepTodayFragment extends Fragment implements OnChartGestureListener, OnChartValueSelectedListener {
     private final String TAG = getClass().getSimpleName();
-    private Context mContext;
     FragmentStepTodayBinding todayBinding;
     ServerCommand serverCommand;
+    @SuppressLint("SimpleDateFormat")
     SimpleDateFormat mFormat = new SimpleDateFormat("yyyy-MM-dd");
     ArrayList TodayList = new ArrayList<StepItem>();
     ArrayList<String> xVals;
@@ -53,13 +55,13 @@ public class StepTodayFragment extends Fragment implements OnChartGestureListene
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         todayBinding = DataBindingUtil.inflate(inflater, R.layout.fragment_step_today, container, false);
         todayBinding.setStepToday(this);
 
         initChartView();
 
-        mContext = this.getActivity();
+        Context mContext = this.getActivity();
 
         return todayBinding.getRoot();
     }
@@ -70,7 +72,7 @@ public class StepTodayFragment extends Fragment implements OnChartGestureListene
         setData();
         Legend l = todayBinding.todayChart.getLegend();
         l.setForm(Legend.LegendForm.LINE);
-        int color = ContextCompat.getColor(getContext(), R.color.color_chart_xy);
+        int color = ContextCompat.getColor(Objects.requireNonNull(getContext()), R.color.color_chart_xy);
         todayBinding.todayChart.setNoDataTextDescription("You need to provide data for the chart.");
         todayBinding.todayChart.getAxisLeft().setTextColor(color);
         todayBinding.todayChart.getAxisLeft().setAxisMinValue(0f);
@@ -171,11 +173,7 @@ public class StepTodayFragment extends Fragment implements OnChartGestureListene
         serverCommand = new ServerCommand();
         try {
             TodayList = serverCommand.getStep();
-            if(TodayList.size() > 0 ){
-                return true;
-            }else{
-                return false;
-            }
+            return TodayList.size() > 0;
         }catch (NullPointerException e){
             return false;
         }

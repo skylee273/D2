@@ -3,12 +3,11 @@ package btcore.co.kr.d2band.view.profile.presenter;
 import btcore.co.kr.d2band.view.profile.Password;
 import btcore.co.kr.d2band.view.profile.Password.Presenter;
 import btcore.co.kr.d2band.view.profile.model.PasswordModel;
-import btcore.co.kr.d2band.view.profile.model.ProfileModel;
 
 public class PasswordPresenter implements Presenter {
 
-    Password.View passwordView;
-    PasswordModel passwordModel;
+    private Password.View passwordView;
+    private PasswordModel passwordModel;
 
     public PasswordPresenter(Password.View passwordView){
         this.passwordView = passwordView;

@@ -13,7 +13,7 @@ public class SHA256Util {
         return getEncrypt(source, salt.getBytes());
     }
 
-    public static String getEncrypt(String source, byte[] salt) {
+    private static String getEncrypt(String source, byte[] salt) {
 
         String result = "";
 
@@ -29,9 +29,9 @@ public class SHA256Util {
 
             byte[] byteData = md.digest();
 
-            StringBuffer sb = new StringBuffer();
-            for (int i = 0; i < byteData.length; i++) {
-                sb.append(Integer.toString((byteData[i] & 0xFF) + 256, 16).substring(1));
+            StringBuilder sb = new StringBuilder();
+            for (byte aByteData : byteData) {
+                sb.append(Integer.toString((aByteData & 0xFF) + 256, 16).substring(1));
             }
 
             result = sb.toString();
@@ -48,10 +48,10 @@ public class SHA256Util {
         byte[] salt = new byte[8];
         random.nextBytes(salt);
 
-        StringBuffer sb = new StringBuffer();
-        for (int i = 0; i < salt.length; i++) {
+        StringBuilder sb = new StringBuilder();
+        for (byte aSalt : salt) {
             // byte 값을 Hex 값으로 바꾸기.
-            sb.append(String.format("%02x",salt[i]));
+            sb.append(String.format("%02x", aSalt));
         }
 
         return sb.toString();

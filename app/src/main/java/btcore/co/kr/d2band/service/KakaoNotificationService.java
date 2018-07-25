@@ -21,9 +21,7 @@ import java.util.Locale;
 public class KakaoNotificationService extends NotificationListenerService {
     private final String TAG =  getClass().getSimpleName();
     private Context mContext;
-    private String mTitle = null, context = null, mMissText = null, mTime;
     private String title, miss, content;
-    private Bundle extras;
 
     @Override
     public void onCreate() {
@@ -44,19 +42,19 @@ public class KakaoNotificationService extends NotificationListenerService {
         String Date =  new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.KOREA).format(System.currentTimeMillis());
         Notification mNotification=statusBarNotification.getNotification();
 
-        extras = mNotification.extras;
+        Bundle extras = mNotification.extras;
         String packName = statusBarNotification.getPackageName();
 
 
         if (packName.equalsIgnoreCase("com.kakao.talk")) {
 
-            mMissText = extras.getString(Notification.EXTRA_SUB_TEXT);
+            String mMissText = extras.getString(Notification.EXTRA_SUB_TEXT);
 
-            mTitle = extras.getString(Notification.EXTRA_TITLE);
+            String mTitle = extras.getString(Notification.EXTRA_TITLE);
 
-            context = extras.getString(Notification.EXTRA_TEXT);
+            String context = extras.getString(Notification.EXTRA_TEXT);
 
-            mTime = Date;
+            String mTime = Date;
 
             if(mMissText != null){
                 miss = mMissText;

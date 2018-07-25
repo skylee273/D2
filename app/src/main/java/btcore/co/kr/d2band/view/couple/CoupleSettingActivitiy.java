@@ -17,12 +17,12 @@ import android.database.Cursor;
 import android.databinding.DataBindingUtil;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.MediaStore;
 import android.support.design.widget.Snackbar;
+import android.support.media.ExifInterface;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -47,13 +47,14 @@ import btcore.co.kr.d2band.bus.SmsBusEvent;
 import btcore.co.kr.d2band.bus.SmsProvider;
 import btcore.co.kr.d2band.databinding.ActivityCoupleSettingBinding;
 import btcore.co.kr.d2band.service.BluetoothLeService;
-import btcore.co.kr.d2band.user.Contact;
+import btcore.co.kr.d2band.user.ContactItem;
 import btcore.co.kr.d2band.util.BleProtocol;
 import btcore.co.kr.d2band.view.couple.dialog.CoupleDialog;
 import btcore.co.kr.d2band.view.couple.presenter.CoupleSettingPresenter;
 import butterknife.OnClick;
 import me.drakeet.materialdialog.MaterialDialog;
 
+import static btcore.co.kr.d2band.database.ServerCommand.contactArrayList;
 import static btcore.co.kr.d2band.service.BluetoothLeService.STATE;
 
 public class CoupleSettingActivitiy extends AppCompatActivity implements CoupleSetting.view {
@@ -72,8 +73,6 @@ public class CoupleSettingActivitiy extends AppCompatActivity implements CoupleS
     private long startTime;
     private long endTime;
     private Timer autoTimer;
-    private TimerTask autoTask;
-    private Contact contact;
     private CoupleDialog coupleDialog;
     private final int GALLERY_CODE = 1112;
     private CoupleSetting.Presenter presenter;
@@ -85,6 +84,7 @@ public class CoupleSettingActivitiy extends AppCompatActivity implements CoupleS
     ActivityCoupleSettingBinding coupleSettingBinding;
     MaterialDialog mMaterialDialog;
 
+    @SuppressLint("CommitPrefEdits")
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -97,9 +97,6 @@ public class CoupleSettingActivitiy extends AppCompatActivity implements CoupleS
 
         // 블루투스 생성
         bleProtocol = new BleProtocol();
-
-        // 연락처 생성
-        contact = new Contact();
 
         // 버스 등록
         CallProvider.getInstance().register(this);
@@ -230,6 +227,7 @@ public class CoupleSettingActivitiy extends AppCompatActivity implements CoupleS
         } catch (IOException e) {
             e.printStackTrace();
         }
+        assert exif != null;
         int exifOrientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
 
         Bitmap bitmap = BitmapFactory.decodeFile(path);//경로를 통해 비트맵으로 전환
@@ -253,6 +251,7 @@ public class CoupleSettingActivitiy extends AppCompatActivity implements CoupleS
         } catch (IOException e) {
             e.printStackTrace();
         }
+        assert exif != null;
         int exifOrientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
         int exifDegree = exifOrientationToDegrees(exifOrientation);
 
@@ -400,8 +399,8 @@ public class CoupleSettingActivitiy extends AppCompatActivity implements CoupleS
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
 
-            final Intent mIntent = intent;
             //*********************//
+            assert action != null;
             if (action.equals(BluetoothLeService.ACTION_GATT_CONNECTED)) {
                 runOnUiThread(new Runnable() {
                     public void run() {
@@ -439,7 +438,7 @@ public class CoupleSettingActivitiy extends AppCompatActivity implements CoupleS
 
     public void AutoConnection() {
         autoTimer = new Timer();
-        autoTask = new TimerTask() {
+        TimerTask autoTask = new TimerTask() {
             @Override
             public void run() {
                 if (!STATE) {
@@ -460,8 +459,9 @@ public class CoupleSettingActivitiy extends AppCompatActivity implements CoupleS
         String callName = callBusEvent.getEventData();
         if(STATE){
             try {
-                for (String temp : contact.getName()) {
-                    if (callName.equals(temp)) {
+                for (ContactItem aContactArrayList : contactArrayList) {
+                    String name = aContactArrayList.getName();
+                    if (callName.equals(name)) {
                         subFlag = true;
                     }
                 }
@@ -507,8 +507,11 @@ public class CoupleSettingActivitiy extends AppCompatActivity implements CoupleS
 
         if (STATE) {
             try {
-                for (String name : contact.getName()) {
-                    if (NameOrPhone.equals(name)) subFlag = true;
+                for (ContactItem aContactArrayList : contactArrayList) {
+                    String name = aContactArrayList.getName();
+                    if (NameOrPhone.equals(name)) {
+                        subFlag = true;
+                    }
                 }
             } catch (Exception e) {
                 Log.d(TAG, e.toString());

@@ -1,5 +1,6 @@
 package btcore.co.kr.d2band.view.find;
 
+import android.annotation.SuppressLint;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.databinding.DataBindingUtil;
@@ -21,7 +22,6 @@ import btcore.co.kr.d2band.view.find.fragment.FragmentPw;
 import btcore.co.kr.d2band.view.find.presenter.Find;
 import btcore.co.kr.d2band.view.find.presenter.FindPresenter;
 import btcore.co.kr.d2band.view.login.LoginActivity;
-import btcore.co.kr.d2band.view.step.StepActivity;
 import butterknife.OnClick;
 
 /**
@@ -98,7 +98,8 @@ public class FindIdActivity extends AppCompatActivity implements Find.View {
             FragmentPw fragmentPw = (FragmentPw) findFragmentByPosition(currentPage);
             String name = fragmentPw.getName();
             String phone = fragmentPw.getPhone();
-            presenter.initFindPw(name, phone);
+            String id = fragmentPw.getID();
+            presenter.initFindPw(id, name, phone);
             presenter.callPwDialog();
         }
 
@@ -162,12 +163,13 @@ public class FindIdActivity extends AppCompatActivity implements Find.View {
 
     public class pagerAdapter extends FragmentPagerAdapter {
 
-        public static final String ARG_PAGE = "page";
+        static final String ARG_PAGE = "page";
 
-        public pagerAdapter(FragmentManager fragmentManager) {
+        pagerAdapter(FragmentManager fragmentManager) {
             super(fragmentManager);
         }
 
+        @SuppressLint("Assert")
         @Override
         public Fragment getItem(int position) {
             Fragment fragment = null;
@@ -184,6 +186,7 @@ public class FindIdActivity extends AppCompatActivity implements Find.View {
 
             Bundle args = new Bundle();
             args.putInt(ARG_PAGE, position);
+            assert false;
             fragment.setArguments(args);
             return fragment;
         }

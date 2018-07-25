@@ -12,21 +12,13 @@ public class BleProtocol {
     private byte D_START = 0x7F;
     private byte D_LENGHT = 0x01;
     private byte D_TYPE_NOTI = 0x0F;
-    private byte D_TYPE_TIME = 0x0A;
     private byte D_CALL = 0x00;
     private byte D_CALL_START = 0x01;
     private byte D_CALL_STOP = 0x00;
-    private byte D_MISS_CALL = 0x01;
     private byte D_MISS_COUNT;
-    private byte D_SMS = 0x02;
     private byte D_SMS_COUNT;
-    private byte D_KAKAO = 0x03;
     private byte D_KAKAO_COUNT;
     private byte D_SUB_CALL = 0x04;
-    private byte D_SUB_MISS_CALL = 0x05;
-    private byte D_SUB_SMS = 0x06;
-    private byte D_SUB_KAKAO = 0x07;
-    private byte D_REQUEST = 0x0B;
     private byte D_END = (byte) 0x00;
     private byte D_NAME_LENGTH;
     private byte [] D_NAME;
@@ -46,7 +38,8 @@ public class BleProtocol {
         sendByte = new byte[20];
         sendByte[0] = D_START;
         sendByte[1] = D_LENGHT;
-        sendByte[2] = D_REQUEST;
+        byte d_REQUEST = 0x0B;
+        sendByte[2] = d_REQUEST;
         sendByte[3] = 0x01;
         sendByte[4] = D_END;
         return sendByte;
@@ -58,7 +51,8 @@ public class BleProtocol {
         sendByte = new byte[20];
         sendByte[0] = D_START;      //Start ID
         sendByte[1] = D_LENGHT;      //Length
-        sendByte[2] = D_TYPE_TIME;      //Type
+        byte d_TYPE_TIME = 0x0A;
+        sendByte[2] = d_TYPE_TIME;      //Type
         sendByte[3] = (byte) timeData.charAt(0);      //2        //year
         sendByte[4] = (byte) timeData.charAt(1);      //0
         sendByte[5] = (byte) timeData.charAt(2);         //1
@@ -74,7 +68,7 @@ public class BleProtocol {
         sendByte[15] = (byte) timeData.charAt(12);         //1           /second
         sendByte[16] = (byte) timeData.charAt(13);         //1
         sendByte[17] = (byte) WeekData;         //1
-        sendByte[18] = (byte) D_END;
+        sendByte[18] = D_END;
 
         return sendByte;
 
@@ -216,7 +210,8 @@ public class BleProtocol {
         sendByte[0] = D_START;
         sendByte[1] = D_LENGHT;
         sendByte[2] = D_TYPE_NOTI;
-        sendByte[3] = D_MISS_CALL;
+        byte d_MISS_CALL = 0x01;
+        sendByte[3] = d_MISS_CALL;
         sendByte[4] = D_MISS_COUNT;
         sendByte[5] = D_END;
         return sendByte;
@@ -229,7 +224,8 @@ public class BleProtocol {
         sendByte[0] = D_START;
         sendByte[1] = D_LENGHT;
         sendByte[2] = D_TYPE_NOTI;
-        sendByte[3] = D_SUB_MISS_CALL;
+        byte d_SUB_MISS_CALL = 0x05;
+        sendByte[3] = d_SUB_MISS_CALL;
         sendByte[4] = D_MISS_COUNT;
         sendByte[5] = D_END;
         return sendByte;
@@ -248,7 +244,8 @@ public class BleProtocol {
         sendData.add(D_START);
         sendData.add(D_LENGHT);
         sendData.add(D_TYPE_NOTI);
-        sendData.add(D_SMS);
+        byte d_SMS = 0x02;
+        sendData.add(d_SMS);
         sendData.add(D_SMS_COUNT);
         sendData.add(D_NAME_LENGTH);
         for(byte NameByte : D_NAME){
@@ -264,6 +261,7 @@ public class BleProtocol {
         }
 
         for(int i = 0 ; i < sendData.size(); i++) {
+            if( i == 20) break;
             sendByte[i] = sendData.get(i);
         }
         return sendByte;
@@ -282,7 +280,8 @@ public class BleProtocol {
         sendData.add(D_START);
         sendData.add(D_LENGHT);
         sendData.add(D_TYPE_NOTI);
-        sendData.add(D_SUB_SMS);
+        byte d_SUB_SMS = 0x06;
+        sendData.add(d_SUB_SMS);
         sendData.add(D_SMS_COUNT);
         sendData.add(D_NAME_LENGTH);
         for(byte NameByte : D_NAME){
@@ -298,6 +297,7 @@ public class BleProtocol {
         }
 
         for(int i = 0 ; i < sendData.size(); i++) {
+            if(i == 20) break;
             sendByte[i] = sendData.get(i);
         }
         return sendByte;
@@ -316,7 +316,8 @@ public class BleProtocol {
         sendData.add(D_START);
         sendData.add(D_LENGHT);
         sendData.add(D_TYPE_NOTI);
-        sendData.add(D_KAKAO);
+        byte d_KAKAO = 0x03;
+        sendData.add(d_KAKAO);
         sendData.add(D_KAKAO_COUNT);
         sendData.add(D_NAME_LENGTH);
         for(byte NameByte : D_NAME){
@@ -350,7 +351,8 @@ public class BleProtocol {
         sendData.add(D_START);
         sendData.add(D_LENGHT);
         sendData.add(D_TYPE_NOTI);
-        sendData.add(D_SUB_KAKAO);
+        byte d_SUB_KAKAO = 0x07;
+        sendData.add(d_SUB_KAKAO);
         sendData.add(D_KAKAO_COUNT);
         sendData.add(D_NAME_LENGTH);
         for(byte NameByte : D_NAME){
@@ -372,14 +374,13 @@ public class BleProtocol {
     }
     public int getWeek() {
         Calendar cal = Calendar.getInstance();
-        int week = cal.get(cal.DAY_OF_WEEK);
+        int week = cal.get(Calendar.DAY_OF_WEEK);
         return (week - 1);
     }
 
     public String getDate() {
         SimpleDateFormat mSimpleDateFormat = new SimpleDateFormat("yyyyMMddHHmmss", Locale.KOREA);
         Date currentTime = new Date();
-        String mTime = mSimpleDateFormat.format(currentTime);
-        return mTime;
+        return mSimpleDateFormat.format(currentTime);
     }
 }

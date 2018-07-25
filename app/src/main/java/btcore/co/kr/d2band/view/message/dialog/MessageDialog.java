@@ -4,7 +4,6 @@ import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.design.widget.TextInputEditText;
 import android.view.View;
 import android.widget.TextView;
 
@@ -13,14 +12,10 @@ import btcore.co.kr.d2band.R;
 public class MessageDialog extends Dialog implements View.OnClickListener {
 
     private static final int LAYOUT = R.layout.dialog_message;
-    private Context context;
-    private TextView cancel;
-    private TextView plus;
     private boolean deleteFlag = false;
 
     public MessageDialog(@NonNull Context context) {
         super(context);
-        this.context = context;
     }
 
     @Override
@@ -28,9 +23,8 @@ public class MessageDialog extends Dialog implements View.OnClickListener {
         super.onCreate(savedInstanceState);
         setContentView(LAYOUT);
 
-        cancel = findViewById(R.id.btn_cancel);
-        plus = findViewById(R.id.btn_plus);
-
+        TextView cancel = findViewById(R.id.btn_cancel);
+        TextView plus = findViewById(R.id.btn_plus);
         cancel.setOnClickListener(this);
         plus.setOnClickListener(this);
 

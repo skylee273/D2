@@ -1,15 +1,14 @@
 package btcore.co.kr.d2band.receiver;
 
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.util.Log;
-import android.widget.Toast;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -17,11 +16,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import btcore.co.kr.d2band.bus.SmsBusEvent;
 import btcore.co.kr.d2band.bus.SmsProvider;
-
-import static android.content.Context.MODE_PRIVATE;
 
 
 /**
@@ -40,6 +38,8 @@ public class MmsReceiver extends BroadcastReceiver {
         mSavedContext = context;
         String action = intent.getAction();
         String type = intent.getType();
+        assert action != null;
+        assert type != null;
         if (action.equals(ACTION_MMS_RECEIVED) && type.equals(MMS_DATA_TYPE)) {
             try {
                 List<TextMessage> messages = getMessagesFrom(context, intent);
@@ -59,9 +59,10 @@ public class MmsReceiver extends BroadcastReceiver {
     private void receiveMessage(TextMessage message) {
 
         Uri mms_content = Uri.parse("content://mms/inbox");
-        Cursor c = mSavedContext.getContentResolver().query(mms_content, null, "read = 0", null, null);
+        @SuppressLint("Recycle") Cursor c = mSavedContext.getContentResolver().query(mms_content, null, "read = 0", null, null);
+        assert c != null;
         c.moveToFirst();
-        String countStr = String.format("%03d", c.getCount());
+        @SuppressLint("DefaultLocale") String countStr = String.format("%03d", c.getCount());
 
         String numberOrName = getDisplayName(mSavedContext, message.from);
         String mmsContext = message.body;
@@ -82,12 +83,13 @@ public class MmsReceiver extends BroadcastReceiver {
         try {
             String[] projection = {ContactsContract.Contacts.DISPLAY_NAME};
             Cursor cursor = context.getContentResolver().query(contactUri, projection, null, null, null);
+            assert cursor != null;
             if (cursor.moveToFirst()) {
                 int nameIdx = cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME);
                 displayName = cursor.getString(nameIdx);
                 cursor.close(); // Release resources
             }
-        } catch (Exception e) {
+        } catch (Exception ignored) {
         }
         return displayName;
     }
@@ -106,12 +108,12 @@ public class MmsReceiver extends BroadcastReceiver {
         }
 
         try {
-            String buffer = new String(bundle.getByteArray("data"));
+            String buffer = new String(Objects.requireNonNull(bundle.getByteArray("data")));
 
             for (int i = 0; i < 10; i++) {
                 try {
                     Thread.sleep(1000);
-                } catch (Exception ex) {
+                } catch (Exception ignored) {
                 }
                 Cursor cur = context.getContentResolver().query(Uri.parse("content://mms/inbox"), null, "m_type in (132,128)", null, "date DESC");
                 if (cur == null) {
@@ -132,12 +134,13 @@ public class MmsReceiver extends BroadcastReceiver {
                             continue;
                         }
                         String subj = cur.getString(cur.getColumnIndex("sub"));
-                        String body = "";
+                        StringBuilder body = new StringBuilder();
                         String from = getMmsAddr(context, id);
                         long date = Long.parseLong(cur.getString(cur.getColumnIndex("date")));
 
                         Cursor cprt = context.getContentResolver().query(Uri.parse("content://mms/part"), null, "mid = " + id, null, null);
                         try {
+                            assert cprt != null;
                             if (cprt.moveToFirst()) {
                                 do {
                                     String pid = cprt.getString(cprt.getColumnIndex("_id"));
@@ -145,12 +148,12 @@ public class MmsReceiver extends BroadcastReceiver {
                                     if ("text/plain".equals(type)) {
                                         String dat = cprt.getString(cprt.getColumnIndex("_data"));
                                         if (dat != null) {
-                                            body += getMmsText(context, pid);
+                                            body.append(getMmsText(context, pid));
                                         } else {
-                                            body += cprt.getString(cprt.getColumnIndex("text"));
+                                            body.append(cprt.getString(cprt.getColumnIndex("text")));
                                         }
                                     } else if ("image/jpeg".equals(type) || "image/bmp".equals(type) || "image/gif".equals(type) || "image/jpg".equals(type) || "image/png".equals(type)) {
-                                        body += "\n[image]\n";
+                                        body.append("\n[image]\n");
                                     }
                                 } while (cprt.moveToNext());
                             }
@@ -191,12 +194,12 @@ public class MmsReceiver extends BroadcastReceiver {
                 sb.append(temp);
                 temp = reader.readLine();
             }
-        } catch (IOException e) {
+        } catch (IOException ignored) {
         } finally {
             if (is != null) {
                 try {
                     is.close();
-                } catch (IOException e) {
+                } catch (IOException ignored) {
                 }
             }
         }
@@ -233,7 +236,7 @@ public class MmsReceiver extends BroadcastReceiver {
         double date;
         String from, body;
 
-        public TextMessage(String from, double date, String body) {
+        TextMessage(String from, double date, String body) {
             this.from = from;
             this.date = date;
             this.body = body;

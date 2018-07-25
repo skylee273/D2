@@ -7,8 +7,8 @@ import btcore.co.kr.d2band.view.couple.model.CoupleModel;
 
 public class CouplePresenter implements Couple.Presenter{
 
-    Couple.View coupleView;
-    CoupleModel coupleModel;
+    private Couple.View coupleView;
+    private CoupleModel coupleModel;
 
     public CouplePresenter(Couple.View view){
         this.coupleView = view;
@@ -41,6 +41,7 @@ public class CouplePresenter implements Couple.Presenter{
     @Override
     public void updateCalendar(String date) {
         if(coupleModel.checkDate(date)){
+            coupleModel.setDate();
             coupleView.showCalendar(coupleModel.getDate(), coupleModel.koreaDate(), coupleModel.getMod(), coupleModel.getDay());
         }else{
             coupleView.showErrorMessage("날짜를 다시 선택해주세요.");

@@ -13,17 +13,13 @@ import btcore.co.kr.d2band.R;
 public class CoupleDialog extends Dialog implements View.OnClickListener {
 
     private static final int LAYOUT = R.layout.dialog_couple;
-    private Context context;
 
     private TextInputEditText name;
     private TextView state;
-    private TextView cancel;
-    private TextView confirm;
     private String mName;
 
     public CoupleDialog(@NonNull Context context) {
         super(context);
-        this.context = context;
     }
 
     @Override
@@ -34,8 +30,8 @@ public class CoupleDialog extends Dialog implements View.OnClickListener {
         name = findViewById(R.id.edit_name);
 
         state = findViewById(R.id.text_state);
-        cancel = findViewById(R.id.btn_cancel);
-        confirm = findViewById(R.id.btn_change);
+        TextView cancel = findViewById(R.id.btn_cancel);
+        TextView confirm = findViewById(R.id.btn_change);
 
         cancel.setOnClickListener(this);
         confirm.setOnClickListener(this);

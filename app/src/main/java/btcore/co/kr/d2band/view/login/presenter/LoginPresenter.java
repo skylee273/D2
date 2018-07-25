@@ -1,7 +1,5 @@
 package btcore.co.kr.d2band.view.login.presenter;
 
-import android.util.Log;
-
 import btcore.co.kr.d2band.view.login.Login;
 import btcore.co.kr.d2band.view.login.model.LoginModel;
 
@@ -11,8 +9,8 @@ import btcore.co.kr.d2band.view.login.model.LoginModel;
 
 public class LoginPresenter implements Login.Presenter {
 
-    Login.View loginView;
-    LoginModel loginModel;
+    private Login.View loginView;
+    private LoginModel loginModel;
 
     public LoginPresenter(Login.View loginView){
         this.loginView = loginView;
@@ -48,42 +46,6 @@ public class LoginPresenter implements Login.Presenter {
             });
         }else{
             loginView.showErrorMessage("아이디 또는 비밀번호를 입력하세요");
-        }
-    }
-
-    @Override
-    public void UserSet() {
-        if(loginModel.checkUserId()){
-            loginModel.callSetUser(new LoginModel.ApiListener() {
-                @Override
-                public void onSuccess(String message) {
-                    Log.d("UserSet",message);
-                }
-                @Override
-                public void onFail(String message) {
-                    Log.d("UserSet",message);
-                }
-            });
-        }else{
-            Log.d("UserSet","저장 실패");
-
-        }
-    }
-
-    @Override
-    public void RecvSet() {
-        if(loginModel.checkUserId()){
-            loginModel.callSetRecv(new LoginModel.RecvApiListener() {
-                @Override
-                public void onSuccess(String message) {
-                    Log.d("RECV SET", "OK SAVE");
-                }
-
-                @Override
-                public void onFail(String message) {
-                    Log.d("RECV SET", "NOT SAVE");
-                }
-            });
         }
     }
 

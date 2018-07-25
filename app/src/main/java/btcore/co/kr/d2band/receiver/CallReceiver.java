@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
@@ -14,13 +13,11 @@ import android.support.v4.app.ActivityCompat;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
-import android.widget.Toast;
 
+import java.util.Objects;
 
 import btcore.co.kr.d2band.bus.CallBusEvent;
 import btcore.co.kr.d2band.bus.CallProvider;
-
-import static android.content.Context.MODE_PRIVATE;
 
 /**
  * Created by leehaneul on 2018-01-25.
@@ -40,10 +37,11 @@ public class CallReceiver extends BroadcastReceiver {
             if (mCallStartEndDetector == null) {
                 mCallStartEndDetector = new CallStartEndDetector();
             }
-            if (intent.getAction().equals("android.intent.action.NEW_OUTGOING_CALL")) {
-                mCallStartEndDetector.setOutgoingNumber(intent.getExtras().getString("android.intent.extra.PHONE_NUMBER"));
+            if (Objects.equals(intent.getAction(), "android.intent.action.NEW_OUTGOING_CALL")) {
+                mCallStartEndDetector.setOutgoingNumber(Objects.requireNonNull(intent.getExtras()).getString("android.intent.extra.PHONE_NUMBER"));
             } else {
                 TelephonyManager telephony = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+                assert telephony != null;
                 telephony.listen(mCallStartEndDetector, PhoneStateListener.LISTEN_CALL_STATE);
             }
         } catch (Exception e) {
@@ -56,10 +54,10 @@ public class CallReceiver extends BroadcastReceiver {
         boolean mIsIncoming;
         String mSavedNumber;
 
-        public CallStartEndDetector() {
+        CallStartEndDetector() {
         }
 
-        public void setOutgoingNumber(String number) {
+        void setOutgoingNumber(String number) {
             mSavedNumber = number;
         }
 
@@ -138,11 +136,12 @@ public class CallReceiver extends BroadcastReceiver {
         if (ActivityCompat.checkSelfPermission(mSavedContext, android.Manifest.permission.READ_CALL_LOG) != PackageManager.PERMISSION_GRANTED) {
             return;
         }
-            Cursor c = mSavedContext.getContentResolver().query(CallLog.Calls.CONTENT_URI, projection, where, null,
+            @SuppressLint("Recycle") Cursor c = mSavedContext.getContentResolver().query(CallLog.Calls.CONTENT_URI, projection, where, null,
                     null);
             if (c != null) {
                 c.moveToFirst();
             }
+        assert c != null;
         missedCount = (c.getCount() + 1) & 0xFF;
         CallProvider.getInstance().post(new CallBusEvent(2, String.valueOf(missedCount)));
     }
@@ -160,6 +159,7 @@ public class CallReceiver extends BroadcastReceiver {
             }
             String[] projection = {ContactsContract.Contacts.DISPLAY_NAME};
             Cursor cursor = context.getContentResolver().query(contactUri, projection, null, null, null);
+            assert cursor != null;
             if (cursor.moveToFirst()) {
                 int nameIdx = cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME);
                 displayName = cursor.getString(nameIdx);

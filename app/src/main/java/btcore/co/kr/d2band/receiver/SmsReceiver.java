@@ -1,26 +1,17 @@
 package btcore.co.kr.d2band.receiver;
 
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.Build;
-import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.provider.Telephony;
 import android.telephony.SmsMessage;
-import android.util.Log;
-
 
 import btcore.co.kr.d2band.bus.SmsBusEvent;
 import btcore.co.kr.d2band.bus.SmsProvider;
-import btcore.co.kr.d2band.user.Contact;
-
-import static android.content.Context.MODE_PRIVATE;
-import static btcore.co.kr.d2band.service.BluetoothLeService.STATE;
 
 /**
  * Created by leehaneul on 2018-01-25.
@@ -29,8 +20,6 @@ import static btcore.co.kr.d2band.service.BluetoothLeService.STATE;
 public class SmsReceiver extends BroadcastReceiver {
     protected Context mSavedContext;
     private final String TAG = getClass().getSimpleName();
-    private Contact contact;
-
     public SmsReceiver() {
         super();
     }
@@ -38,31 +27,16 @@ public class SmsReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         mSavedContext = context;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            for (SmsMessage message : Telephony.Sms.Intents.getMessagesFromIntent(intent)) {
-                receiveMessage(message);
-            }
-        } else {
-            try {
-                final Bundle bundle = intent.getExtras();
-                if (bundle == null || !bundle.containsKey("pdus")) {
-                    return;
-                }
-
-                final Object[] pdus = (Object[]) bundle.get("pdus");
-                for (Object pdu : pdus) {
-                    receiveMessage(SmsMessage.createFromPdu((byte[]) pdu));
-                }
-            } catch (Exception e) {
-                Log.e(TAG, e.getMessage());
-            }
+        for (SmsMessage message : Telephony.Sms.Intents.getMessagesFromIntent(intent)) {
+            receiveMessage(message);
         }
     }
 
     private void receiveMessage(SmsMessage message) {
 
         Uri sms_content = Uri.parse("content://sms/inbox");
-        Cursor c = mSavedContext.getContentResolver().query(sms_content, null, "read = 0", null, null);
+        @SuppressLint("Recycle") Cursor c = mSavedContext.getContentResolver().query(sms_content, null, "read = 0", null, null);
+        assert c != null;
         c.moveToFirst();
         int countStr = c.getCount();
         String numberOrName = getDisplayName(mSavedContext, message.getOriginatingAddress());
